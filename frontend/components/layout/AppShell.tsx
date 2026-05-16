@@ -2,10 +2,7 @@
 
 import { Sidebar } from "./Sidebar";
 import { DemoModeBadge } from "./DemoModeBadge";
-import {
-  pathnameShowsSeylanHandoff,
-  SeylanBankHandoffBanner,
-} from "@/components/seylan/SeylanBankHandoffBanner";
+import { SeylanBankHandoffBanner } from "@/components/seylan/SeylanBankHandoffBanner";
 import { usePathname } from "next/navigation";
 
 interface AppShellProps {
@@ -18,7 +15,9 @@ export function AppShell({ children }: AppShellProps) {
   /** MPGS injects iframes/modals on document.body — avoid sidebar stacking and fixed layout clashes. */
   const isPaymentGatewaySurface =
     pathname.startsWith("/payments/checkout") || pathname.startsWith("/payments/return");
-  const showSeylanHandoff = pathnameShowsSeylanHandoff(pathname);
+  const showSeylanHandoff = ["/wallet", "/assistant", "/loans", "/business"].some(
+    (p) => pathname.startsWith(p),
+  );
 
   if (isOnboarding || isPaymentGatewaySurface) {
     return (
