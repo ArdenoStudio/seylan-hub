@@ -21,10 +21,10 @@ def _heuristic(txn: dict) -> dict:
     desc = txn.get("description", "")
     for cat_en, cat_si, sub, pattern in _RULES:
         if re.search(pattern, desc, re.IGNORECASE):
-            return {"id": txn["id"], "description": desc, "amount_lkr": txn["amount_lkr"],
+            return {"id": txn.get("transaction_id") or txn.get("id", ""), "description": desc, "amount_lkr": txn["amount_lkr"],
                     "category_en": cat_en, "category_si": cat_si,
                     "subcategory": sub, "confidence": 0.75}
-    return {"id": txn["id"], "description": desc, "amount_lkr": txn["amount_lkr"],
+    return {"id": txn.get("transaction_id") or txn.get("id", ""), "description": desc, "amount_lkr": txn["amount_lkr"],
             "category_en": "MISC", "category_si": "විවිධ",
             "subcategory": "Miscellaneous", "confidence": 0.5}
 
@@ -34,7 +34,7 @@ _cache: dict[frozenset, list[dict]] = {}
 
 
 async def categorize_transactions(transactions: list[dict]) -> list[dict]:
-    key = frozenset(t["id"] for t in transactions)
+    key = frozenset(t.get("transaction_id") or t.get("id","") for t in transactions)
     if key in _cache:
         return _cache[key]
 
@@ -52,7 +52,7 @@ async def categorize_transactions(transactions: list[dict]) -> list[dict]:
         raw = re.sub(r"\n?```$", "", raw.strip())
         cats = json.loads(raw)
         # Merge amounts/descriptions back in
-        by_id = {t["id"]: t for t in transactions}
+        by_id = {(t.get("transaction_id") or t.get("id","")): t for t in transactions}
         result = []
         for c in cats:
             orig = by_id.get(c["id"], {})

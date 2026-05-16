@@ -23,7 +23,7 @@ async def categorize(req: CategorizeRequest):
     data = json.loads((_FX / "business_account.json").read_text(encoding="utf-8"))
     all_txns = data.get(req.user_id, {}).get("transactions", [])
     if req.transaction_ids:
-        txns = [t for t in all_txns if t["id"] in req.transaction_ids]
+        txns = [t for t in all_txns if (t.get("transaction_id") or t.get("id")) in req.transaction_ids]
     else:
         txns = all_txns
     log.info("categorize user=%s count=%d", req.user_id, len(txns))
