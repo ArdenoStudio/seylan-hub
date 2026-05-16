@@ -176,6 +176,15 @@
   box-shadow: 0 4px 24px rgba(114, 28, 36, 0.07), 0 1px 4px rgba(114, 28, 36, 0.04);
 }
 
+/* Dark glass card — used inside .dark wrappers */
+.dark .card-glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
 /* Plum brand shadow utility */
 .shadow-brand {
   box-shadow: 0 4px 24px rgba(114, 28, 36, 0.10), 0 1px 4px rgba(114, 28, 36, 0.05);
@@ -184,10 +193,25 @@
   box-shadow: 0 8px 40px rgba(114, 28, 36, 0.14), 0 2px 8px rgba(114, 28, 36, 0.06);
 }
 
+/* Dark overrides for brand shadows */
+.dark .shadow-brand {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.45), 0 1px 4px rgba(0, 0, 0, 0.30);
+}
+.dark .shadow-brand-lg {
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.40);
+}
+
 /* Persona module color zones — accent gradient overlay per page */
 [data-module="wallet"] {
   --module-accent: #E31821;
   --module-accent-soft: rgba(227, 24, 33, 0.06);
+  /* Dark glass tokens — override shadcn dark card variables so bg-card
+     renders as transparent glass instead of the dark-red #3A1016 value */
+  --card: rgba(255, 255, 255, 0.05);
+  --card-foreground: #FFF8F1;
+  --border: rgba(255, 255, 255, 0.08);
+  --muted-foreground: rgba(255, 248, 241, 0.45);
+  --ring: rgba(255, 255, 255, 0.15);
 }
 [data-module="loans"] {
   --module-accent: #3B82F6;
@@ -209,6 +233,34 @@
   background:
     radial-gradient(circle at top right, rgba(139, 92, 246, 0.08), transparent 28rem),
     linear-gradient(180deg, #f8f5ff 0%, #fffdf8 58%, #fff6ec 100%);
+}
+
+/* Tabular number utility */
+.tabular { font-variant-numeric: tabular-nums; }
+
+/* Card inner gradient accent */
+.card-top-accent {
+  position: relative;
+}
+.card-top-accent::before {
+  content: "";
+  position: absolute;
+  inset-x: 0;
+  top: 0;
+  height: 3px;
+  border-radius: 1.5rem 1.5rem 0 0;
+  background: linear-gradient(90deg, var(--color-seylan-red), var(--color-seylan-gold), transparent);
+  opacity: 0.6;
+}
+
+/* Pulse ring for alert insight */
+@keyframes ping-soft {
+  0%   { transform: scale(1); opacity: 0.3; }
+  70%  { transform: scale(1.8); opacity: 0; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+.animate-ping-soft {
+  animation: ping-soft 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
 /* Spotlight persona card effect */
@@ -234,3 +286,16 @@
 .persona-card-spotlight:hover::before {
   opacity: 1;
 }
+
+/* Footer grid drift animation */
+@keyframes gridDrift {
+  0%, 100% { background-position: 0 0; }
+  50% { background-position: 3px 3px; }
+}
+.animate-grid-drift {
+  animation: gridDrift 8s ease-in-out infinite;
+}
+
+/* Hide scrollbar for module tabs */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
