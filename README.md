@@ -54,6 +54,13 @@ See `frontend/.env.example` for all required variables. Set `NEXT_PUBLIC_USE_MOC
 - Wallet realtime has a polling fallback so the demo can continue if Supabase
   realtime is unavailable.
 
+## Seylan Bank integration notes
+
+Stakeholder onboarding brief (non-technical and technical checkpoints for Seylan): [docs/seylan-stakeholder-brief.md](docs/seylan-stakeholder-brief.md).
+
+Hub modules mapped to gateway Python packages and environment toggles:
+[docs/seylan-hub-api-mapping.md](docs/seylan-hub-api-mapping.md).
+
 ## Credits
 
 - **Seylan Bank** — Sponsor & banking domain

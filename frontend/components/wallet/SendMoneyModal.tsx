@@ -15,6 +15,7 @@ import { formatLKR } from "@/lib/utils";
 import { postWalletTransfer } from "@/lib/api";
 import { toast } from "sonner";
 import { Send } from "lucide-react";
+import { EXTERNAL_LINK_REL, SEYLAN_LINKS } from "@/lib/seylan-external-links";
 
 const FX_RATE = 408.3;
 
@@ -105,6 +106,21 @@ export function SendMoneyModal({
               </div>
             ))}
           </div>
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            Live corridor payouts, beneficiary onboarding, bank OTP flows, and
+            mandate-driven debits finalize in Seylan&apos;s authorised channels—for
+            example{" "}
+            <a
+              href={SEYLAN_LINKS.internetBankingPersonalLogin}
+              target="_blank"
+              rel={EXTERNAL_LINK_REL}
+              className="font-medium text-seylan-plum underline-offset-2 hover:text-seylan-red hover:underline"
+            >
+              Personal Internet Banking
+            </a>{" "}
+            or the Seylan Mobile Banking app—unless your deployment has Seylan Hub
+            gateway credentials configured.
+          </p>
           <Button
             className="w-full"
             disabled={sending || amountGbp <= 0}
