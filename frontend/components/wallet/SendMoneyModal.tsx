@@ -387,15 +387,21 @@ export function SendMoneyModal({
 
       {/* FX calculator — separate popup */}
       <Dialog open={showFxCalc} onOpenChange={setShowFxCalc}>
-        <DialogContent className="max-w-sm border border-gray-100 p-0 shadow-2xl [background:#ffffff]" showCloseButton={false}>
+        <DialogContent
+          className="max-w-lg border border-gray-100 p-0 shadow-2xl [background:#ffffff]"
+          showCloseButton={false}
+        >
           <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-[#E31821] via-[#E0AF49] to-[#E31821]" />
-          <div className="p-5">
-            <div className="mb-4 flex items-center justify-between">
-              <p className="text-sm font-semibold text-gray-900">FX Calculator</p>
+          <div className="p-8">
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-[#E31821]">Seylan Hub</p>
+                <p className="mt-0.5 text-xl font-semibold text-gray-900">FX Calculator</p>
+              </div>
               <button
                 type="button"
                 onClick={() => setShowFxCalc(false)}
-                className="flex h-7 w-7 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 text-lg"
               >
                 ×
               </button>

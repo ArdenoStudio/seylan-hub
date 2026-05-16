@@ -122,9 +122,9 @@ export function CurrencyExchangeCard({
   }
 
   return (
-    <div className={cn("w-full space-y-5", className)}>
+    <div className={cn("w-full space-y-6", className)}>
       {/* Currency pair row */}
-      <div className="relative flex items-center justify-between rounded-lg border border-gray-200 bg-white p-3">
+      <div className="relative flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4">
         <motion.div
           key={`${animationKey}-from`}
           initial={{ opacity: 0, x: -20 }}
@@ -159,15 +159,15 @@ export function CurrencyExchangeCard({
       </div>
 
       {/* Big amount input */}
-      <div className="relative text-center">
-        <span className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-5xl font-bold text-gray-200 select-none">
+      <div className="relative py-4 text-center">
+        <span className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-7xl font-bold text-gray-100 select-none">
           {fromCurrency.code}
         </span>
         <Input
           type="text"
           value={amount}
           onChange={handleAmountChange}
-          className="h-auto border-none bg-transparent p-0 text-center text-6xl font-bold tracking-tighter shadow-none focus-visible:ring-0 text-gray-900"
+          className="h-auto border-none bg-transparent p-0 text-center text-7xl font-bold tracking-tighter shadow-none focus-visible:ring-0 text-gray-900"
           placeholder="0.00"
         />
         {availableBalance !== undefined && (
@@ -184,7 +184,7 @@ export function CurrencyExchangeCard({
       </div>
 
       {/* Rate pill */}
-      <div className="rounded-lg bg-gray-50 px-4 py-2 text-center text-sm text-gray-500">
+      <div className="rounded-xl bg-gray-50 px-4 py-3 text-center text-sm text-gray-500">
         1 {fromCurrency.code} ={" "}
         <span className="font-semibold text-gray-800">{fromCurrency.lkrRate}</span> LKR
       </div>
