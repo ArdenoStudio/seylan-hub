@@ -25,10 +25,10 @@ export function TaxJarPanel({
   const [triggering, setTriggering] = useState(false);
   const animRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
-  useEffect(() => {
+  if (balance !== initialBalance && displayBalance === balance) {
     setBalance(initialBalance);
     setDisplayBalance(initialBalance);
-  }, [initialBalance]);
+  }
 
   useEffect(() => {
     if (displayBalance === balance) return;

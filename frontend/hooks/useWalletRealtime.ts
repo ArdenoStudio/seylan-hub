@@ -33,8 +33,25 @@ export function useWalletRealtime({ accountId, onSpend }: UseWalletRealtimeOptio
   }, [accountId]);
 
   useEffect(() => {
-    fetchWallet();
-  }, [fetchWallet]);
+    let cancelled = false;
+    getFamilyWallet(accountId)
+      .then((data) => {
+        if (cancelled) return;
+        const w = data as WalletState;
+        setWallet(w);
+        setBuckets(w.buckets);
+        setTransactions(w.recent_transactions);
+        setError(null);
+      })
+      .catch((e) => {
+        if (cancelled) return;
+        setError(e instanceof Error ? e.message : "Failed to load wallet");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [accountId]);
 
   useEffect(() => {
     const unsubscribe = subscribeToTransactions(accountId, (newTx) => {

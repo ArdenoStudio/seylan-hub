@@ -20,14 +20,16 @@ export default function LoansPage() {
 
   useEffect(() => {
     if (!mounted) return;
-    setLoading(true);
+    let cancelled = false;
     getLoans(userId)
       .then((data) => {
+        if (cancelled) return;
         const loans = data as Loan | Loan[];
         setLoan(Array.isArray(loans) ? loans[0] : loans);
       })
-      .catch(() => setLoan(null))
-      .finally(() => setLoading(false));
+      .catch(() => { if (!cancelled) setLoan(null); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [userId, mounted]);
 
   if (!mounted || loading) {
