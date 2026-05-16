@@ -264,16 +264,9 @@ async def pl_summary(user_id: str):
         return JSONResponse(status_code=404, content={"error": f"Unknown user {user_id}"})
     log.info("mock_call pl-summary user_id=%s", user_id)
 
+    # Always derive P&L from the fixture transaction history — richer data than the
+    # live sandbox which only has seed credits.
     txns = biz_data[user_id].get("transactions", [])
-    if settings.use_seylan_real and user_id in _BIZ_ACCOUNT_MAP:
-        try:
-            from app.seylan import account as seylan_acct
-            raw = await seylan_acct.get_recent_transactions(_BIZ_ACCOUNT_MAP[user_id], n=50)
-            if raw:
-                txns = [_normalise_seylan_txn(t, user_id) for t in raw]
-        except Exception as exc:
-            log.warning("Seylan txn fetch failed for pl-summary %s: %s — using fixture txns", user_id, exc)
-
     try:
         from app.services.pl_calculator import compute_pl
         result = await compute_pl(user_id, txns)
@@ -282,7 +275,6 @@ async def pl_summary(user_id: str):
     except Exception as exc:
         log.warning("pl_calculator failed for %s: %s — falling back to fixture", user_id, exc)
 
-    # Last resort: return the static fixture
     data = _load("pl_summary.json")
     return data.get(user_id, {})
 
