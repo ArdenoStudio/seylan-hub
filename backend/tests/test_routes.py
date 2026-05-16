@@ -80,6 +80,15 @@ async def test_pl_summary(client):
 
 
 @pytest.mark.asyncio
+async def test_sandbox_transfer_accounts(client):
+    resp = await client.get("/api/wallet/sandbox-transfer-accounts")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["source_account"] == "064000012548001"
+    assert data["destination_account"] == "001213437904100"
+
+
+@pytest.mark.asyncio
 async def test_wallet_transfer_valid(client):
     resp = await client.post("/api/wallet/transfer", json={
         "sender_account_id": "SEY-USR-001",

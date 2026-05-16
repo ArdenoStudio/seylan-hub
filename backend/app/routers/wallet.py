@@ -13,6 +13,15 @@ log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["wallet"])
 
 
+@router.get("/wallet/sandbox-transfer-accounts")
+async def sandbox_transfer_accounts():
+    """Account numbers used for Seylan internal-transfer sandbox calls (same as transfer endpoint)."""
+    return {
+        "source_account": settings.seylan_sandbox_source_account,
+        "destination_account": settings.seylan_sandbox_destination_account,
+    }
+
+
 @router.get("/fx")
 async def get_fx_rate(from_currency: str = "GBP", to_currency: str = "LKR"):
     rates = {
@@ -53,15 +62,13 @@ async def wallet_transfer(req: WalletTransferRequest):
     except Exception as exc:
         log.warning("Failed to persist allocation rule: %s", exc)
 
-    # Real bank transfer when enabled — always uses the sandbox test accounts
-    _SOURCE_ACCOUNT = "064000012548001"
-    _DEST_ACCOUNT   = "001213437904100"
+    # Real bank transfer when enabled — uses configured sandbox test accounts
     if settings.seylan_enable_transfers and settings.use_seylan_real:
         try:
             from app.seylan import transfers
             result = await transfers.transfer_funds(
-                source=_SOURCE_ACCOUNT,
-                destination=_DEST_ACCOUNT,
+                source=settings.seylan_sandbox_source_account,
+                destination=settings.seylan_sandbox_destination_account,
                 amount=req.amount_lkr,
                 user_ref=transfer_id[:16],
                 src_narration=f"Seylan Hub remit {req.corridor}",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useLayoutEffect } from "react";
 import { useWalletRealtime } from "@/hooks/useWalletRealtime";
 import { BucketGrid } from "@/components/wallet/BucketGrid";
 import { AllocationEditor } from "@/components/wallet/AllocationEditor";
@@ -32,8 +32,9 @@ export default function WalletPage() {
     provider: string;
   } | null>(null);
 
+  const accountHolderRef = useRef("");
   const handleSpend = useCallback((tx: Transaction, newBalance: number) => {
-    fireSpendToast(tx, newBalance);
+    fireSpendToast(tx, newBalance, { accountHolder: accountHolderRef.current });
   }, []);
 
   const { wallet, transactions, buckets, loading, refetch } =
@@ -41,6 +42,10 @@ export default function WalletPage() {
       accountId: FAMILY_ACCOUNT_ID,
       onSpend: handleSpend,
     });
+
+  useLayoutEffect(() => {
+    accountHolderRef.current = wallet?.account_holder ?? "";
+  }, [wallet?.account_holder]);
 
   if (loading) {
     return (
@@ -180,6 +185,7 @@ export default function WalletPage() {
       <SendMoneyModal
         senderId={WALLET_SENDER_ID}
         recipientId={FAMILY_ACCOUNT_ID}
+        recipientAccountHolder={wallet?.account_holder ?? ""}
         allocations={allocations}
         onSuccess={(amountLkr?: number, amountGbp?: number) => {
           if (amountLkr) {

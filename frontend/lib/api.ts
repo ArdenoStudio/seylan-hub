@@ -99,6 +99,13 @@ export async function postWalletTransfer(payload: {
   });
 }
 
+export async function getSandboxTransferAccounts() {
+  return request<{
+    source_account: string;
+    destination_account: string;
+  }>("/api/wallet/sandbox-transfer-accounts");
+}
+
 export async function saveAllocationRules(
   senderId: string,
   allocations: Record<string, number>,

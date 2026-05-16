@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     seylan_enable_transfers: bool = False
     seylan_enable_merchant_qr: bool = False
 
+    # Hackathon sandbox internal-transfer test accounts (override via env)
+    seylan_sandbox_source_account: str = "064000012548001"
+    seylan_sandbox_destination_account: str = "001213437904100"
+
     # AI
     groq_api_key: str = ""
     elevenlabs_api_key: str = ""
