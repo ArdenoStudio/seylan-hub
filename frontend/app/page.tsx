@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Wallet, Bot, CreditCard, Store, ArrowRight, ShieldCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 const MODULES = [
@@ -61,12 +60,13 @@ export default function HomePage() {
             Real-time Seylan Bank data. Bilingual AI. Four modules built for how Sri Lankans actually use money.
           </p>
           <div className="mt-6">
-            <Button asChild size="lg" className="rounded-full px-8">
-              <Link href="/wallet">
-                Open Seylan Hub
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
+            <Link
+              href="/wallet"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-seylan-red px-8 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-seylan-red/90"
+            >
+              Open Seylan Hub
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </div>
         </div>
 
