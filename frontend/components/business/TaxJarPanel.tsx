@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { motion } from "motion/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,10 +13,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { formatLKR } from "@/lib/utils";
-import { createPaymentSession } from "@/lib/api";
+import { createPaymentSession, postTaxJarTrigger } from "@/lib/api";
 import { toast } from "sonner";
 import { Transaction } from "@/types";
-import { CreditCard, Loader2 } from "lucide-react";
+import { CreditCard, Loader2, Zap, CircleCheck } from "lucide-react";
 
 interface TaxJarPanelProps {
   userId: string;
@@ -26,11 +27,13 @@ interface TaxJarPanelProps {
 export function TaxJarPanel({
   userId,
   initialBalance,
+  onNewTransaction,
 }: TaxJarPanelProps) {
   const [displayBalance, setDisplayBalance] = useState(initialBalance);
   const [cardModalOpen, setCardModalOpen] = useState(false);
   const [cardAmount, setCardAmount] = useState(8200);
   const [submitting, setSubmitting] = useState(false);
+  const [paymentMode, setPaymentMode] = useState<"card" | "demo">("card");
   const animRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   useEffect(() => {
@@ -55,19 +58,54 @@ export function TaxJarPanel({
     return () => clearInterval(animRef.current);
   }, [initialBalance, displayBalance]);
 
-  async function handleCardPayment() {
+  async function handlePayment() {
     if (!cardAmount || cardAmount <= 0) return;
     setSubmitting(true);
     try {
-      const session = await createPaymentSession({
-        amount_lkr: cardAmount,
-        purpose: "tax_jar_inbound",
-        description: "Customer payment — Silva Hardware",
-        metadata: { user_id: userId, tax_rate_pct: 10 },
+      if (paymentMode === "card") {
+        const session = await createPaymentSession({
+          amount_lkr: cardAmount,
+          purpose: "tax_jar_inbound",
+          description: "Customer payment — Silva Hardware",
+          metadata: { user_id: userId, tax_rate_pct: 10 },
+        });
+        window.location.href = session.checkout_url;
+        return;
+      }
+
+      // Demo mode — hit mock endpoint to simulate inbound payment
+      const taxSaved = Math.round(cardAmount * 0.1);
+      await postTaxJarTrigger({
+        user_id: userId,
+        incoming_amount_lkr: cardAmount,
+        description: "Customer payment — Silva Hardware (demo)",
       });
-      window.location.href = session.checkout_url;
+      onNewTransaction?.({
+        transaction_id: `biz_demo_tax_${Date.now()}`,
+        type: "credit",
+        amount_lkr: cardAmount,
+        description: `Card payment — Silva Hardware`,
+        merchant: "Silva Hardware & Electricals",
+        timestamp: new Date().toISOString(),
+        account_id: "SEY-BIZ-001",
+      } as Transaction);
+      toast.custom(() => (
+        <div className="flex items-start gap-3 rounded-xl border border-[#E31821]/30 bg-[#0c0407] px-4 py-3.5 shadow-[0_8px_32px_rgba(227,24,33,0.25)] w-[356px]">
+          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#E31821]/15">
+            <CircleCheck className="h-4 w-4 text-[#E31821]" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-white">Payment simulated</p>
+            <p className="mt-0.5 text-xs leading-relaxed text-white/50">
+              {formatLKR(cardAmount)} received · {formatLKR(taxSaved)} saved to Tax Jar
+            </p>
+          </div>
+        </div>
+      ), { duration: 5000 });
+      setCardModalOpen(false);
     } catch {
-      toast.error("Could not create payment session. Please try again.");
+      toast.error("Could not process payment. Please try again.");
+    } finally {
       setSubmitting(false);
     }
   }
@@ -104,7 +142,7 @@ export function TaxJarPanel({
 
         <Button
           className="w-full rounded-full bg-seylan-red hover:bg-seylan-red/90 text-white font-semibold"
-          onClick={() => setCardModalOpen(true)}
+          onClick={() => { setPaymentMode("card"); setCardModalOpen(true); }}
         >
           <CreditCard className="h-4 w-4 mr-2" />
           Accept Card Payment
@@ -118,6 +156,32 @@ export function TaxJarPanel({
           <DialogTitle>Accept Card Payment</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
+          {/* Mode toggle */}
+          <div className="relative flex rounded-xl bg-muted p-1">
+            <motion.div
+              className="absolute inset-y-1 rounded-lg bg-background shadow-sm"
+              layout
+              transition={{ type: "spring", stiffness: 500, damping: 35 }}
+              style={{ width: "calc(50% - 4px)", left: paymentMode === "card" ? 4 : "calc(50%)" }}
+            />
+            <button
+              type="button"
+              onClick={() => setPaymentMode("card")}
+              className={`relative z-10 flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-sm font-medium transition-colors ${paymentMode === "card" ? "text-foreground" : "text-muted-foreground"}`}
+            >
+              <CreditCard className="h-3.5 w-3.5" />
+              Pay with Card
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaymentMode("demo")}
+              className={`relative z-10 flex flex-1 items-center justify-center gap-1.5 rounded-lg py-1.5 text-sm font-medium transition-colors ${paymentMode === "demo" ? "text-foreground" : "text-muted-foreground"}`}
+            >
+              <Zap className="h-3.5 w-3.5" />
+              Demo Mode
+            </button>
+          </div>
+
           <div className="rounded-lg bg-seylan-mist/60 border border-seylan-border p-3 text-sm">
             <p className="font-medium text-seylan-charcoal">Silva Hardware &amp; Electricals</p>
             <p className="text-xs text-muted-foreground mt-0.5">10% auto-saved to Tax Jar on receipt</p>
@@ -145,13 +209,20 @@ export function TaxJarPanel({
               </p>
             )}
           </div>
-          <p className="text-[11px] text-muted-foreground">
-            Approved MPGS test card:{" "}
-            <span className="font-mono font-semibold text-seylan-charcoal">5123 4500 0000 0008</span>
-            , expiry <span className="font-mono font-semibold text-seylan-charcoal">01/39</span>,
-            CVV <span className="font-mono font-semibold text-seylan-charcoal">100</span>.
-            Real cards are not accepted on this test gateway.
-          </p>
+          {paymentMode === "card" && (
+            <p className="text-[11px] text-muted-foreground">
+              Approved MPGS test card:{" "}
+              <span className="font-mono font-semibold text-seylan-charcoal">5123 4500 0000 0008</span>
+              , expiry <span className="font-mono font-semibold text-seylan-charcoal">01/39</span>,
+              CVV <span className="font-mono font-semibold text-seylan-charcoal">100</span>.
+              Real cards are not accepted on this test gateway.
+            </p>
+          )}
+          {paymentMode === "demo" && (
+            <p className="text-[11px] text-muted-foreground">
+              Simulates an inbound card payment instantly — no card required. Tax Jar balance updates in real time.
+            </p>
+          )}
           <div className="flex gap-3">
             <Button variant="outline" className="flex-1" onClick={() => setCardModalOpen(false)} disabled={submitting}>
               Cancel
@@ -159,10 +230,14 @@ export function TaxJarPanel({
             <Button
               className="flex-1 bg-seylan-red hover:bg-seylan-red/90 text-white"
               disabled={submitting || !cardAmount || cardAmount <= 0}
-              onClick={handleCardPayment}
+              onClick={handlePayment}
             >
               {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              {submitting ? "Redirecting..." : `Charge ${formatLKR(cardAmount)}`}
+              {submitting
+                ? (paymentMode === "card" ? "Redirecting..." : "Simulating...")
+                : paymentMode === "card"
+                ? `Charge ${formatLKR(cardAmount)}`
+                : `Simulate ${formatLKR(cardAmount)}`}
             </Button>
           </div>
         </div>
