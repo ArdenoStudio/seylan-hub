@@ -89,8 +89,16 @@ export function CategorisedTransactionFeed({
   }
 
   return (
-    <Card className="border-seylan-border">
+    <Card className="border-seylan-border bg-white/95 shadow-sm">
       <CardContent className="p-5">
+        <div className="mb-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-seylan-red">
+            AI categorised feed
+          </p>
+          <h3 className="font-heading text-lg font-semibold text-seylan-charcoal">
+            Transactions needing review
+          </h3>
+        </div>
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="mb-4">
             <TabsTrigger value="all">All</TabsTrigger>
@@ -107,7 +115,7 @@ export function CategorisedTransactionFeed({
                 );
                 return (
                   <div key={day} className="mb-4">
-                    <div className="sticky top-0 bg-white z-10 flex justify-between items-center py-1 border-b border-seylan-border mb-2">
+                    <div className="sticky top-0 bg-white/95 z-10 flex justify-between items-center py-2 border-b border-seylan-border mb-2 backdrop-blur">
                       <span className="text-xs font-medium text-seylan-charcoal">
                         {day}
                       </span>

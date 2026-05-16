@@ -27,7 +27,7 @@ export function SuggestedQuestions({
     language === "si" ? [...EN_QUESTIONS, ...SI_QUESTIONS] : EN_QUESTIONS;
 
   return (
-    <div className="flex flex-wrap gap-2 justify-center px-4">
+    <div className="flex max-w-3xl flex-wrap justify-center gap-2 px-4">
       {questions.map((q) => {
         const isSinhala = /[\u0D80-\u0DFF]/.test(q);
         return (
@@ -35,7 +35,7 @@ export function SuggestedQuestions({
             key={q}
             onClick={() => onSelect(q)}
             className={cn(
-              "px-3 py-2 text-sm rounded-full border border-seylan-border hover:border-seylan-red/50 hover:bg-seylan-red/5 transition-colors text-seylan-charcoal",
+              "rounded-full border border-seylan-border bg-white/80 px-3 py-2 text-sm text-seylan-charcoal shadow-sm transition-colors hover:border-seylan-red/50 hover:bg-seylan-red/5",
               isSinhala && "sinhala"
             )}
           >

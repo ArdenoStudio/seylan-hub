@@ -26,13 +26,17 @@ export function ChatThread({
 
   if (messages.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center">
-        <div className="text-center mb-6">
-          <h2 className="text-lg font-semibold text-seylan-charcoal">
-            Seylan Assistant
+      <div className="flex-1 flex flex-col items-center justify-center px-4">
+        <div className="mb-6 max-w-xl rounded-[2rem] border border-seylan-border bg-white/90 p-8 text-center shadow-xl shadow-seylan-plum/5">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-3xl bg-seylan-red/10 text-2xl">
+            ✦
+          </div>
+          <h2 className="font-heading text-2xl font-semibold text-seylan-charcoal">
+            Ask about your money in plain language
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Ask me anything about your accounts
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            Check balances, explain spending, prepare for loan payments, or get
+            business insights in English or Sinhala.
           </p>
         </div>
         <SuggestedQuestions language={language} onSelect={onSuggestedSelect} />
@@ -41,7 +45,7 @@ export function ChatThread({
   }
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+    <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4 sm:px-6">
       {messages.map((msg, i) => (
         <MessageBubble
           key={msg.id}

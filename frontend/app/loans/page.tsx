@@ -9,6 +9,7 @@ import { RepaymentProgressBar } from "@/components/loans/RepaymentProgressBar";
 import { PaymentCountdown } from "@/components/loans/PaymentCountdown";
 import { AIAdvisorPanel } from "@/components/loans/AIAdvisorPanel";
 import { RepaymentTimeline } from "@/components/loans/RepaymentTimeline";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LoansPage() {
@@ -55,19 +56,25 @@ export default function LoansPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-xl font-bold text-seylan-charcoal">
-        Loan Dashboard
-        {user && (
-          <span className="text-sm font-normal text-muted-foreground ml-2">
-            {user.name}
-          </span>
-        )}
-      </h1>
+    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+      <PageHeader
+        eyebrow="Loan health"
+        title="Understand your repayment position at a glance"
+        description="A calmer loan dashboard that explains what is due next, how much is complete, and which action keeps the account healthy."
+        meta={
+          user && (
+            <span className="inline-flex rounded-full border border-seylan-border bg-white/70 px-3 py-1 text-xs font-medium text-seylan-charcoal">
+              {user.name}
+            </span>
+          )
+        }
+      />
 
-      <LoanSummaryCard loan={loan} />
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.5fr_1fr]">
+        <LoanSummaryCard loan={loan} />
+        <PaymentCountdown loan={loan} />
+      </div>
       <RepaymentProgressBar loan={loan} />
-      <PaymentCountdown loan={loan} />
       <AIAdvisorPanel userId={userId} />
       <RepaymentTimeline schedule={loan.schedule} />
     </div>
