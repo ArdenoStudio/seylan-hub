@@ -11,7 +11,7 @@ const ICON_MAP = {
   savings: PiggyBank,
 };
 
-const COLOUR_MAP = {
+const COLOUR_MAP: Record<string, { surface: string; icon: string; bar: string }> = {
   school: {
     surface: "bg-blue-50",
     icon: "text-blue-600",
@@ -29,14 +29,16 @@ const COLOUR_MAP = {
   },
 };
 
+const FALLBACK_COLOUR = { surface: "bg-slate-50", icon: "text-slate-600", bar: "bg-slate-500" };
+
 interface BucketCardProps {
   bucket: Bucket;
   onClick?: () => void;
 }
 
 export function BucketCard({ bucket, onClick }: BucketCardProps) {
-  const Icon = ICON_MAP[bucket.icon];
-  const colours = COLOUR_MAP[bucket.icon];
+  const Icon = ICON_MAP[bucket.icon] ?? PiggyBank;
+  const colours = COLOUR_MAP[bucket.icon] ?? FALLBACK_COLOUR;
   const spentPct =
     bucket.balance_lkr + bucket.spent_lkr > 0
       ? (bucket.spent_lkr / (bucket.balance_lkr + bucket.spent_lkr)) * 100

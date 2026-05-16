@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     supabase_service_key: str = ""
 
     # App
-    cors_origins: str = "http://localhost:3000"
+    cors_origins: str = "http://localhost:3000,https://seylan-hub.vercel.app"
 
     @property
     def cors_list(self) -> list[str]:
