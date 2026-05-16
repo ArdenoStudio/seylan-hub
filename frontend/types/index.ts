@@ -48,6 +48,7 @@ export interface ScheduleEntry {
   month: number;
   due_date: string;
   amount_lkr: number;
+  /** Backend may send `"DUE"` as an alias for `"UPCOMING"`. */
   status: "PAID" | "UPCOMING" | "MISSED";
 }
 
@@ -110,6 +111,7 @@ export interface PlSummary {
   margin_pct: number;
   previous_margin_pct: number;
   expense_breakdown: Record<string, number>;
+  previous_expense_breakdown: Record<string, number>;
 }
 
 export interface TaxJar {

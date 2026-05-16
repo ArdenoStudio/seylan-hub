@@ -3,12 +3,13 @@ import { Transaction } from "@/types";
 import { formatLKR } from "@/lib/utils";
 
 export function fireSpendToast(transaction: Transaction, newBucketBalance?: number) {
+  const bucketPart = transaction.bucket_label ? ` · ${transaction.bucket_label}` : "";
   const description = newBucketBalance !== undefined
-    ? `${transaction.bucket_label} balance: ${formatLKR(newBucketBalance)}`
+    ? `New ${transaction.bucket_label ?? "bucket"} balance: ${formatLKR(newBucketBalance)}`
     : undefined;
 
-  toast(`Kumari just spent ${formatLKR(transaction.amount_lkr)} — ${transaction.merchant}`, {
-    description,
-    icon: "🔔",
-  });
+  toast(
+    `Kumari just spent ${formatLKR(transaction.amount_lkr)} — ${transaction.merchant}${bucketPart}`,
+    { description, icon: "🔔" }
+  );
 }

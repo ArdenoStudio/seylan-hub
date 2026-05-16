@@ -10,8 +10,6 @@ interface LoanSummaryCardProps {
 }
 
 export function LoanSummaryCard({ loan }: LoanSummaryCardProps) {
-  const paidPct = Math.round((loan.payments_made / loan.total_payments) * 100);
-
   return (
     <Card className="border-seylan-border bg-white/95 shadow-lg shadow-seylan-plum/5">
       <CardContent className="p-5">
@@ -26,7 +24,7 @@ export function LoanSummaryCard({ loan }: LoanSummaryCardProps) {
           </div>
           <HealthScoreBadge score={loan.health_score} />
         </div>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 mb-4 sm:grid-cols-4">
           <div className="rounded-2xl bg-seylan-mist/70 p-4">
             <div className="text-xs text-muted-foreground">Outstanding</div>
             <div className="mt-1 text-xl font-semibold text-seylan-charcoal">
@@ -34,22 +32,24 @@ export function LoanSummaryCard({ loan }: LoanSummaryCardProps) {
             </div>
           </div>
           <div className="rounded-2xl bg-seylan-mist/70 p-4">
-            <div className="text-xs text-muted-foreground">Original</div>
+            <div className="text-xs text-muted-foreground">Monthly Payment</div>
+            <div className="mt-1 text-xl font-semibold text-seylan-charcoal">
+              {formatLKR(loan.monthly_payment_lkr)}
+            </div>
+          </div>
+          <div className="rounded-2xl bg-seylan-mist/70 p-4">
+            <div className="text-xs text-muted-foreground">Interest Rate</div>
+            <div className="mt-1 text-xl font-semibold text-seylan-charcoal">
+              {loan.interest_rate_pct}%
+            </div>
+          </div>
+          <div className="rounded-2xl bg-seylan-mist/70 p-4">
+            <div className="text-xs text-muted-foreground">Original Amount</div>
             <div className="mt-1 text-xl font-semibold text-seylan-charcoal">
               {formatLKR(loan.disbursed_lkr)}
             </div>
           </div>
-          <div className="rounded-2xl bg-seylan-mist/70 p-4">
-            <div className="text-xs text-muted-foreground">Progress</div>
-            <div className="mt-1 text-xl font-semibold text-seylan-charcoal">
-              {paidPct}%
-            </div>
-          </div>
         </div>
-        <p className="mt-4 text-sm leading-6 text-muted-foreground">
-          Monthly payment is {formatLKR(loan.monthly_payment_lkr)} at{" "}
-          {loan.interest_rate_pct}% interest.
-        </p>
       </CardContent>
     </Card>
   );

@@ -75,6 +75,35 @@ export function PlSummaryCard({ userId }: PlSummaryCardProps) {
         <div className="text-xs text-muted-foreground mt-1">
           Last week: {data.previous_margin_pct}%
         </div>
+        {(() => {
+          const points = [22, 28.5, 25, 31, data.margin_pct];
+          const min = Math.min(...points);
+          const max = Math.max(...points);
+          const range = max - min || 1;
+          const w = 80,
+            h = 24,
+            pad = 2;
+          const coords = points
+            .map((v, i) => {
+              const x = pad + (i / (points.length - 1)) * (w - pad * 2);
+              const y =
+                h - pad - ((v - min) / range) * (h - pad * 2);
+              return `${x},${y}`;
+            })
+            .join(" ");
+          return (
+            <svg width={w} height={h} className="mt-2 overflow-visible">
+              <polyline
+                points={coords}
+                fill="none"
+                stroke="#E31821"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          );
+        })()}
       </CardContent>
     </Card>
   );

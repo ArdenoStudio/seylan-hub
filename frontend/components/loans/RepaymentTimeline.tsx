@@ -22,7 +22,13 @@ export function RepaymentTimeline({ schedule }: RepaymentTimelineProps) {
   const filtered =
     tab === "all"
       ? schedule
-      : schedule.filter((e) => e.status.toLowerCase() === tab);
+      : schedule.filter((e) => {
+          const s = e.status.toUpperCase();
+          if (tab === "upcoming") return s === "UPCOMING" || s === "DUE";
+          if (tab === "paid") return s === "PAID";
+          if (tab === "missed") return s === "MISSED";
+          return false;
+        });
 
   return (
     <Card className="border-seylan-border bg-white/95 shadow-sm">

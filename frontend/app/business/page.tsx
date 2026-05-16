@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { PlSummaryCard } from "@/components/business/PlSummaryCard";
 import { ExpenseBreakdown } from "@/components/business/ExpenseBreakdown";
@@ -14,12 +14,18 @@ const BUSINESS_USER_ID = "SEY-BIZ-001";
 const INITIAL_TAX_JAR_BALANCE = 15070;
 
 export default function BusinessPage() {
-  const { mounted } = useCurrentUser();
+  const { mounted, user, switchUser } = useCurrentUser();
   const [extraTransactions, setExtraTransactions] = useState<Transaction[]>([]);
 
   const handleNewTransaction = useCallback((tx: Transaction) => {
     setExtraTransactions((prev) => [tx, ...prev]);
   }, []);
+
+  useEffect(() => {
+    if (mounted && user?.id !== BUSINESS_USER_ID) {
+      switchUser(BUSINESS_USER_ID);
+    }
+  }, [mounted, user?.id, switchUser]);
 
   if (!mounted) {
     return (
