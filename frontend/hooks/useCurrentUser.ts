@@ -22,7 +22,7 @@ export function useCurrentUser() {
       personaCode: "P1" as const,
       shortBio: "Seylan Bank demo account",
     },
-    switchUser: (_id: string) => {},
+    switchUser: () => {},
     allUsers: [],
     mounted: true,
   };
