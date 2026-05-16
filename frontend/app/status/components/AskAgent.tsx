@@ -105,9 +105,14 @@ export function AskAgent() {
                       ? "bg-blue-600 text-white rounded-br-sm"
                       : "bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 rounded-bl-sm"
                   )}
-                >
-                  {msg.text}
-                </div>
+                  dangerouslySetInnerHTML={{
+                    __html: msg.text
+                      .replace(/&/g, "&amp;")
+                      .replace(/</g, "&lt;")
+                      .replace(/>/g, "&gt;")
+                      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>"),
+                  }}
+                />
               </div>
             ))}
             {loading && (
