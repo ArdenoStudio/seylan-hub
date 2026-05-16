@@ -30,6 +30,7 @@ import {
 import { toast } from "sonner";
 import { EXTERNAL_LINK_REL, SEYLAN_LINKS } from "@/lib/seylan-external-links";
 import { ArrowRight, CreditCard, Zap, Send, ChevronRight, ChevronDown, RefreshCw } from "lucide-react";
+// ChevronDown kept for currency picker trigger
 import { VerificationCard } from "@/components/ui/verification-card";
 import { CurrencyExchangeCard } from "@/components/wallet/CurrencyExchangeCard";
 
@@ -285,34 +286,12 @@ export function SendMoneyModal({
             {/* FX calculator toggle */}
             <button
               type="button"
-              onClick={() => setShowFxCalc((v) => !v)}
+              onClick={() => setShowFxCalc(true)}
               className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-gray-200 py-2 text-xs font-medium text-gray-400 transition-colors hover:border-gray-300 hover:text-gray-600"
             >
               <RefreshCw className="h-3 w-3" />
-              {showFxCalc ? "Hide FX calculator" : "Open FX calculator"}
-              <ChevronDown className={`h-3 w-3 transition-transform ${showFxCalc ? "rotate-180" : ""}`} />
+              FX calculator
             </button>
-
-            <AnimatePresence>
-              {showFxCalc && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.25, ease: "easeInOut" }}
-                  className="overflow-hidden"
-                >
-                  <CurrencyExchangeCard
-                    initialFromCurrency={currency}
-                    onExchange={({ from, amount: a, amountLkr }) => {
-                      setCurrency(from);
-                      setAmount(a);
-                      setShowFxCalc(false);
-                    }}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
 
             {/* LKR conversion */}
             <div className="relative overflow-hidden rounded-xl border border-gray-100 bg-gray-50 p-4">
@@ -431,6 +410,33 @@ export function SendMoneyModal({
           </div>
         </div>
       </DialogContent>
+
+      {/* FX calculator — separate popup */}
+      <Dialog open={showFxCalc} onOpenChange={setShowFxCalc}>
+        <DialogContent className="max-w-sm border border-gray-100 p-0 shadow-2xl [background:#ffffff]" showCloseButton={false}>
+          <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-[#E31821] via-[#E0AF49] to-[#E31821]" />
+          <div className="p-5">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm font-semibold text-gray-900">FX Calculator</p>
+              <button
+                type="button"
+                onClick={() => setShowFxCalc(false)}
+                className="flex h-7 w-7 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              >
+                ×
+              </button>
+            </div>
+            <CurrencyExchangeCard
+              initialFromCurrency={currency}
+              onExchange={({ from, amount: a }) => {
+                setCurrency(from);
+                setAmount(a);
+                setShowFxCalc(false);
+              }}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
