@@ -25,6 +25,19 @@ export const metadata: Metadata = {
   title: "Seylan Hub",
   description:
     "AI banking for Sri Lanka — diaspora wallets, voice assistant, loan health, and bookkeeping for SMEs",
+  openGraph: {
+    title: "Seylan Hub",
+    description:
+      "AI banking for Sri Lanka — diaspora wallets, voice assistant, loan health, and bookkeeping for SMEs",
+    images: ["/api/og"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Seylan Hub",
+    description:
+      "AI banking for Sri Lanka — diaspora wallets, voice assistant, loan health, and bookkeeping for SMEs",
+    images: ["/api/og"],
+  },
 };
 
 export default function RootLayout({

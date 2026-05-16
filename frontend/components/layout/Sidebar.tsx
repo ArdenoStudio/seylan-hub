@@ -23,7 +23,8 @@ export function Sidebar() {
       {/* Desktop sidebar */}
       <aside className="hidden md:flex w-60 flex-col bg-seylan-charcoal text-white fixed inset-y-0 left-0 z-30">
         <div className="p-4 border-b border-sidebar-border">
-          <div className="text-lg font-bold tracking-tight">Seylan Hub</div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/seylan-logo-white.svg" alt="Seylan Hub" className="h-8" />
         </div>
 
         {user && (
