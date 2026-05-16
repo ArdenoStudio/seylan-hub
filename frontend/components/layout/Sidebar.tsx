@@ -3,15 +3,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Wallet, Bot, CreditCard, Store } from "lucide-react";
+import { Wallet, CreditCard, Store, Sparkles, Activity, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/wallet",    label: "Wallet",    icon: Wallet    },
-  { href: "/assistant", label: "Assistant", icon: Bot       },
+  { href: "/assistant", label: "Seylan AI", icon: Sparkles  },
   { href: "/loans",     label: "Loans",     icon: CreditCard },
   { href: "/business",  label: "Business",  icon: Store     },
 ];
+
+const STATUS_URL = "https://seylan-hub-status1.vercel.app/";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -71,6 +73,22 @@ export function Sidebar() {
             );
           })}
         </nav>
+
+        {/* Status link pinned to bottom */}
+        <div className="border-t border-white/10 px-3 py-4">
+          <a
+            href={STATUS_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm text-white/50 transition-all hover:bg-white/10 hover:text-white"
+          >
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 transition-colors group-hover:bg-white/15">
+              <Activity className="h-4 w-4" />
+            </span>
+            <span className="font-medium">System Status</span>
+            <ExternalLink className="ml-auto h-3 w-3 opacity-50" />
+          </a>
+        </div>
       </aside>
 
       {/* Mobile bottom tab bar */}

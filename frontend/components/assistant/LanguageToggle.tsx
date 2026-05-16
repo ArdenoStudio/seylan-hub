@@ -10,14 +10,14 @@ interface LanguageToggleProps {
 
 export function LanguageToggle({ language, onChange }: LanguageToggleProps) {
   return (
-    <div className="flex items-center gap-1 bg-seylan-mist rounded-full p-1">
+    <div className="flex items-center gap-1 rounded-full border border-white/[0.10] bg-white/[0.05] p-1 backdrop-blur-sm">
       <button
         onClick={() => onChange("en")}
         className={cn(
-          "px-3 py-1 text-xs rounded-full transition-colors",
+          "px-3 py-1 text-xs rounded-full transition-all duration-150",
           language === "en"
-            ? "bg-white text-seylan-charcoal shadow-sm font-medium"
-            : "text-muted-foreground"
+            ? "bg-white text-seylan-charcoal shadow-sm font-semibold"
+            : "text-white/35 hover:text-white/60"
         )}
       >
         EN
@@ -25,10 +25,10 @@ export function LanguageToggle({ language, onChange }: LanguageToggleProps) {
       <button
         onClick={() => onChange("si")}
         className={cn(
-          "px-3 py-1 text-xs rounded-full transition-colors sinhala",
+          "px-3 py-1 text-xs rounded-full transition-all duration-150 sinhala",
           language === "si"
-            ? "bg-white text-seylan-charcoal shadow-sm font-medium"
-            : "text-muted-foreground"
+            ? "bg-white text-seylan-charcoal shadow-sm font-semibold"
+            : "text-white/35 hover:text-white/60"
         )}
       >
         SI

@@ -3,21 +3,6 @@
 import { ExternalLink } from "lucide-react";
 import { SEYLAN_LINKS, EXTERNAL_LINK_REL } from "@/lib/seylan-external-links";
 
-const HANDOFF_MODULES = [
-  "/wallet",
-  "/loans",
-  "/business",
-  "/assistant",
-  "/demo",
-] as const;
-
-export function pathnameShowsSeylanHandoff(pathname: string | null): boolean {
-  if (!pathname || pathname === "/") return false;
-  return HANDOFF_MODULES.some(
-    (m) => pathname === m || pathname.startsWith(`${m}/`)
-  );
-}
-
 function OutLink({
   href,
   label,

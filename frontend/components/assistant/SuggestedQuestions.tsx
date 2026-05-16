@@ -2,45 +2,73 @@
 
 import { Language } from "@/types";
 import { cn } from "@/lib/utils";
+import { Wallet, CreditCard, TrendingDown, PiggyBank, Receipt, Languages } from "lucide-react";
 
 interface SuggestedQuestionsProps {
   language: Language;
   onSelect: (question: string) => void;
 }
 
-const EN_QUESTIONS = [
-  "What is my savings balance?",
-  "When is my next loan payment?",
-  "How much have I paid on my loan?",
-  "What's my biggest expense this month?",
+const QUICK_ACTIONS = [
+  {
+    label: "My balance",
+    labelSi: "මගේ ශේෂය",
+    icon: Wallet,
+    q: "What is my current savings balance?",
+  },
+  {
+    label: "Loan status",
+    labelSi: "ණය තත්ත්වය",
+    icon: CreditCard,
+    q: "When is my next loan payment and how much do I owe?",
+  },
+  {
+    label: "Top expenses",
+    labelSi: "ලොකු වියදම්",
+    icon: TrendingDown,
+    q: "What's my biggest expense category this month?",
+  },
+  {
+    label: "Tax savings",
+    labelSi: "බදු ඉතිරිය",
+    icon: PiggyBank,
+    q: "How much have I saved in my tax jar?",
+  },
+  {
+    label: "Transactions",
+    labelSi: "ගනුදෙනු",
+    icon: Receipt,
+    q: "Show me my recent transactions.",
+  },
+  {
+    label: "සිංහලෙන් කතා කරන්න",
+    labelSi: "සිංහල",
+    icon: Languages,
+    q: "මගේ ශේෂය කොපමණද?",
+  },
 ];
 
-const SI_QUESTIONS = [
-  "මගේ ඉතිරිකිරීමේ ශේෂය කොපමණද?",
-  "මගේ ඊළඟ ණය වාරිකය කවදාද?",
-];
-
-export function SuggestedQuestions({
-  language,
-  onSelect,
-}: SuggestedQuestionsProps) {
-  const questions =
-    language === "si" ? [...EN_QUESTIONS, ...SI_QUESTIONS] : EN_QUESTIONS;
-
+export function SuggestedQuestions({ language, onSelect }: SuggestedQuestionsProps) {
   return (
-    <div className="flex max-w-3xl flex-wrap justify-center gap-2 px-4">
-      {questions.map((q) => {
-        const isSinhala = /[\u0D80-\u0DFF]/.test(q);
+    <div className="flex flex-wrap justify-center gap-2">
+      {QUICK_ACTIONS.map((action) => {
+        const isSinhala = /[඀-෿]/.test(action.label);
+        const displayLabel =
+          language === "si" && action.labelSi ? action.labelSi : action.label;
         return (
           <button
-            key={q}
-            onClick={() => onSelect(q)}
+            key={action.label}
+            onClick={() => onSelect(action.q)}
             className={cn(
-              "rounded-full border border-seylan-border bg-white/80 px-3 py-2 text-sm text-seylan-charcoal shadow-sm transition-colors hover:border-seylan-red/50 hover:bg-seylan-red/5",
+              "flex items-center gap-2 rounded-full border border-white/[0.10] bg-white/[0.04]",
+              "px-4 py-2 text-xs text-white/50 backdrop-blur-sm",
+              "transition-all duration-150",
+              "hover:border-seylan-red/30 hover:bg-seylan-red/[0.08] hover:text-white/80",
               isSinhala && "sinhala"
             )}
           >
-            {q}
+            <action.icon className="h-3.5 w-3.5 shrink-0 text-seylan-red/50" />
+            {displayLabel}
           </button>
         );
       })}
