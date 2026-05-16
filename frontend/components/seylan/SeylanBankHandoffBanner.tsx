@@ -23,6 +23,12 @@ function OutLink({
   );
 }
 
+const HANDOFF_PATHS = ["/wallet", "/payments", "/assistant"];
+
+export function pathnameShowsSeylanHandoff(pathname: string): boolean {
+  return HANDOFF_PATHS.some((p) => pathname === p || pathname.startsWith(p + "/"));
+}
+
 export function SeylanBankHandoffBanner() {
   return (
     <div
