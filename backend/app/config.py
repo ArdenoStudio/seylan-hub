@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     # Operator-scoped usernames (merchant.<mid>.operator.<op>) require matching credentials.
     mpgs_operator_id: str = ""
     # Hosted Checkout's browser script and REST session version must match.
-    mpgs_api_version: str = "62"
+    mpgs_api_version: str = "79"
     mpgs_enable: bool = False
 
     # AI

@@ -6,7 +6,7 @@ import Link from "next/link";
 
 const DEFAULT_MPGS_HOST = "test-seylan.mtf.gateway.mastercard.com";
 /** The checkout.js path version must match the REST version used to create the MPGS session. */
-const DEFAULT_MPGS_CHECKOUT_JS_VERSION = "62";
+const DEFAULT_MPGS_CHECKOUT_JS_VERSION = "79";
 
 const MPGS_SESSION_STORAGE_PREFIX = "HostedCheckout";
 
