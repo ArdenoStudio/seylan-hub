@@ -20,16 +20,14 @@ export function useVoice(): UseVoiceReturn {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [supported, setSupported] = useState(false);
-
-  useEffect(() => {
-    setSupported(
+  const [supported] = useState(
+    () =>
+      typeof window !== "undefined" &&
       !!(
         (window as typeof window & { SpeechRecognition?: unknown }).SpeechRecognition ??
         (window as typeof window & { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition
       )
-    );
-  }, []);
+  );
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const sessionFinalRef = useRef("");
