@@ -8,7 +8,6 @@ import { TransactionFeed } from "@/components/wallet/TransactionFeed";
 import { LastRemittanceBanner } from "@/components/wallet/LastRemittanceBanner";
 import { SendMoneyModal } from "@/components/wallet/SendMoneyModal";
 import { fireSpendToast } from "@/components/wallet/SpendNotificationToast";
-import { isApiMockMode } from "@/lib/api";
 import { InsightActionStrip } from "@/components/insights/InsightActionStrip";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -175,9 +174,7 @@ export default function WalletPage() {
               provider: "Seylan Hub",
             });
           }
-          // Mock mode applies totals via `seylan:mock-remittance`; refetch would reload static MOCK_WALLET.
-          // When the API is used, silent refresh updates buckets without skeleton flash.
-          if (!isApiMockMode) void refetch(true);
+          void refetch(true);
         }}
         open={modalOpen}
         onOpenChange={setModalOpen}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { PlSummaryCard } from "@/components/business/PlSummaryCard";
 import { ExpenseBreakdown } from "@/components/business/ExpenseBreakdown";
 import { TaxJarPanel } from "@/components/business/TaxJarPanel";
@@ -8,8 +8,8 @@ import { CategorisedTransactionFeed } from "@/components/business/CategorisedTra
 import { InsightActionStrip } from "@/components/insights/InsightActionStrip";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MOCK_PL_SUMMARY } from "@/lib/mock-data/business";
-import { Transaction } from "@/types";
+import { getPlSummary } from "@/lib/api";
+import { PlSummary, Transaction } from "@/types";
 import { Bot, PiggyBank, ReceiptText, TrendingUp } from "lucide-react";
 
 const BUSINESS_USER_ID = "SEY-BIZ-001";
@@ -19,12 +19,31 @@ const ASSISTANT_PROMPT =
 
 export default function BusinessPage() {
   const [extraTransactions, setExtraTransactions] = useState<Transaction[]>([]);
+  const [pl, setPl] = useState<PlSummary | null>(null);
+  const [plLoading, setPlLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    getPlSummary(BUSINESS_USER_ID)
+      .then((data) => {
+        if (!cancelled) setPl(data as PlSummary);
+      })
+      .catch(() => {
+        if (!cancelled) setPl(null);
+      })
+      .finally(() => {
+        if (!cancelled) setPlLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleNewTransaction = useCallback((tx: Transaction) => {
     setExtraTransactions((prev) => [tx, ...prev]);
   }, []);
 
-  if (false) {
+  if (plLoading) {
     return (
       <div className="p-6 space-y-4">
         <Skeleton className="h-8 w-64" />
@@ -33,20 +52,22 @@ export default function BusinessPage() {
     );
   }
 
-  const dailyExpenseRate = MOCK_PL_SUMMARY.expenses_lkr / 7;
+  const expenses = pl?.expenses_lkr ?? 0;
+  const net = pl?.net_lkr ?? 0;
+  const revenue = pl?.revenue_lkr ?? 0;
+  const misc = pl?.expense_breakdown?.MISC ?? 0;
+
+  const dailyExpenseRate = expenses > 0 ? expenses / 7 : 0;
   const cashRunwayDays = Math.max(
     1,
-    Math.round(MOCK_PL_SUMMARY.net_lkr / dailyExpenseRate)
+    dailyExpenseRate > 0 ? Math.round(net / dailyExpenseRate) : 1
   );
-  const projectedTaxNeed = Math.round(MOCK_PL_SUMMARY.revenue_lkr * 0.45);
-  const taxCoveragePct = Math.min(
-    100,
-    Math.round((INITIAL_TAX_JAR_BALANCE / projectedTaxNeed) * 100)
-  );
-  const reviewCount =
-    MOCK_PL_SUMMARY.expense_breakdown.MISC > 0
-      ? extraTransactions.length + 1
-      : extraTransactions.length;
+  const projectedTaxNeed = revenue > 0 ? Math.round(revenue * 0.45) : 0;
+  const taxCoveragePct =
+    projectedTaxNeed > 0
+      ? Math.min(100, Math.round((INITIAL_TAX_JAR_BALANCE / projectedTaxNeed) * 100))
+      : 0;
+  const reviewCount = misc > 0 ? extraTransactions.length + 1 : extraTransactions.length;
 
   return (
     <div data-module="business" className="space-y-5 p-4 sm:space-y-6 sm:p-6 lg:p-8">

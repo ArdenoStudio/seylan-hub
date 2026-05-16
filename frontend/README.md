@@ -28,10 +28,9 @@ Open [http://localhost:3000](http://localhost:3000).
 
 | Variable | Description |
 |----------|-------------|
-| `NEXT_PUBLIC_API_BASE` | Backend API URL (default: `http://localhost:8000`) |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_API_BASE` | Backend API URL (default: `http://localhost:8000`). Required for production. |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL (for wallet realtime) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/public key |
-| `NEXT_PUBLIC_USE_MOCK` | Set to `false` to use the live backend. Defaults to mock demo data. |
 
 ## Demo Reliability
 
@@ -39,7 +38,7 @@ Open [http://localhost:3000](http://localhost:3000).
   reset, and data prewarm actions.
 - The wallet uses Supabase Realtime when connected and falls back to polling
   when realtime is unavailable.
-- Mock mode is visible in the UI through the "Demo data" badge.
+- All module data comes from the FastAPI backend (`NEXT_PUBLIC_API_BASE`).
 - Run `npm run test:smoke` before presenting to verify demo-critical files and
   routes are present.
 

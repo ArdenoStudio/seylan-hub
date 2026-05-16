@@ -1,17 +1,4 @@
-import {
-  MOCK_WALLET,
-  getMockLoan,
-  MOCK_PL_SUMMARY,
-  MOCK_BUSINESS_TRANSACTIONS,
-  getMockChatResponse,
-} from "./mock-data";
-import { Transaction } from "@/types";
-
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK !== "false";
-
-/** When true, wallet/transfer calls stay client-side; refetch after transfer would wipe local state. */
-export const isApiMockMode = USE_MOCK;
 
 export class ApiError extends Error {
   status: number;
@@ -35,9 +22,6 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export async function getAccountContext(userId: string) {
-  if (USE_MOCK) {
-    return { user_id: userId, account_holder: "Demo User", accounts: [], balance_lkr: 245000, language_preference: "en" };
-  }
   return request(`/mock/account-context/${userId}`);
 }
 
@@ -53,62 +37,46 @@ interface RawWalletResponse {
 }
 
 export async function getFamilyWallet(accountId: string) {
-  if (USE_MOCK) return MOCK_WALLET;
-  try {
-    const raw = await request<RawWalletResponse>(`/mock/family-wallet/${accountId}`);
-    return {
-      ...raw,
-      last_remittance: raw.last_remittance ? {
-        ...raw.last_remittance,
-        amount_gbp: (raw.last_remittance as Record<string, unknown>).sender_amount_gbp ?? (raw.last_remittance as Record<string, unknown>).amount_gbp,
-        fx_rate: (raw.last_remittance as Record<string, unknown>).exchange_rate ?? (raw.last_remittance as Record<string, unknown>).fx_rate,
-      } : undefined,
-      buckets: (raw.buckets ?? []).map((b) => ({
-        ...b,
-        bucket_id: (b as Record<string, unknown>).bucket_id ?? (b as Record<string, unknown>).id,
-        allocation_pct: (b as Record<string, unknown>).allocation_pct ?? (b as Record<string, unknown>).allocated_pct,
-      })),
-      recent_transactions: (raw.recent_transactions ?? []).map((t) => ({
-        ...t,
-        transaction_id: (t as Record<string, unknown>).transaction_id ?? (t as Record<string, unknown>).id,
-        timestamp: (t as Record<string, unknown>).timestamp ?? (t as Record<string, unknown>).date,
-        type: (t as Record<string, unknown>).type ?? ((t as Record<string, unknown>).amount_lkr as number) < 0 ? "debit" : "credit",
-      })),
-    };
-  } catch {
-    return MOCK_WALLET;
-  }
+  const raw = await request<RawWalletResponse>(`/mock/family-wallet/${accountId}`);
+  return {
+    ...raw,
+    last_remittance: raw.last_remittance ? {
+      ...raw.last_remittance,
+      amount_gbp: (raw.last_remittance as Record<string, unknown>).sender_amount_gbp ?? (raw.last_remittance as Record<string, unknown>).amount_gbp,
+      fx_rate: (raw.last_remittance as Record<string, unknown>).exchange_rate ?? (raw.last_remittance as Record<string, unknown>).fx_rate,
+    } : undefined,
+    buckets: (raw.buckets ?? []).map((b) => ({
+      ...b,
+      bucket_id: (b as Record<string, unknown>).bucket_id ?? (b as Record<string, unknown>).id,
+      allocation_pct: (b as Record<string, unknown>).allocation_pct ?? (b as Record<string, unknown>).allocated_pct,
+    })),
+    recent_transactions: (raw.recent_transactions ?? []).map((t) => ({
+      ...t,
+      transaction_id: (t as Record<string, unknown>).transaction_id ?? (t as Record<string, unknown>).id,
+      timestamp: (t as Record<string, unknown>).timestamp ?? (t as Record<string, unknown>).date,
+      type: (t as Record<string, unknown>).type ?? ((t as Record<string, unknown>).amount_lkr as number) < 0 ? "debit" : "credit",
+    })),
+  };
 }
 
 export async function getLoans(userId: string) {
-  if (USE_MOCK) return getMockLoan(userId);
-  try {
-    const data = await request<Record<string, unknown>>(`/mock/loans/${userId}`);
-    if (data && Array.isArray((data as Record<string, unknown>).loans)) {
-      return ((data as Record<string, unknown>).loans as unknown[])[0] ?? getMockLoan(userId);
-    }
-    return Array.isArray(data) ? (data as unknown[])[0] : data;
-  } catch {
-    return getMockLoan(userId);
+  const data = await request<Record<string, unknown>>(`/mock/loans/${userId}`);
+  if (data && Array.isArray((data as Record<string, unknown>).loans)) {
+    const loans = (data as Record<string, unknown>).loans as unknown[];
+    return loans[0] ?? null;
   }
+  if (Array.isArray(data)) {
+    return (data as unknown[])[0] ?? null;
+  }
+  return data;
 }
 
 export async function getBusinessAccount(userId: string) {
-  if (USE_MOCK) return { transactions: MOCK_BUSINESS_TRANSACTIONS };
-  try {
-    return await request(`/mock/business-account/${userId}`);
-  } catch {
-    return { transactions: MOCK_BUSINESS_TRANSACTIONS };
-  }
+  return request(`/mock/business-account/${userId}`);
 }
 
 export async function getPlSummary(userId: string) {
-  if (USE_MOCK) return MOCK_PL_SUMMARY;
-  try {
-    return await request(`/mock/pl-summary/${userId}`);
-  } catch {
-    return MOCK_PL_SUMMARY;
-  }
+  return request(`/mock/pl-summary/${userId}`);
 }
 
 export async function postWalletTransfer(payload: {
@@ -118,23 +86,6 @@ export async function postWalletTransfer(payload: {
   corridor: string;
   allocation_rules: Record<string, number>;
 }) {
-  if (USE_MOCK) {
-    await new Promise((r) => setTimeout(r, 800));
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(
-        new CustomEvent("seylan:mock-remittance", {
-          detail: {
-            account_id: payload.recipient_account_id,
-            amount_lkr: payload.amount_lkr,
-            sender_id: payload.sender_account_id,
-            allocations: payload.allocation_rules,
-          },
-        })
-      );
-    }
-    return { success: true, amount_lkr: payload.amount_lkr };
-  }
-  // Backend expects list[{bucket_id, pct}], not Record<string, number>
   const normalised = {
     ...payload,
     allocation_rules: Object.entries(payload.allocation_rules).map(
@@ -153,10 +104,6 @@ export async function saveAllocationRules(
   allocations: Record<string, number>,
   accountId = "SEY-ACC-002"
 ) {
-  if (USE_MOCK) {
-    await new Promise((r) => setTimeout(r, 400));
-    return { status: "saved" };
-  }
   return request(`/api/wallet/rules/${senderId}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -181,16 +128,6 @@ export async function postChat(
   onToken: (token: string) => void,
   onError?: (message: string) => void
 ): Promise<void> {
-  if (USE_MOCK) {
-    const response = getMockChatResponse(payload.user_id, payload.message);
-    const words = response.split(" ");
-    for (const word of words) {
-      await new Promise((r) => setTimeout(r, 30 + Math.random() * 40));
-      onToken(word + " ");
-    }
-    return;
-  }
-
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30000);
 
@@ -243,10 +180,6 @@ export async function postChat(
 }
 
 export function postTts(payload: { text: string; language: string }) {
-  if (USE_MOCK) {
-    throw new ApiError(503, "TTS is only available when connected to the backend");
-  }
-
   return request<{ audio_base64: string; content_type: string }>("/api/tts", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -265,9 +198,6 @@ interface CategorizedItem {
 export async function postCategorize(payload: { transaction_ids: string[] }): Promise<
   Record<string, { category_en: string; category_si: string; subcategory: string }>
 > {
-  if (USE_MOCK) {
-    return {};
-  }
   const raw = await request<{ categorized: CategorizedItem[] }>("/api/categorize-transactions", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -296,16 +226,13 @@ export async function prewarmDemoData() {
 }
 
 export async function postDemoReset() {
-  if (USE_MOCK) {
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(new CustomEvent("seylan:demo-reset"));
-    }
-    return { success: true, mode: "mock" };
-  }
-
-  return request("/mock/reset-demo", {
+  const result = await request("/mock/reset-demo", {
     method: "POST",
   });
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("seylan:demo-reset"));
+  }
+  return result;
 }
 
 export function postTaxJarRule(payload: {
@@ -325,11 +252,6 @@ export async function postTaxJarTrigger(payload: {
   incoming_amount_lkr: number;
   description: string;
 }): Promise<{ new_balance: number; tax_saved: number }> {
-  if (USE_MOCK) {
-    await new Promise((r) => setTimeout(r, 600));
-    const taxAmount = Math.round(payload.incoming_amount_lkr * 0.1);
-    return { new_balance: 15070 + taxAmount, tax_saved: taxAmount };
-  }
   const raw = await request<{
     new_tax_jar_balance_lkr?: number;
     new_balance?: number;
@@ -351,34 +273,6 @@ export function postTriggerSpend(payload: {
   merchant: string;
   bucket_id: string;
 }) {
-  if (USE_MOCK) {
-    const tx: Transaction = {
-      transaction_id: `mock-${Date.now()}`,
-      account_id: payload.account_id,
-      bucket_id: payload.bucket_id,
-      bucket_label:
-        payload.bucket_id === "bucket_school"
-          ? "School"
-          : payload.bucket_id === "bucket_savings"
-          ? "Savings"
-          : "Household",
-      amount_lkr: payload.amount_lkr,
-      merchant: payload.merchant,
-      timestamp: new Date().toISOString(),
-      type: "debit",
-    };
-
-    if (typeof window !== "undefined") {
-      window.dispatchEvent(
-        new CustomEvent<Transaction>("seylan:mock-transaction", {
-          detail: tx,
-        })
-      );
-    }
-
-    return Promise.resolve({ success: true, transaction: tx });
-  }
-
   return request("/mock/trigger-spend", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

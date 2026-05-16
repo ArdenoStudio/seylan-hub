@@ -20,7 +20,7 @@ const requiredFiles = [
 
 const requiredSnippets = [
   ["app/page.tsx", "Open Seylan Hub"],
-  ["hooks/useWalletRealtime.ts", "seylan:mock-transaction"],
+  ["hooks/useWalletRealtime.ts", "subscribeToTransactions"],
   ["app/wallet/page.tsx", "Track money sent home"],
   ["components/layout/AppShell.tsx", "pathnameShowsSeylanHandoff"],
   ["components/assistant/MessageBubble.tsx", "<AudioPlayer"],

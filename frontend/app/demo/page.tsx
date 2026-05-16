@@ -115,7 +115,7 @@ export default function DemoControlPage() {
                   Reset demo state
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Restores mock UI state or calls the backend seed endpoint.
+                  Calls the backend reset endpoint and refreshes open wallet views.
                 </p>
               </div>
             </div>

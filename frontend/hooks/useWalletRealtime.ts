@@ -95,96 +95,16 @@ export function useWalletRealtime({ accountId, onSpend }: UseWalletRealtimeOptio
   }, [accountId, onSpend]);
 
   useEffect(() => {
-    function handleMockTransaction(event: Event) {
-      const newTx = (event as CustomEvent<Transaction>).detail;
-      if (!newTx || newTx.account_id !== accountId) return;
-
-      setTransactions((prev) => {
-        if (prev.some((tx) => tx.transaction_id === newTx.transaction_id)) {
-          return prev;
-        }
-        return [newTx, ...prev];
-      });
-
-      setBuckets((prev) =>
-        prev.map((b) => {
-          if (b.bucket_id !== newTx.bucket_id) return b;
-          if (newTx.type === "credit") {
-            return { ...b, balance_lkr: b.balance_lkr + newTx.amount_lkr };
-          }
-          const newBalance = b.balance_lkr - newTx.amount_lkr;
-          if (onSpend) onSpend(newTx, newBalance);
-          return {
-            ...b,
-            balance_lkr: newBalance,
-            spent_lkr: b.spent_lkr + newTx.amount_lkr,
-          };
-        })
-      );
-
-      if (newTx.type === "credit") {
-        setWallet((w) =>
-          w ? { ...w, total_balance_lkr: w.total_balance_lkr + newTx.amount_lkr } : w
-        );
-      }
-    }
-
     function handleDemoReset() {
       fetchWallet();
     }
 
-    function handleMockRemittance(event: Event) {
-      const d = (event as CustomEvent<{
-        account_id: string;
-        amount_lkr: number;
-        sender_id: string;
-        allocations: Record<string, number>;
-      }>).detail;
-      if (!d || d.account_id !== accountId) return;
-
-      const ts = new Date().toISOString();
-      setTransactions((prev) => {
-        const tx: Transaction = {
-          transaction_id: `remit-${Date.now()}`,
-          account_id: d.account_id,
-          merchant: `Remittance from ${d.sender_id}`,
-          amount_lkr: d.amount_lkr,
-          timestamp: ts,
-          type: "credit",
-        };
-        if (prev.some((t) => t.transaction_id === tx.transaction_id)) return prev;
-        return [tx, ...prev];
-      });
-
-      setBuckets((prev) =>
-        prev.map((b) => {
-          const pct = d.allocations[b.bucket_id];
-          if (pct == null) return b;
-          const share = Math.round((d.amount_lkr * pct) / 100);
-          return { ...b, balance_lkr: b.balance_lkr + share };
-        })
-      );
-
-      setWallet((w) =>
-        w
-          ? { ...w, total_balance_lkr: w.total_balance_lkr + d.amount_lkr }
-          : w
-      );
-    }
-
-    window.addEventListener("seylan:mock-transaction", handleMockTransaction);
     window.addEventListener("seylan:demo-reset", handleDemoReset);
-    window.addEventListener("seylan:mock-remittance", handleMockRemittance);
 
     return () => {
-      window.removeEventListener(
-        "seylan:mock-transaction",
-        handleMockTransaction
-      );
       window.removeEventListener("seylan:demo-reset", handleDemoReset);
-      window.removeEventListener("seylan:mock-remittance", handleMockRemittance);
     };
-  }, [accountId, fetchWallet, onSpend]);
+  }, [accountId, fetchWallet]);
 
   useEffect(() => {
     if (realtimeConnected) return;

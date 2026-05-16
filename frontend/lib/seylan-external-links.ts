@@ -1,5 +1,5 @@
 /**
- * Official Seylan Bank customer surfaces for handoff when Hub demos are mock-only.
+ * Official Seylan Bank customer surfaces for handoff when live bank flows are completed outside Hub.
  * URLs validated against seylan.lk / seylanbank.lk marketing and IB flows.
  */
 

@@ -92,16 +92,6 @@ export interface WalletState {
   recent_transactions: Transaction[];
 }
 
-export interface DemoUser {
-  id: string;
-  name: string;
-  location: string;
-  role: string;
-  defaultRoute: string;
-  personaCode: "P1" | "P2" | "P3" | "P4";
-  shortBio: string;
-}
-
 export interface PlSummary {
   user_id: string;
   week_label: string;

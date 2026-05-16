@@ -9,13 +9,6 @@ interface AIAdvisorPanelProps {
   userId: string;
 }
 
-const MOCK_ADVICE: Record<string, string> = {
-  "SEY-USR-001":
-    "Your repayments are on track — great discipline. With 12 payments remaining, you'll clear this loan by June 2027.\nConsider setting up a LankaPay JustPay standing order for the 1st of each month so payments never miss.\nBased on your current trajectory, you qualify for a top-up loan of up to LKR 200,000 at our current rate.",
-  "SEY-USR-003":
-    "You have one missed payment from April 2026. This has triggered a CRIB flag — acting now prevents it from affecting your credit profile.\nPay LKR 45,000 via SeylanPay before 20 May to clear the arrear.\nWe can also restructure your schedule to reduce monthly burden — speak to your relationship manager.",
-};
-
 export function AIAdvisorPanel({ userId }: AIAdvisorPanelProps) {
   const [advice, setAdvice] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,17 +16,6 @@ export function AIAdvisorPanel({ userId }: AIAdvisorPanelProps) {
   useEffect(() => {
     let cancelled = false;
     const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
-    const useMock = process.env.NEXT_PUBLIC_USE_MOCK !== "false";
-
-    if (useMock) {
-      setTimeout(() => {
-        if (!cancelled) {
-          setAdvice(MOCK_ADVICE[userId] ?? MOCK_ADVICE["SEY-USR-001"]);
-          setLoading(false);
-        }
-      }, 400);
-      return () => { cancelled = true; };
-    }
 
     fetch(`${apiBase}/api/loans/advisor`, {
       method: "POST",
@@ -42,19 +24,27 @@ export function AIAdvisorPanel({ userId }: AIAdvisorPanelProps) {
       signal: AbortSignal.timeout(20000),
     })
       .then((res) => {
-        if (!res.ok) throw new Error("Failed");
+        if (!res.ok) throw new Error("Failed to load advisor");
         return res.json();
       })
       .then((data) => {
-        if (!cancelled) setAdvice(data.advisor_text ?? data.advice ?? data.text ?? JSON.stringify(data));
+        if (!cancelled) {
+          setAdvice(data.advisor_text ?? data.advice ?? data.text ?? JSON.stringify(data));
+        }
       })
       .catch(() => {
-        if (!cancelled) setAdvice(MOCK_ADVICE[userId] ?? MOCK_ADVICE["SEY-USR-001"]);
+        if (!cancelled) {
+          setAdvice(
+            "Unable to reach the loan advisor service. Check that the API is running and NEXT_PUBLIC_API_BASE is set."
+          );
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [userId]);
 
   return (
