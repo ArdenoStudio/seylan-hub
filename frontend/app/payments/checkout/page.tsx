@@ -8,6 +8,23 @@ const DEFAULT_MPGS_HOST = "test-seylan.mtf.gateway.mastercard.com";
 /** Script path version: MUST stay below 63. Bundles for v63+ only log an error and skip configure(); REST API can still use a higher version (e.g. 79). */
 const DEFAULT_MPGS_CHECKOUT_JS_VERSION = "62";
 
+const MPGS_SESSION_STORAGE_PREFIX = "HostedCheckout";
+
+/** MPGS stores resume flags in sessionStorage; stale keys make showLightbox() short-circuit without opening the UI. */
+function clearMpgsHostedCheckoutBrowserState(): void {
+  if (typeof window === "undefined") return;
+  try {
+    for (let i = window.sessionStorage.length - 1; i >= 0; i--) {
+      const key = window.sessionStorage.key(i);
+      if (key && key.startsWith(MPGS_SESSION_STORAGE_PREFIX)) {
+        window.sessionStorage.removeItem(key);
+      }
+    }
+  } catch {
+    /* storage unavailable */
+  }
+}
+
 declare global {
   interface Window {
     Checkout?: {
@@ -56,6 +73,8 @@ function HostedCheckoutLoader({
     let cancelled = false;
     const scriptSrc = `https://${mpgsHost}/checkout/version/${checkoutJsVersion}/checkout.js`;
 
+    clearMpgsHostedCheckoutBrowserState();
+
     function startHostedCheckout() {
       if (cancelled) return;
       const Checkout = window.Checkout;
@@ -68,6 +87,7 @@ function HostedCheckoutLoader({
           merchant: merchantId,
           session: { id: sessionId },
           interaction: {
+            operation: "PURCHASE",
             merchant: {
               name: "Seylan Hub",
             },
@@ -76,8 +96,7 @@ function HostedCheckoutLoader({
             },
           },
         });
-        // configure() applies inside doWhenDocumentReady; opening the iframe next tick avoids an empty configuration.
-        // showPaymentPage() is a no-op until the xd iframe exists (created by showLightbox on this gateway build).
+        // After configure, showLightbox must run when configuration is non-empty and shouldResumeSession() is false.
         window.setTimeout(() => {
           if (cancelled) return;
           try {
@@ -86,7 +105,7 @@ function HostedCheckoutLoader({
             console.error(e);
             setLoadError("Could not open payment window. Please try again.");
           }
-        }, 0);
+        }, 120);
       } catch (e) {
         console.error(e);
         setLoadError("Could not start checkout. Please try again.");
@@ -106,7 +125,6 @@ function HostedCheckoutLoader({
 
     return () => {
       cancelled = true;
-      script.remove();
     };
   }, [sessionId, merchantId, mpgsHost, checkoutJsVersion]);
 

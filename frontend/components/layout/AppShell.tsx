@@ -15,9 +15,12 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const isOnboarding = pathname === "/";
+  /** MPGS injects iframes/modals on document.body — avoid sidebar stacking and fixed layout clashes. */
+  const isPaymentGatewaySurface =
+    pathname.startsWith("/payments/checkout") || pathname.startsWith("/payments/return");
   const showSeylanHandoff = pathnameShowsSeylanHandoff(pathname);
 
-  if (isOnboarding) {
+  if (isOnboarding || isPaymentGatewaySurface) {
     return (
       <>
         <DemoModeBadge />
