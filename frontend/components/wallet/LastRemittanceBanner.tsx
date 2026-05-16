@@ -16,6 +16,8 @@ export function LastRemittanceBanner({
   onSendAgain,
 }: LastRemittanceBannerProps) {
   const { last_remittance } = wallet;
+  const currencyCode = last_remittance.currency_code ?? "GBP";
+  const corridor = last_remittance.corridor ?? "GBP → LKR";
 
   return (
     <Card className="card-glass shadow-brand border-0 overflow-hidden">
@@ -45,7 +47,7 @@ export function LastRemittanceBanner({
               </div>
               <div>
                 <span className="text-lg font-semibold text-muted-foreground dark:text-white/50 tabular-nums">
-                  £{last_remittance.amount_gbp}
+                  {currencyCode} {last_remittance.amount_gbp}
                 </span>
               </div>
             </div>
@@ -78,7 +80,7 @@ export function LastRemittanceBanner({
         <div className="mt-4 flex items-center gap-2 rounded-2xl border border-seylan-border/70 bg-seylan-mist/50 px-4 py-2.5 dark:border-white/[0.08] dark:bg-white/[0.04]">
           <div className="flex items-center gap-1.5">
             <span className="text-xs font-medium text-seylan-charcoal dark:text-white/60">
-              GBP → LKR
+              {corridor}
             </span>
             <span className="font-heading text-base font-bold text-seylan-charcoal dark:text-white tabular-nums">
               {last_remittance.fx_rate}

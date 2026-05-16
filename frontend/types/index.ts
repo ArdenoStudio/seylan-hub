@@ -96,6 +96,8 @@ export interface WalletState {
     fx_rate: number;
     date: string;
     provider: string;
+    currency_code?: string;
+    corridor?: string;
   };
   buckets: Bucket[];
   recent_transactions: Transaction[];

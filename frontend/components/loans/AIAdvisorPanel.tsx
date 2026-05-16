@@ -50,10 +50,10 @@ export function AIAdvisorPanel({ userId }: AIAdvisorPanelProps) {
     <Card className="card-glass shadow-brand border-0">
       <CardContent className="p-5">
         <div className="flex items-center gap-2 mb-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-seylan-red/10">
+          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-seylan-red/10 dark:bg-seylan-red/20">
             <Bot className="h-4 w-4 text-seylan-red" />
           </div>
-          <h3 className="font-heading text-lg font-semibold text-seylan-charcoal">
+          <h3 className="font-heading text-lg font-semibold text-seylan-charcoal dark:text-white">
             What this means
           </h3>
         </div>
@@ -87,7 +87,7 @@ export function AIAdvisorPanel({ userId }: AIAdvisorPanelProps) {
         {loading ? (
           <Skeleton className="h-16 w-full" />
         ) : (
-          <p className="text-sm text-muted-foreground leading-7 whitespace-pre-wrap">
+          <p className="text-sm text-muted-foreground dark:text-white/50 leading-7 whitespace-pre-wrap">
             {advice}
           </p>
         )}

@@ -40,9 +40,14 @@ export function Sidebar() {
         </div>
 
         <div className="border-b border-white/10 px-3 py-4">
-          <Link href="/profile" className="block rounded-2xl border border-white/10 bg-white/10 p-3 transition-colors hover:bg-white/15">
-            <div className="text-sm font-semibold">Nimal Fernando</div>
-            <div className="text-xs text-white/60">VOXVERSE STUDIO · 0640-0001254-001</div>
+          <Link href="/profile" className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 p-3 transition-colors hover:bg-white/15">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-seylan-red to-[#4f1219] text-xs font-bold text-white">
+              NF
+            </div>
+            <div className="min-w-0">
+              <div className="text-sm font-semibold truncate">Nimal Fernando</div>
+              <div className="text-xs text-white/60 truncate">0640-0001254-001</div>
+            </div>
           </Link>
         </div>
 

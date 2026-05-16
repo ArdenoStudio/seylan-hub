@@ -49,41 +49,60 @@ async def create_checkout_session(
     return_url: str,
     purpose: str,
 ) -> dict[str, Any]:
-    """Initiate a Hosted Checkout session (POST /session).
+    """Create a Hosted Checkout session (two-step for Seylan gateway).
 
-    Browser Hosted Checkout loads the static checkout.min.js bundle documented by MPGS.
+    Step 1: CREATE_CHECKOUT_SESSION — sets interaction + order metadata.
+    Step 2: UPDATE_SESSION — sets the order amount (required separately).
     """
-    url = _base_url() + "/merchant/" + settings.mpgs_merchant_id + "/session"
-    payload: dict[str, Any] = {
-        "apiOperation": "INITIATE_CHECKOUT",
+    mid = settings.mpgs_merchant_id
+    session_url = _base_url() + "/merchant/" + mid + "/session"
+
+    create_payload: dict[str, Any] = {
+        "apiOperation": "CREATE_CHECKOUT_SESSION",
         "interaction": {
             "operation": "PURCHASE",
             "returnUrl": return_url,
-            "displayControl": {"billingAddress": "HIDE"},
             "merchant": {"name": "Seylan Hub"},
         },
         "order": {
             "id": order_id,
-            "amount": _format_amount(amount_lkr),
             "currency": "LKR",
-            "description": description,
         },
     }
 
     log.info("MPGS create_checkout_session order_id=%s amount=%.2f", order_id, amount_lkr)
 
     async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-        resp = await client.post(url, json=payload, auth=_auth())
+        resp = await client.post(session_url, json=create_payload, auth=_auth())
 
-    if not resp.is_success:
-        log.error("MPGS session error %s: %s", resp.status_code, resp.text)
-        raise RuntimeError(
-            "MPGS session creation failed [" + str(resp.status_code) + "]: " + resp.text
+        if not resp.is_success:
+            log.error("MPGS session create error %s: %s", resp.status_code, resp.text)
+            raise RuntimeError(
+                "MPGS session creation failed [" + str(resp.status_code) + "]: " + resp.text
+            )
+
+        data = resp.json()
+        session_id: str = data.get("session", {}).get("id", "")
+        success_indicator: str = data.get("successIndicator", "")
+
+        update_resp = await client.put(
+            session_url + "/" + session_id,
+            json={
+                "apiOperation": "UPDATE_SESSION",
+                "order": {
+                    "amount": _format_amount(amount_lkr),
+                    "currency": "LKR",
+                },
+            },
+            auth=_auth(),
         )
 
-    data = resp.json()
-    session_id: str = data.get("session", {}).get("id", "")
-    success_indicator: str = data.get("successIndicator", "")
+        if not update_resp.is_success:
+            log.error("MPGS session update error %s: %s", update_resp.status_code, update_resp.text)
+            raise RuntimeError(
+                "MPGS session update failed [" + str(update_resp.status_code) + "]: " + update_resp.text
+            )
+
     log.info("MPGS session created session_id=%s", session_id)
     return {
         "session_id": session_id,

@@ -10,7 +10,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import { RefreshCw, ArrowRightLeft } from "lucide-react";
 import {
@@ -42,13 +41,11 @@ const CurrencySelector = ({
 
   return (
     <Select value={selected.code} onValueChange={onChange}>
-      <SelectTrigger className="w-auto border-none bg-transparent shadow-none focus:ring-0 gap-1 [&>span]:hidden">
-        {/* Render display ourselves — SelectValue shows raw text on hydration */}
+      <SelectTrigger className="w-auto border-none bg-transparent shadow-none focus:ring-0 gap-1">
         <div className="flex items-center gap-2 text-lg font-medium">
           <img src={selected.flag} alt={selected.name} className="h-6 w-6 rounded-full object-cover" />
           <span>{selected.code}</span>
         </div>
-        <SelectValue className="hidden" />
       </SelectTrigger>
       <SelectContent>
         {options.map((c) => (

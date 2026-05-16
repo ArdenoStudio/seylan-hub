@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "motion/react";
 import {
   Dialog,
   DialogContent,
@@ -12,34 +13,63 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loan } from "@/types";
 import { formatLKR } from "@/lib/utils";
-import { createPaymentSession } from "@/lib/api";
+import { createPaymentSession, postDemoLoanPayment } from "@/lib/api";
 import { toast } from "sonner";
+import { CreditCard, Zap, CircleCheck } from "lucide-react";
 
 interface LoanPaymentModalProps {
   loan: Loan;
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: (amountLkr: number) => void;
 }
 
-export function LoanPaymentModal({ loan, isOpen, onClose }: LoanPaymentModalProps) {
+export function LoanPaymentModal({ loan, isOpen, onClose, onSuccess }: LoanPaymentModalProps) {
+  const [paymentMode, setPaymentMode] = useState<"card" | "demo">("card");
   const [amount, setAmount] = useState(loan.monthly_payment_lkr);
   const [submitting, setSubmitting] = useState(false);
 
   async function handleSubmit() {
     if (!amount || amount <= 0) return;
     setSubmitting(true);
+
     try {
-      const session = await createPaymentSession({
+      if (paymentMode === "card") {
+        const session = await createPaymentSession({
+          amount_lkr: amount,
+          purpose: "loan",
+          description: "Loan instalment -- " + loan.loan_id,
+          metadata: {
+            loan_id: loan.loan_id,
+            user_id: loan.user_id,
+            installment_number: loan.payments_made + 1,
+          },
+        });
+        window.location.href = session.checkout_url;
+        return;
+      }
+
+      // Demo mode — hit backend to update loan state + Supabase
+      await postDemoLoanPayment({
+        user_id: loan.user_id,
+        loan_id: loan.loan_id,
         amount_lkr: amount,
-        purpose: "loan",
-        description: "Loan instalment -- " + loan.loan_id,
-        metadata: {
-          loan_id: loan.loan_id,
-          user_id: loan.user_id,
-          installment_number: loan.payments_made + 1,
-        },
       });
-      window.location.href = session.checkout_url;
+      toast.custom(() => (
+        <div className="flex items-start gap-3 rounded-xl border border-[#E31821]/30 bg-[#0c0407] px-4 py-3.5 shadow-[0_8px_32px_rgba(227,24,33,0.25)] w-[356px]">
+          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#E31821]/15">
+            <CircleCheck className="h-4 w-4 text-[#E31821]" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-white">Payment simulated</p>
+            <p className="mt-0.5 text-xs leading-relaxed text-white/50">
+              {formatLKR(amount)} · Loan {loan.loan_id} · Instalment {loan.payments_made + 1}
+            </p>
+          </div>
+        </div>
+      ), { duration: 5000 });
+      onSuccess?.(amount);
+      onClose();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       const isUnconfigured = msg.includes("[503]") || msg.includes("not enabled");
@@ -48,6 +78,7 @@ export function LoanPaymentModal({ loan, isOpen, onClose }: LoanPaymentModalProp
           ? "Card payments are not yet activated on this deployment."
           : "Could not create payment session. Please try again."
       );
+    } finally {
       setSubmitting(false);
     }
   }
@@ -59,6 +90,30 @@ export function LoanPaymentModal({ loan, isOpen, onClose }: LoanPaymentModalProp
           <DialogTitle>Make Loan Payment</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
+          {/* Mode toggle */}
+          <div className="flex rounded-xl border border-gray-100 bg-gray-50 p-1">
+            {(["card", "demo"] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setPaymentMode(mode)}
+                className="relative flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-all"
+              >
+                {paymentMode === mode && (
+                  <motion.div
+                    layoutId="loan-mode-pill"
+                    className="absolute inset-0 rounded-lg bg-white shadow-sm ring-1 ring-gray-200"
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <span className={`relative flex items-center gap-1.5 ${paymentMode === mode ? "text-gray-900" : "text-gray-400"}`}>
+                  {mode === "card" ? <CreditCard className="h-3 w-3" /> : <Zap className="h-3 w-3" />}
+                  {mode === "card" ? "Card (MPGS)" : "Demo Mode"}
+                </span>
+              </button>
+            ))}
+          </div>
+
           {/* Loan summary */}
           <div className="rounded-lg border border-seylan-border bg-seylan-mist/60 p-4 space-y-2 text-sm">
             <div className="flex justify-between">
@@ -97,14 +152,20 @@ export function LoanPaymentModal({ loan, isOpen, onClose }: LoanPaymentModalProp
             )}
           </div>
 
-          {/* Test card reminder */}
-          <p className="text-[11px] leading-relaxed text-muted-foreground">
-            Mastercard test gateway. Approved test card:{" "}
-            <span className="font-mono font-semibold text-seylan-charcoal">5123 4500 0000 0008</span>
-            , expiry <span className="font-mono font-semibold text-seylan-charcoal">01/39</span>,
-            CVV <span className="font-mono font-semibold text-seylan-charcoal">100</span>.
-            Real cards are not accepted on this test gateway.
-          </p>
+          {/* Footer note */}
+          {paymentMode === "card" ? (
+            <p className="text-[11px] leading-relaxed text-muted-foreground">
+              Mastercard test gateway. Approved test card:{" "}
+              <span className="font-mono font-semibold text-seylan-charcoal">5123 4500 0000 0008</span>
+              , expiry <span className="font-mono font-semibold text-seylan-charcoal">01/39</span>,
+              CVV <span className="font-mono font-semibold text-seylan-charcoal">100</span>.
+              Real cards are not accepted on this test gateway.
+            </p>
+          ) : (
+            <p className="text-[11px] leading-relaxed text-muted-foreground">
+              Simulates an instalment payment internally. No card or real transaction required.
+            </p>
+          )}
 
           <div className="flex gap-3">
             <Button
@@ -120,7 +181,11 @@ export function LoanPaymentModal({ loan, isOpen, onClose }: LoanPaymentModalProp
               disabled={submitting || !amount || amount <= 0}
               onClick={handleSubmit}
             >
-              {submitting ? "Redirecting..." : "Pay " + formatLKR(amount)}
+              {submitting
+                ? paymentMode === "card" ? "Redirecting…" : "Processing…"
+                : paymentMode === "card"
+                  ? `Pay ${formatLKR(amount)}`
+                  : `Simulate ${formatLKR(amount)}`}
             </Button>
           </div>
         </div>

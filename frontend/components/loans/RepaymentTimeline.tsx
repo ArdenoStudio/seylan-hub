@@ -19,9 +19,9 @@ interface RepaymentTimelineProps {
 }
 
 const STATUS_PILL = {
-  PAID: "bg-green-100 text-green-700",
-  UPCOMING: "bg-blue-100 text-blue-700",
-  MISSED: "bg-red-100 text-red-700",
+  PAID: "bg-green-900/30 text-green-400",
+  UPCOMING: "bg-blue-900/30 text-blue-400",
+  MISSED: "bg-red-900/30 text-red-400",
 } as const;
 
 type PillKey = keyof typeof STATUS_PILL;
@@ -48,11 +48,9 @@ function MiniTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-xl border border-seylan-border bg-white/95 px-3 py-2 text-xs shadow-brand">
-      <p className="text-muted-foreground">{label}</p>
-      <p className="font-semibold text-seylan-charcoal">
-        {formatLKR(payload[0].value)}
-      </p>
+    <div className="rounded-xl border border-white/10 bg-[#1a0a0b] px-3 py-2 text-xs shadow-lg">
+      <p className="text-white/40">{label}</p>
+      <p className="font-semibold text-white">{formatLKR(payload[0].value)}</p>
     </div>
   );
 }
@@ -74,8 +72,7 @@ export function RepaymentTimeline({ schedule }: RepaymentTimelineProps) {
   const chartData = schedule.slice(0, 12).map((e) => ({
     month: `M${e.month}`,
     amount: e.amount_lkr,
-    paid:
-      canonicalScheduleStatus(e.status) === "PAID" ? e.amount_lkr : 0,
+    paid: canonicalScheduleStatus(e.status) === "PAID" ? e.amount_lkr : 0,
   }));
 
   return (
@@ -85,7 +82,7 @@ export function RepaymentTimeline({ schedule }: RepaymentTimelineProps) {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-seylan-red">
             Repayment history
           </p>
-          <h3 className="font-heading text-lg font-semibold text-seylan-charcoal">
+          <h3 className="font-heading text-lg font-semibold text-seylan-charcoal dark:text-white">
             Payment timeline
           </h3>
         </div>
@@ -107,7 +104,7 @@ export function RepaymentTimeline({ schedule }: RepaymentTimelineProps) {
             </defs>
             <XAxis
               dataKey="month"
-              tick={{ fontSize: 9, fill: "#79565B" }}
+              tick={{ fontSize: 9, fill: "rgba(255,255,255,0.3)" }}
               axisLine={false}
               tickLine={false}
             />
@@ -147,13 +144,13 @@ export function RepaymentTimeline({ schedule }: RepaymentTimelineProps) {
                 return (
                   <div
                     key={`${entry.month}-${entry.due_date}`}
-                    className="flex items-center justify-between py-2 border-b border-seylan-border last:border-0"
+                    className="flex items-center justify-between py-2 border-b border-seylan-border dark:border-white/[0.08] last:border-0"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-muted-foreground w-8">
+                      <span className="text-xs text-muted-foreground dark:text-white/30 w-8">
                         #{entry.month}
                       </span>
-                      <span className="text-sm text-seylan-charcoal">
+                      <span className="text-sm text-seylan-charcoal dark:text-white/80">
                         {new Date(entry.due_date).toLocaleDateString("en-LK", {
                           day: "numeric",
                           month: "short",
@@ -162,12 +159,10 @@ export function RepaymentTimeline({ schedule }: RepaymentTimelineProps) {
                       </span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium">
+                      <span className="text-sm font-medium dark:text-white">
                         {formatLKR(entry.amount_lkr)}
                       </span>
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded-full ${STATUS_PILL[statusKey]}`}
-                      >
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_PILL[statusKey]}`}>
                         {statusKey}
                       </span>
                     </div>
@@ -175,7 +170,7 @@ export function RepaymentTimeline({ schedule }: RepaymentTimelineProps) {
                 );
               })}
               {filtered.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">
+                <p className="text-sm text-muted-foreground dark:text-white/30 text-center py-4">
                   No entries
                 </p>
               )}

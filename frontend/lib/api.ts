@@ -115,6 +115,21 @@ export async function postWalletTransfer(payload: {
   return res.json();
 }
 
+export async function postDemoLoanPayment(payload: {
+  user_id: string;
+  loan_id: string;
+  amount_lkr: number;
+}) {
+  return request<{ ok: boolean; outstanding_lkr: number; payments_made: number; health_score: string }>(
+    "/api/loans/demo-payment",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }
+  );
+}
+
 export async function createPaymentSession(args: {
   amount_lkr: number;
   purpose: "remittance" | "loan" | "tax_jar_inbound" | "shop_sale";

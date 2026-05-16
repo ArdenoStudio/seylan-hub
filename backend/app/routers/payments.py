@@ -157,17 +157,20 @@ async def create_payment_session(body: CreateSessionRequest):
             raise HTTPException(status_code=502, detail="MPGS authentication failed — check MPGS_MERCHANT_ID and MPGS_API_PASSWORD credentials.")
         raise HTTPException(status_code=502, detail=f"MPGS gateway error: {msg}")
 
-    supabase_client.save_payment({
-        "order_id": order_id,
-        "session_id": session["session_id"],
-        "amount_lkr": body.amount_lkr,
-        "currency": "LKR",
-        "purpose": body.purpose,
-        "description": body.description,
-        "status": "PENDING",
-        "metadata": body.metadata,
-        "gateway_response": session,
-    })
+    try:
+        supabase_client.save_payment({
+            "order_id": order_id,
+            "session_id": session["session_id"],
+            "amount_lkr": body.amount_lkr,
+            "currency": "LKR",
+            "purpose": body.purpose,
+            "description": body.description,
+            "status": "PENDING",
+            "metadata": body.metadata,
+            "gateway_response": session,
+        })
+    except Exception as exc:
+        log.warning("Could not persist payment to Supabase (non-fatal): %s", exc)
 
     return CreateSessionResponse(
         order_id=order_id,
@@ -180,11 +183,12 @@ async def create_payment_session(body: CreateSessionRequest):
 async def get_payment(order_id: str):
     _require_mpgs()
 
-    row = supabase_client.get_payment(order_id)
-    if not row:
-        raise HTTPException(status_code=404, detail=f"Payment {order_id} not found.")
+    try:
+        row = supabase_client.get_payment(order_id)
+    except Exception:
+        row = None
 
-    if row.get("status") == "PENDING":
+    if row and row.get("status") == "PENDING":
         try:
             gateway = await mpgs.get_order_status(order_id)
             supabase_client.update_payment_status(
@@ -196,8 +200,19 @@ async def get_payment(order_id: str):
             row["gateway_response"] = gateway
         except Exception as exc:
             log.warning("MPGS status refresh failed for %s: %s", order_id, exc)
+        return row
 
-    return row
+    try:
+        gateway = await mpgs.get_order_status(order_id)
+        return {
+            "order_id": order_id,
+            "status": gateway["status"],
+            "amount_lkr": gateway.get("amount"),
+            "currency": gateway.get("currency", "LKR"),
+            "gateway_response": gateway,
+        }
+    except Exception:
+        raise HTTPException(status_code=404, detail=f"Payment {order_id} not found.")
 
 
 @router.post("/api/payments/webhook", status_code=200)

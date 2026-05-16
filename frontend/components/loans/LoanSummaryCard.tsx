@@ -10,9 +10,10 @@ import { LoanPaymentModal } from "./LoanPaymentModal";
 
 interface LoanSummaryCardProps {
   loan: Loan;
+  onPaymentSuccess?: () => void;
 }
 
-export function LoanSummaryCard({ loan }: LoanSummaryCardProps) {
+export function LoanSummaryCard({ loan, onPaymentSuccess }: LoanSummaryCardProps) {
   const [payModalOpen, setPayModalOpen] = useState(false);
 
   return (
@@ -24,37 +25,26 @@ export function LoanSummaryCard({ loan }: LoanSummaryCardProps) {
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-seylan-red">
                 Current loan
               </p>
-              <h2 className="mt-1 font-heading text-2xl font-semibold text-seylan-charcoal">
+              <h2 className="mt-1 font-heading text-2xl font-semibold text-seylan-charcoal dark:text-white">
                 {loan.type} &middot; {loan.purpose}
               </h2>
             </div>
             <HealthScoreBadge score={loan.health_score} />
           </div>
           <div className="grid grid-cols-2 gap-3 mb-4 sm:grid-cols-4">
-            <div className="rounded-2xl bg-seylan-mist/70 p-4">
-              <div className="text-xs text-muted-foreground">Outstanding</div>
-              <div className="mt-1 text-xl font-semibold text-seylan-charcoal">
-                {formatLKR(loan.outstanding_lkr)}
+            {[
+              { label: "Outstanding", value: formatLKR(loan.outstanding_lkr) },
+              { label: "Monthly Payment", value: formatLKR(loan.monthly_payment_lkr) },
+              { label: "Interest Rate", value: `${loan.interest_rate_pct}%` },
+              { label: "Original Amount", value: formatLKR(loan.disbursed_lkr) },
+            ].map(({ label, value }) => (
+              <div key={label} className="rounded-2xl bg-seylan-mist/70 dark:bg-white/[0.06] p-4">
+                <div className="text-xs text-muted-foreground dark:text-white/40">{label}</div>
+                <div className="mt-1 text-xl font-semibold text-seylan-charcoal dark:text-white">
+                  {value}
+                </div>
               </div>
-            </div>
-            <div className="rounded-2xl bg-seylan-mist/70 p-4">
-              <div className="text-xs text-muted-foreground">Monthly Payment</div>
-              <div className="mt-1 text-xl font-semibold text-seylan-charcoal">
-                {formatLKR(loan.monthly_payment_lkr)}
-              </div>
-            </div>
-            <div className="rounded-2xl bg-seylan-mist/70 p-4">
-              <div className="text-xs text-muted-foreground">Interest Rate</div>
-              <div className="mt-1 text-xl font-semibold text-seylan-charcoal">
-                {loan.interest_rate_pct}%
-              </div>
-            </div>
-            <div className="rounded-2xl bg-seylan-mist/70 p-4">
-              <div className="text-xs text-muted-foreground">Original Amount</div>
-              <div className="mt-1 text-xl font-semibold text-seylan-charcoal">
-                {formatLKR(loan.disbursed_lkr)}
-              </div>
-            </div>
+            ))}
           </div>
           <Button
             className="w-full bg-seylan-red hover:bg-seylan-red/90 text-white font-semibold"
@@ -70,6 +60,7 @@ export function LoanSummaryCard({ loan }: LoanSummaryCardProps) {
         loan={loan}
         isOpen={payModalOpen}
         onClose={() => setPayModalOpen(false)}
+        onSuccess={onPaymentSuccess}
       />
     </>
   );

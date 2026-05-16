@@ -24,7 +24,7 @@ import {
 // LKR_CURRENCY exported for CurrencyExchangeCard use
 import { toast } from "sonner";
 import { EXTERNAL_LINK_REL, SEYLAN_LINKS } from "@/lib/seylan-external-links";
-import { ArrowRight, CreditCard, Zap, Send, ChevronRight, RefreshCw } from "lucide-react";
+import { ArrowRight, CreditCard, Zap, Send, ChevronRight, RefreshCw, CircleCheck } from "lucide-react";
 import { VerificationCard } from "@/components/ui/verification-card";
 import { CurrencyExchangeCard } from "@/components/wallet/CurrencyExchangeCard";
 
@@ -33,7 +33,7 @@ interface SendMoneyModalProps {
   recipientId: string;
   recipientAccountHolder: string;
   allocations: Record<string, number>;
-  onSuccess: (amountLkr?: number, amountGbp?: number) => void;
+  onSuccess: (amountLkr?: number, amountGbp?: number, currency?: RemittanceCurrency) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -137,11 +137,23 @@ export function SendMoneyModal({
         corridor: `${currency.code}->LKR`,
         allocation_rules: allocations,
       });
-      toast.success(`Sent ${formatLKR(amountLkr)}`, {
-        description: buildSuccessToastDescription(),
-      });
+      toast.custom(() => (
+        <div className="flex items-start gap-3 rounded-xl border border-[#E31821]/30 bg-[#0c0407] px-4 py-3.5 shadow-[0_8px_32px_rgba(227,24,33,0.25)] w-[356px]">
+          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#E31821]/15">
+            <CircleCheck className="h-4 w-4 text-[#E31821]" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-white">
+              Sent {formatLKR(amountLkr)}
+            </p>
+            <p className="mt-0.5 text-xs leading-relaxed text-white/50">
+              {buildSuccessToastDescription()}
+            </p>
+          </div>
+        </div>
+      ), { duration: 5000 });
       handleDialogOpenChange(false);
-      onSuccess(amountLkr, amountGbpEquiv);
+      onSuccess(amountLkr, amountGbpEquiv, currency);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       const isUnconfigured = msg.includes("[503]") || msg.includes("not enabled");
@@ -237,7 +249,7 @@ export function SendMoneyModal({
             {/* Amount input */}
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center gap-1.5">
-                <span className="text-sm">{currency.flag}</span>
+                <img src={currency.flag} alt={currency.code} className="h-4 w-4 rounded-full object-cover" />
                 <span className="text-xs font-semibold text-gray-500">{currency.code}</span>
               </div>
               <Input
