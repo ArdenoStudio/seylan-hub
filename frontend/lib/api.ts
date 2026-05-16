@@ -36,15 +36,6 @@ interface RawWalletResponse {
   [key: string]: unknown;
 }
 
-function normaliseWalletTxnType(rec: Record<string, unknown>): "credit" | "debit" {
-  const raw = String(rec.type ?? "").toLowerCase();
-  if (raw === "credit" || raw === "debit") return raw;
-  if (String(rec.source ?? "") === "transfer") return "credit";
-  const amt = Number(rec.amount_lkr ?? 0);
-  if (amt > 0 && String(rec.merchant ?? "").toLowerCase().includes("remittance")) return "credit";
-  return "debit";
-}
-
 export async function getFamilyWallet(accountId: string) {
   const raw = await request<RawWalletResponse>(`/mock/family-wallet/${accountId}`);
   return {
@@ -63,7 +54,7 @@ export async function getFamilyWallet(accountId: string) {
       ...t,
       transaction_id: (t as Record<string, unknown>).transaction_id ?? (t as Record<string, unknown>).id,
       timestamp: (t as Record<string, unknown>).timestamp ?? (t as Record<string, unknown>).date,
-      type: normaliseWalletTxnType(t as Record<string, unknown>),
+      type: (t as Record<string, unknown>).type ?? ((t as Record<string, unknown>).amount_lkr as number) < 0 ? "debit" : "credit",
     })),
   };
 }
@@ -119,6 +110,27 @@ export async function postWalletTransfer(payload: {
   return res.json();
 }
 
+export async function createPaymentSession(args: {
+  amount_lkr: number;
+  purpose: "remittance" | "loan" | "tax_jar_inbound" | "shop_sale";
+  description: string;
+  metadata: Record<string, unknown>;
+}): Promise<{ order_id: string; session_id: string; checkout_url: string }> {
+  const res = await fetch(`${API_BASE}/api/payments/session`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(args),
+  });
+  if (!res.ok) throw new Error("Failed to create payment session");
+  return res.json();
+}
+
+export async function getPaymentStatus(orderId: string) {
+  const res = await fetch(`${API_BASE}/api/payments/${orderId}`);
+  if (!res.ok) throw new Error("Failed to fetch payment status");
+  return res.json();
+}
+
 export async function getSandboxTransferAccounts() {
   const url =
     typeof window !== "undefined"
@@ -140,26 +152,17 @@ export async function saveAllocationRules(
   allocations: Record<string, number>,
   accountId = "SEY-ACC-002"
 ) {
-  const body = JSON.stringify({
-    account_id: accountId,
-    allocation_rules: Object.entries(allocations).map(([bucket_id, pct]) => ({
-      bucket_id,
-      pct,
-    })),
-  });
-  const path = `/api/wallet/rules/${encodeURIComponent(senderId)}`;
-  const url = typeof window !== "undefined" ? path : `${API_BASE}${path}`;
-  const res = await fetch(url, {
+  return request(`/api/wallet/rules/${senderId}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body,
-    signal: AbortSignal.timeout(15000),
+    body: JSON.stringify({
+      account_id: accountId,
+      allocation_rules: Object.entries(allocations).map(([bucket_id, pct]) => ({
+        bucket_id,
+        pct,
+      })),
+    }),
   });
-  if (!res.ok) {
-    const text = await res.text().catch(() => "Unknown error");
-    throw new ApiError(res.status, text);
-  }
-  return res.json();
 }
 
 export async function postChat(
