@@ -15,7 +15,13 @@ def _base_url() -> str:
 
 
 def _auth() -> tuple[str, str]:
-    return ("merchant." + settings.mpgs_merchant_id, settings.mpgs_api_password)
+    # If an operator ID is set, use operator-scoped credentials
+    # MPGS format: merchant.{MID}.operator.{OPID}  or just  merchant.{MID}
+    if settings.mpgs_operator_id:
+        username = f"merchant.{settings.mpgs_merchant_id}.operator.{settings.mpgs_operator_id}"
+    else:
+        username = "merchant." + settings.mpgs_merchant_id
+    return (username, settings.mpgs_api_password)
 
 
 async def create_checkout_session(
