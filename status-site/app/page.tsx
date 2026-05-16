@@ -2,7 +2,6 @@ import { getSummary, getRecentIncidents, overallStatus, REPO_URL } from "@/lib/u
 import { StatusBanner } from "./components/StatusBanner";
 import { ServiceCard } from "./components/ServiceCard";
 import { Incidents } from "./components/Incidents";
-import { AskAgent } from "./components/AskAgent";
 
 export const revalidate = 60;
 
@@ -22,7 +21,7 @@ export default async function StatusPage() {
 
   return (
     <main className="min-h-screen">
-      <div className="mx-auto max-w-3xl px-5 sm:px-8 py-12 sm:py-16">
+      <div className="mx-auto max-w-3xl px-5 sm:px-8 py-12 sm:py-16 pb-28">
 
         {/* Header */}
         <header className="flex items-center justify-between mb-8">
@@ -72,9 +71,6 @@ export default async function StatusPage() {
 
         {/* Incidents */}
         <Incidents incidents={incidents} />
-
-        {/* AI Chat */}
-        <AskAgent />
 
         {/* Footer */}
         <footer className="mt-16 pt-8 border-t border-neutral-200 dark:border-neutral-800 text-xs text-neutral-500 flex flex-wrap items-center justify-between gap-3">
