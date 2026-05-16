@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +10,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { formatLKR } from "@/lib/utils";
 import {
   createPaymentSession,
@@ -19,16 +19,30 @@ import {
 import { GBP_LKR_RATE, gbpToLkr } from "@/lib/remittance-fx";
 import { toast } from "sonner";
 import { EXTERNAL_LINK_REL, SEYLAN_LINKS } from "@/lib/seylan-external-links";
+import { ArrowRight, CreditCard, Zap, Send, ChevronRight } from "lucide-react";
 
 interface SendMoneyModalProps {
   senderId: string;
   recipientId: string;
-  /** From wallet API (e.g. getFamilyWallet) — not hardcoded marketing copy */
   recipientAccountHolder: string;
   allocations: Record<string, number>;
   onSuccess: (amountLkr?: number, amountGbp?: number) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+const BUCKET_COLORS: Record<string, string> = {
+  school: "#E0AF49",
+  household: "#E31821",
+  savings: "#10B981",
+};
+
+function getBucketColor(id: string): string {
+  const key = id.toLowerCase().replace(/_/g, "");
+  for (const [k, v] of Object.entries(BUCKET_COLORS)) {
+    if (key.includes(k)) return v;
+  }
+  return "#8B5CF6";
 }
 
 export function SendMoneyModal({
@@ -63,18 +77,10 @@ export function SendMoneyModal({
     if (!open) return;
     let cancelled = false;
     getSandboxTransferAccounts()
-      .then((data) => {
-        if (!cancelled) setSandboxRouting(data);
-      })
-      .catch(() => {
-        if (!cancelled) setSandboxRouting(null);
-      })
-      .finally(() => {
-        if (!cancelled) setSandboxRoutingLoaded(true);
-      });
-    return () => {
-      cancelled = true;
-    };
+      .then((data) => { if (!cancelled) setSandboxRouting(data); })
+      .catch(() => { if (!cancelled) setSandboxRouting(null); })
+      .finally(() => { if (!cancelled) setSandboxRoutingLoaded(true); });
+    return () => { cancelled = true; };
   }, [open]);
 
   const hubRecipientLine = recipientAccountHolder.trim()
@@ -84,9 +90,7 @@ export function SendMoneyModal({
   function buildSuccessToastDescription(): string {
     const lines: string[] = [`Hub wallet: ${hubRecipientLine}`];
     if (sandboxRouting) {
-      lines.push(
-        `Sandbox internal transfer: ${sandboxRouting.source_account} → ${sandboxRouting.destination_account}`
-      );
+      lines.push(`Sandbox: ${sandboxRouting.source_account} → ${sandboxRouting.destination_account}`);
     }
     return lines.join("\n");
   }
@@ -109,13 +113,10 @@ export function SendMoneyModal({
             fx_rate: GBP_LKR_RATE,
           },
         });
-        // Hosted Checkout is a full navigation to another origin; assignment is intentional.
         // eslint-disable-next-line react-hooks/immutability -- external MPGS redirect
         window.location.href = session.checkout_url;
         return;
       }
-
-      // Demo mode — existing postWalletTransfer flow unchanged
       await postWalletTransfer({
         sender_account_id: senderId,
         recipient_account_id: recipientId,
@@ -134,7 +135,7 @@ export function SendMoneyModal({
       toast.error(
         paymentMode === "card"
           ? isUnconfigured
-            ? "Card payments are not yet activated on this deployment. Use Demo Mode to test the transfer flow."
+            ? "Card payments are not yet activated. Use Demo Mode to test."
             : "Could not create payment session. Please try again."
           : "Transfer failed. Please try again."
       );
@@ -143,141 +144,230 @@ export function SendMoneyModal({
     }
   }
 
+  const isValid = Number.isFinite(amountGbp) && amountGbp > 0;
+
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Send Money to Sri Lanka</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 pt-2">
-          {/* Payment mode toggle */}
-          <div className="flex rounded-lg border border-seylan-border overflow-hidden text-sm font-medium">
-            <button
-              type="button"
-              className={`flex-1 py-2 transition-colors ${
-                paymentMode === "card"
-                  ? "bg-seylan-plum text-white"
-                  : "bg-white text-seylan-charcoal hover:bg-seylan-mist"
-              }`}
-              onClick={() => setPaymentMode("card")}
-            >
-              Pay with Card (MPGS Test)
-            </button>
-            <button
-              type="button"
-              className={`flex-1 py-2 transition-colors ${
-                paymentMode === "demo"
-                  ? "bg-seylan-plum text-white"
-                  : "bg-white text-seylan-charcoal hover:bg-seylan-mist"
-              }`}
-              onClick={() => setPaymentMode("demo")}
-            >
-              Demo Mode
-            </button>
-          </div>
+      <DialogContent
+        className="max-w-sm overflow-hidden border-0 p-0 shadow-2xl [background:linear-gradient(160deg,#2d0d12_0%,#1a0608_60%,#0f0305_100%)] [box-shadow:0_32px_80px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.06)]"
+        showCloseButton={false}
+      >
+        {/* Top accent bar */}
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#E0AF49]/60 to-transparent" />
 
-          <div className="rounded-lg border border-seylan-border bg-white/80 p-3 text-xs space-y-2">
-            <p className="font-semibold text-seylan-charcoal">Recipient (Seylan Hub)</p>
-            <p className="text-muted-foreground break-words">
-              {recipientAccountHolder.trim() ? (
-                <>
-                  <span className="text-seylan-charcoal">{recipientAccountHolder.trim()}</span>
-                  <span className="text-muted-foreground"> · </span>
-                </>
-              ) : null}
-              <span className="font-mono text-seylan-charcoal">{recipientId}</span>
-            </p>
-            <p className="font-semibold text-seylan-charcoal pt-1 border-t border-seylan-border/60 mt-2 pt-2">
-              Sandbox internal transfer (when enabled)
-            </p>
-            {!sandboxRoutingLoaded ? (
-              <p className="text-muted-foreground">Loading account numbers…</p>
-            ) : sandboxRouting ? (
-              <p className="font-mono text-muted-foreground break-all">
-                {sandboxRouting.source_account} → {sandboxRouting.destination_account}
-              </p>
-            ) : (
-              <p className="text-muted-foreground">
-                Could not load sandbox routing from the API. Transfers still update the Hub wallet when
-                the request succeeds.
-              </p>
-            )}
-          </div>
+        {/* Ambient glow */}
+        <div className="pointer-events-none absolute -top-20 left-1/2 h-48 w-80 -translate-x-1/2 rounded-full bg-[#E31821]/10 blur-3xl" />
 
-          <div>
-            <Label htmlFor="amount">Amount (GBP)</Label>
-            <Input
-              id="amount"
-              type="number"
-              step="0.01"
-              min={0.01}
-              value={Number.isFinite(amountGbp) ? amountGbp : 0}
-              onChange={(e) => {
-                const v = parseFloat(e.target.value);
-                setAmountGbp(Number.isFinite(v) && v >= 0 ? v : 0);
-              }}
-            />
-          </div>
-          <div className="p-3 bg-seylan-mist rounded-lg">
-            <div className="text-sm text-muted-foreground">
-              LKR conversion at {GBP_LKR_RATE} (integer LKR = GBP × rate, rounded)
-            </div>
-            <div className="text-xl font-bold text-seylan-charcoal">
-              {formatLKR(amountLkr)}
-            </div>
-          </div>
-          <div className="p-3 bg-seylan-mist rounded-lg">
-            <div className="text-xs text-muted-foreground mb-2">
-              Allocation
-            </div>
-            {Object.entries(allocations).map(([id, pct]) => (
-              <div
-                key={id}
-                className="flex justify-between text-sm text-seylan-charcoal"
-              >
-                <span className="capitalize">{id.replace(/_/g, " ")}</span>
-                <span>{pct}%</span>
+        <div className="relative z-10 flex flex-col gap-0">
+          {/* Header */}
+          <DialogHeader className="px-5 pt-5 pb-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-[#E0AF49]/70">
+                  Seylan Hub
+                </p>
+                <DialogTitle className="font-heading text-lg font-semibold text-white">
+                  Send to Sri Lanka
+                </DialogTitle>
               </div>
-            ))}
-          </div>
-          {paymentMode === "card" ? (
-            <p className="text-[11px] leading-relaxed text-muted-foreground">
-              Card payments use Mastercard&apos;s test gateway. For an approved test payment, use{" "}
-              <span className="font-mono font-semibold text-seylan-charcoal">
-                5123 4500 0000 0008
-              </span>
-              , expiry <span className="font-mono font-semibold text-seylan-charcoal">01/39</span>,
-              CVV <span className="font-mono font-semibold text-seylan-charcoal">100</span>.
-              Real cards are not accepted on this test gateway.
-            </p>
-          ) : (
-            <p className="text-[11px] leading-relaxed text-muted-foreground">
-              Demo mode simulates the transfer internally. Live corridor payouts
-              finalize in Seylan&apos;s authorised channels—for example{" "}
-              <a
-                href={SEYLAN_LINKS.internetBankingPersonalLogin}
-                target="_blank"
-                rel={EXTERNAL_LINK_REL}
-                className="font-medium text-seylan-plum underline-offset-2 hover:text-seylan-red hover:underline"
+              <button
+                type="button"
+                onClick={() => handleDialogOpenChange(false)}
+                className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-full text-white/30 transition-colors hover:bg-white/10 hover:text-white/70"
+                aria-label="Close"
               >
-                Personal Internet Banking
-              </a>{" "}
-              or the Seylan Mobile Banking app.
-            </p>
-          )}
-          <Button
-            className="w-full"
-            disabled={sending || !Number.isFinite(amountGbp) || amountGbp <= 0}
-            onClick={handleSubmit}
-          >
-            {sending
-              ? paymentMode === "card"
-                ? "Redirecting to Mastercard..."
-                : "Sending..."
-              : paymentMode === "card"
-              ? `Pay ${formatLKR(amountLkr)} by Card`
-              : `Send ${formatLKR(amountLkr)}`}
-          </Button>
+                ×
+              </button>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-3 px-5 pb-5">
+            {/* Mode toggle */}
+            <div className="flex rounded-xl border border-white/8 bg-white/4 p-1">
+              {(["card", "demo"] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setPaymentMode(mode)}
+                  className="relative flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-medium transition-all"
+                >
+                  {paymentMode === mode && (
+                    <motion.div
+                      layoutId="mode-pill"
+                      className="absolute inset-0 rounded-lg bg-[#721C24] shadow-[0_2px_12px_rgba(114,28,36,0.5)]"
+                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                  <span className={`relative flex items-center gap-1.5 ${paymentMode === mode ? "text-white" : "text-white/40"}`}>
+                    {mode === "card" ? <CreditCard className="h-3 w-3" /> : <Zap className="h-3 w-3" />}
+                    {mode === "card" ? "Card (MPGS)" : "Demo Mode"}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {/* Recipient card */}
+            <div className="relative overflow-hidden rounded-xl border border-white/8 bg-white/4 p-3.5">
+              <div className="absolute inset-0 bg-gradient-to-br from-[#E0AF49]/5 via-transparent to-transparent" />
+              <p className="relative mb-2 text-[10px] font-semibold uppercase tracking-widest text-[#E0AF49]/60">
+                Recipient
+              </p>
+              <p className="relative text-sm font-semibold text-white">
+                {recipientAccountHolder.trim() || "Seylan Hub Wallet"}
+              </p>
+              <p className="relative mt-0.5 font-mono text-[11px] text-white/40">{recipientId}</p>
+
+              {sandboxRoutingLoaded && sandboxRouting && (
+                <div className="relative mt-3 border-t border-white/8 pt-3">
+                  <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-white/30">
+                    Sandbox route
+                  </p>
+                  <div className="flex items-center gap-2 font-mono text-[11px] text-white/40">
+                    <span className="truncate">{sandboxRouting.source_account}</span>
+                    <ArrowRight className="h-3 w-3 shrink-0 text-[#E0AF49]/50" />
+                    <span className="truncate">{sandboxRouting.destination_account}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Amount input */}
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center">
+                <span className="text-sm font-bold text-white/30">£</span>
+              </div>
+              <Input
+                id="amount"
+                type="number"
+                step="0.01"
+                min={0.01}
+                value={Number.isFinite(amountGbp) ? amountGbp : 0}
+                onChange={(e) => {
+                  const v = parseFloat(e.target.value);
+                  setAmountGbp(Number.isFinite(v) && v >= 0 ? v : 0);
+                }}
+                className="border-white/10 bg-white/5 pl-8 text-sm font-semibold text-white placeholder:text-white/20 focus-visible:border-[#E0AF49]/40 focus-visible:ring-[#E0AF49]/20"
+              />
+              <div className="pointer-events-none absolute inset-y-0 right-3.5 flex items-center">
+                <span className="text-xs font-medium text-white/30">GBP</span>
+              </div>
+            </div>
+
+            {/* LKR conversion */}
+            <div className="relative overflow-hidden rounded-xl border border-[#E0AF49]/20 bg-gradient-to-br from-[#E0AF49]/8 to-transparent p-4">
+              <div className="flex items-end justify-between">
+                <div>
+                  <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-widest text-[#E0AF49]/60">
+                    You send
+                  </p>
+                  <p className="font-heading text-2xl font-bold tracking-tight text-[#E0AF49]">
+                    {formatLKR(amountLkr)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[10px] text-white/30">Rate</p>
+                  <p className="font-mono text-xs font-semibold text-white/50">
+                    {GBP_LKR_RATE}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Allocation */}
+            <div className="rounded-xl border border-white/8 bg-white/4 p-3.5">
+              <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-white/30">
+                Allocation
+              </p>
+              <div className="space-y-2.5">
+                {Object.entries(allocations).map(([id, pct]) => {
+                  const color = getBucketColor(id);
+                  return (
+                    <div key={id}>
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="text-xs font-medium capitalize text-white/70">
+                          {id.replace(/_/g, " ")}
+                        </span>
+                        <span className="font-mono text-xs font-semibold text-white/50">
+                          {pct}%
+                        </span>
+                      </div>
+                      <div className="h-1 overflow-hidden rounded-full bg-white/8">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${pct}%` }}
+                          transition={{ duration: 0.6, ease: "easeOut", delay: 0.1 }}
+                          className="h-full rounded-full"
+                          style={{ background: color }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Footnote */}
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={paymentMode}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.2 }}
+                className="text-[11px] leading-relaxed text-white/30"
+              >
+                {paymentMode === "card" ? (
+                  <>
+                    Test card:{" "}
+                    <span className="font-mono font-semibold text-white/50">5123 4500 0000 0008</span>
+                    {" "}· exp{" "}
+                    <span className="font-mono font-semibold text-white/50">01/39</span>
+                    {" "}· CVV{" "}
+                    <span className="font-mono font-semibold text-white/50">100</span>
+                    . Real cards not accepted.
+                  </>
+                ) : (
+                  <>
+                    Simulates transfer internally. Live payouts via{" "}
+                    <a
+                      href={SEYLAN_LINKS.internetBankingPersonalLogin}
+                      target="_blank"
+                      rel={EXTERNAL_LINK_REL}
+                      className="font-medium text-[#E0AF49]/70 underline-offset-2 hover:text-[#E0AF49] hover:underline"
+                    >
+                      Personal Internet Banking
+                    </a>
+                    .
+                  </>
+                )}
+              </motion.p>
+            </AnimatePresence>
+
+            {/* CTA */}
+            <button
+              type="button"
+              disabled={sending || !isValid}
+              onClick={handleSubmit}
+              className="group relative w-full overflow-hidden rounded-xl bg-[#E31821] py-3.5 text-sm font-semibold text-white shadow-[0_4px_20px_rgba(227,24,33,0.4)] transition-all hover:bg-[#c41219] hover:shadow-[0_6px_28px_rgba(227,24,33,0.5)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+            >
+              <span className="relative flex items-center justify-center gap-2">
+                {sending ? (
+                  <>
+                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    {paymentMode === "card" ? "Redirecting…" : "Sending…"}
+                  </>
+                ) : (
+                  <>
+                    {paymentMode === "card" ? <CreditCard className="h-3.5 w-3.5" /> : <Send className="h-3.5 w-3.5" />}
+                    {paymentMode === "card"
+                      ? `Pay ${formatLKR(amountLkr)} by Card`
+                      : `Send ${formatLKR(amountLkr)}`}
+                    <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                  </>
+                )}
+              </span>
+            </button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
