@@ -75,6 +75,7 @@ export function TaxJarPanel({
   }
 
   return (
+    <>
     <Card className="border-seylan-border bg-[linear-gradient(135deg,#fffdf8_0%,#fff0d5_100%)] shadow-lg shadow-seylan-gold/10">
       <CardContent className="p-5">
         <div className="mb-4 flex items-start justify-between gap-3">
@@ -167,5 +168,6 @@ export function TaxJarPanel({
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 }

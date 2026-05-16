@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { ChatMessage, Language } from "@/types";
+import { ChatMessage, Language, PaymentAction } from "@/types";
 import { postChat } from "@/lib/api";
 
 export function useChat(userId: string) {
@@ -72,7 +72,7 @@ export function useChat(userId: string) {
             setMessages((prev) =>
               prev.map((m) =>
                 m.id === aiMsgId
-                  ? { ...m, payment_action: paymentAction as import("@/types").PaymentAction }
+                  ? { ...m, payment_action: paymentAction as unknown as PaymentAction }
                   : m
               )
             );

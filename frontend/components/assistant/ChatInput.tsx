@@ -30,12 +30,10 @@ export function ChatInput({ onSend, disabled, language }: ChatInputProps) {
     }
   }
 
-  const handleVoiceTranscript = useCallback(
-    (text: string) => {
-      onSend(text);
-    },
-    [onSend]
-  );
+  // Populate input from voice — user reviews and hits Send themselves
+  const handleVoiceTranscript = useCallback((text: string) => {
+    setValue(text);
+  }, []);
 
   return (
     <div className="sticky bottom-0 border-t border-seylan-border bg-white/90 p-4 backdrop-blur">

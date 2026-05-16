@@ -40,8 +40,14 @@ export function LoanPaymentModal({ loan, isOpen, onClose }: LoanPaymentModalProp
         },
       });
       window.location.href = session.checkout_url;
-    } catch {
-      toast.error("Could not create payment session. Please try again.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      const isUnconfigured = msg.includes("[503]") || msg.includes("not enabled");
+      toast.error(
+        isUnconfigured
+          ? "Card payments are not yet activated on this deployment."
+          : "Could not create payment session. Please try again."
+      );
       setSubmitting(false);
     }
   }

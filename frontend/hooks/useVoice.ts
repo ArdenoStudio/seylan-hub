@@ -16,34 +16,56 @@ export function useVoice(): UseVoiceReturn {
   const [transcript, setTranscript] = useState("");
   const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const finalTranscriptRef = useRef("");
 
-  const SpeechRecognition =
+  const SpeechRecognitionCtor =
     typeof window !== "undefined"
-      ? window.SpeechRecognition || window.webkitSpeechRecognition
+      ? (window.SpeechRecognition ?? window.webkitSpeechRecognition ?? null)
       : null;
 
-  const supported = !!SpeechRecognition;
+  const supported = !!SpeechRecognitionCtor;
 
   const start = useCallback(
     (lang = "en-US") => {
-      if (!SpeechRecognition) {
-        setError("Speech recognition not supported");
+      if (!SpeechRecognitionCtor) {
+        setError("Speech recognition not supported in this browser");
         return;
       }
 
-      const recognition = new SpeechRecognition();
+      // Stop any in-flight session
+      if (recognitionRef.current) {
+        recognitionRef.current.onend = null;
+        recognitionRef.current.stop();
+      }
+
+      const recognition = new SpeechRecognitionCtor();
       recognition.lang = lang;
-      recognition.interimResults = false;
-      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.continuous = true;
+      recognition.maxAlternatives = 1;
+
+      finalTranscriptRef.current = "";
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
-        const result = event.results[0]?.[0]?.transcript ?? "";
-        setTranscript(result);
-        setIsListening(false);
+        let interim = "";
+        let final = finalTranscriptRef.current;
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const result = event.results[i];
+          if (result.isFinal) {
+            final += result[0]?.transcript ?? "";
+          } else {
+            interim += result[0]?.transcript ?? "";
+          }
+        }
+        finalTranscriptRef.current = final;
+        // Show live interim transcript
+        setTranscript(final + interim);
       };
 
       recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-        setError(event.error);
+        if (event.error !== "aborted") {
+          setError(event.error);
+        }
         setIsListening(false);
       };
 
@@ -57,11 +79,16 @@ export function useVoice(): UseVoiceReturn {
       setIsListening(true);
       recognition.start();
     },
-    [SpeechRecognition]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
   );
 
   const stop = useCallback(() => {
-    recognitionRef.current?.stop();
+    if (recognitionRef.current) {
+      recognitionRef.current.onend = null;
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
     setIsListening(false);
   }, []);
 

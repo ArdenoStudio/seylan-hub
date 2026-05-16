@@ -126,10 +126,14 @@ export function SendMoneyModal({
       });
       handleDialogOpenChange(false);
       onSuccess(amountLkr, amountGbp);
-    } catch {
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      const isUnconfigured = msg.includes("[503]") || msg.includes("not enabled");
       toast.error(
         paymentMode === "card"
-          ? "Could not create payment session. Please try again."
+          ? isUnconfigured
+            ? "Card payments are not yet activated on this deployment. Use Demo Mode to test the transfer flow."
+            : "Could not create payment session. Please try again."
           : "Transfer failed. Please try again."
       );
     } finally {

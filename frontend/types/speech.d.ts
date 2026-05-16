@@ -1,5 +1,24 @@
+interface SpeechRecognitionResultList {
+  readonly length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  readonly isFinal: boolean;
+  readonly length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  readonly transcript: string;
+  readonly confidence: number;
+}
+
 interface SpeechRecognitionEvent extends Event {
-  results: SpeechRecognitionResultList;
+  readonly resultIndex: number;
+  readonly results: SpeechRecognitionResultList;
 }
 
 interface SpeechRecognitionErrorEvent extends Event {
@@ -10,11 +29,13 @@ interface SpeechRecognition extends EventTarget {
   lang: string;
   interimResults: boolean;
   continuous: boolean;
+  maxAlternatives: number;
   onresult: ((event: SpeechRecognitionEvent) => void) | null;
   onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
   onend: (() => void) | null;
   start(): void;
   stop(): void;
+  abort(): void;
 }
 
 interface SpeechRecognitionConstructor {
