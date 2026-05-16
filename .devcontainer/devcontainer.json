@@ -1,0 +1,32 @@
+{
+  "name": "Seylan Hub Agent Workspace",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/workspaces/seylan-hub",
+  "containerEnv": {
+    "NEXT_PUBLIC_USE_MOCK": "true",
+    "NEXT_PUBLIC_API_BASE": "http://localhost:8000"
+  },
+  "postCreateCommand": "cd frontend && npm ci",
+  "forwardPorts": [3000, 8000],
+  "portsAttributes": {
+    "3000": {
+      "label": "Next.js frontend",
+      "onAutoForward": "notify"
+    },
+    "8000": {
+      "label": "Backend API",
+      "onAutoForward": "silent"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+}

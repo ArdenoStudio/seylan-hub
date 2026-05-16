@@ -46,6 +46,17 @@ uvicorn main:app --port 8000
 
 See `frontend/.env.example` for all required variables. Set `NEXT_PUBLIC_USE_MOCK=true` to run with demo data (no backend needed).
 
+## Agent / DevContainer Workspace
+
+This repo includes a `.devcontainer` setup for Cursor agents and local development. It provides an isolated Node 22 Linux workspace with Chromium installed, forwards the frontend/backend ports, runs `npm ci` in `frontend`, and defaults to `NEXT_PUBLIC_USE_MOCK=true` so the demo can build without Supabase secrets.
+
+After opening the DevContainer:
+
+```bash
+cd frontend
+npm run dev
+```
+
 ## Credits
 
 - **Seylan Bank** — Sponsor & banking domain
