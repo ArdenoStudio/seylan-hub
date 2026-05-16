@@ -72,7 +72,7 @@ export function AIAdvisorPanel({ userId }: AIAdvisorPanelProps) {
           <polyline
             points="0,35 10,33 20,30 40,28 60,25 80,22 100,20 120,17 140,14 160,10 180,7 200,5"
             fill="none"
-            stroke="#C8102E"
+            stroke="#E31821"
             strokeWidth="2"
           />
           <polyline
@@ -82,8 +82,8 @@ export function AIAdvisorPanel({ userId }: AIAdvisorPanelProps) {
           />
           <defs>
             <linearGradient id="sparkGradient" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="#C8102E" stopOpacity="0.2" />
-              <stop offset="100%" stopColor="#C8102E" stopOpacity="0" />
+              <stop offset="0%" stopColor="#E31821" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#E31821" stopOpacity="0" />
             </linearGradient>
           </defs>
         </svg>

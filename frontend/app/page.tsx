@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Globe, CreditCard, Home, Store } from "lucide-react";
@@ -46,8 +47,15 @@ export default function OnboardingPage() {
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-[920px]">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-seylan-red mb-4">
-            <span className="text-white font-bold text-lg">S</span>
+          <div className="mx-auto mb-4 inline-flex rounded-2xl border border-seylan-border bg-white px-5 py-3 shadow-sm">
+            <Image
+              src="/seylan-bank-logo.png"
+              alt="Seylan Bank"
+              width={215}
+              height={100}
+              className="h-12 w-auto"
+              priority
+            />
           </div>
           <h1 className="text-2xl font-bold text-seylan-charcoal">
             Welcome to Seylan Hub

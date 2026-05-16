@@ -13,7 +13,7 @@ export async function GET() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "#F7F8FA",
+          backgroundColor: "#FFF8F1",
           fontFamily: "sans-serif",
         }}
       >
@@ -25,8 +25,9 @@ export async function GET() {
             width: 80,
             height: 80,
             borderRadius: 16,
-            backgroundColor: "#C8102E",
+            backgroundColor: "#E31821",
             marginBottom: 24,
+            boxShadow: "0 14px 30px rgba(114, 28, 36, 0.18)",
           }}
         >
           <span style={{ color: "#FFFFFF", fontSize: 40, fontWeight: 700 }}>
@@ -37,7 +38,7 @@ export async function GET() {
           style={{
             fontSize: 48,
             fontWeight: 700,
-            color: "#1A1A2E",
+            color: "#721C24",
             margin: 0,
             marginBottom: 12,
           }}
@@ -47,7 +48,7 @@ export async function GET() {
         <p
           style={{
             fontSize: 22,
-            color: "#6B7280",
+            color: "#83545A",
             margin: 0,
             maxWidth: 600,
             textAlign: "center",
@@ -62,15 +63,15 @@ export async function GET() {
             gap: 16,
             marginTop: 32,
             fontSize: 14,
-            color: "#C8102E",
+            color: "#E31821",
           }}
         >
-          <span>Next.js 15</span>
-          <span>•</span>
+          <span>Next.js 16</span>
+          <span style={{ color: "#E0AF49" }}>•</span>
           <span>Groq AI</span>
-          <span>•</span>
+          <span style={{ color: "#E0AF49" }}>•</span>
           <span>Supabase Realtime</span>
-          <span>•</span>
+          <span style={{ color: "#E0AF49" }}>•</span>
           <span>Cursor Buildathon 2026</span>
         </div>
       </div>

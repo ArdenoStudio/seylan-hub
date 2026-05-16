@@ -26,6 +26,10 @@ export const metadata: Metadata = {
   description:
     "AI banking for Sri Lanka — diaspora wallets, voice assistant, loan health, and bookkeeping for SMEs",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/seylan-bank-icon.png",
+    apple: "/seylan-bank-icon.png",
+  },
   openGraph: {
     title: "Seylan Hub",
     description:
