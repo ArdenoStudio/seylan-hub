@@ -4,12 +4,15 @@ import { Transaction } from "@/types";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
 export function subscribeToTransactions(
   accountId: string,
   onInsert: (transaction: Transaction) => void
 ) {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return () => {};
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseAnonKey);
   const channel = supabase
     .channel(`transactions:${accountId}`)
     .on(
