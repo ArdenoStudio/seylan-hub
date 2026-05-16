@@ -9,20 +9,49 @@ interface AIAdvisorPanelProps {
   userId: string;
 }
 
+const MOCK_ADVICE: Record<string, string> = {
+  "SEY-USR-001":
+    "Great progress, Nimal! You've completed 66% of your loan (24/36 payments). At your current pace, you'll be debt-free by May 2027. If you make one extra payment of LKR 20,000 this quarter, you could save LKR 18,400 in interest and finish 2 months early.",
+  "SEY-USR-003":
+    "Sunil, your loan health is AT_RISK because of the missed payment in April. To recover: (1) Make your May 20 payment on time — it's in 4 days. (2) Contact the branch to discuss a catch-up plan for the missed LKR 45,000. (3) Consider reducing non-essential expenses by LKR 5,000/month to build a buffer. Your health score can return to ON_TRACK within 3 months of consistent payments.",
+};
+
 export function AIAdvisorPanel({ userId }: AIAdvisorPanelProps) {
   const [advice, setAdvice] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
-    fetch(`${apiBase}/api/loans/advisor?user_id=${userId}`)
+    const useMock = process.env.NEXT_PUBLIC_USE_MOCK !== "false";
+
+    if (useMock) {
+      setTimeout(() => {
+        if (!cancelled) {
+          setAdvice(MOCK_ADVICE[userId] ?? MOCK_ADVICE["SEY-USR-001"]);
+          setLoading(false);
+        }
+      }, 400);
+      return () => { cancelled = true; };
+    }
+
+    fetch(`${apiBase}/api/loans/advisor?user_id=${userId}`, {
+      signal: AbortSignal.timeout(5000),
+    })
       .then((res) => {
         if (!res.ok) throw new Error("Failed");
         return res.json();
       })
-      .then((data) => setAdvice(data.advice ?? data.text ?? JSON.stringify(data)))
-      .catch(() => setAdvice("Unable to load advisor recommendations."))
-      .finally(() => setLoading(false));
+      .then((data) => {
+        if (!cancelled) setAdvice(data.advice ?? data.text ?? JSON.stringify(data));
+      })
+      .catch(() => {
+        if (!cancelled) setAdvice(MOCK_ADVICE[userId] ?? MOCK_ADVICE["SEY-USR-001"]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
   }, [userId]);
 
   return (
@@ -35,7 +64,6 @@ export function AIAdvisorPanel({ userId }: AIAdvisorPanelProps) {
           </h3>
         </div>
 
-        {/* Sparkline SVG */}
         <svg
           viewBox="0 0 200 40"
           className="w-full h-10 mb-3"

@@ -1,4 +1,13 @@
+import {
+  MOCK_WALLET,
+  getMockLoan,
+  MOCK_PL_SUMMARY,
+  MOCK_BUSINESS_TRANSACTIONS,
+  getMockChatResponse,
+} from "./mock-data";
+
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK !== "false";
 
 export class ApiError extends Error {
   status: number;
@@ -10,7 +19,10 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, options);
+  const res = await fetch(`${API_BASE}${path}`, {
+    ...options,
+    signal: AbortSignal.timeout(5000),
+  });
   if (!res.ok) {
     const text = await res.text().catch(() => "Unknown error");
     throw new ApiError(res.status, text);
@@ -18,33 +30,60 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
-export function getAccountContext(userId: string) {
+export async function getAccountContext(userId: string) {
+  if (USE_MOCK) {
+    return { user_id: userId, account_holder: "Demo User", accounts: [], balance_lkr: 245000, language_preference: "en" };
+  }
   return request(`/mock/account-context/${userId}`);
 }
 
-export function getFamilyWallet(accountId: string) {
-  return request(`/mock/family-wallet/${accountId}`);
+export async function getFamilyWallet(accountId: string) {
+  if (USE_MOCK) return MOCK_WALLET;
+  try {
+    return await request(`/mock/family-wallet/${accountId}`);
+  } catch {
+    return MOCK_WALLET;
+  }
 }
 
-export function getLoans(userId: string) {
-  return request(`/mock/loans/${userId}`);
+export async function getLoans(userId: string) {
+  if (USE_MOCK) return getMockLoan(userId);
+  try {
+    return await request(`/mock/loans/${userId}`);
+  } catch {
+    return getMockLoan(userId);
+  }
 }
 
-export function getBusinessAccount(userId: string) {
-  return request(`/mock/business-account/${userId}`);
+export async function getBusinessAccount(userId: string) {
+  if (USE_MOCK) return { transactions: MOCK_BUSINESS_TRANSACTIONS };
+  try {
+    return await request(`/mock/business-account/${userId}`);
+  } catch {
+    return { transactions: MOCK_BUSINESS_TRANSACTIONS };
+  }
 }
 
-export function getPlSummary(userId: string) {
-  return request(`/mock/pl-summary/${userId}`);
+export async function getPlSummary(userId: string) {
+  if (USE_MOCK) return MOCK_PL_SUMMARY;
+  try {
+    return await request(`/mock/pl-summary/${userId}`);
+  } catch {
+    return MOCK_PL_SUMMARY;
+  }
 }
 
-export function postWalletTransfer(payload: {
+export async function postWalletTransfer(payload: {
   sender_account_id: string;
   recipient_account_id: string;
   amount_lkr: number;
   corridor: string;
   allocation_rules: Record<string, number>;
 }) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 800));
+    return { success: true, amount_lkr: payload.amount_lkr };
+  }
   return request("/api/wallet/transfer", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -62,42 +101,60 @@ export async function postChat(
   },
   onToken: (token: string) => void
 ): Promise<void> {
-  const res = await fetch(`${API_BASE}/api/chat`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => "Unknown error");
-    throw new ApiError(res.status, text);
+  if (USE_MOCK) {
+    const response = getMockChatResponse(payload.user_id, payload.message);
+    const words = response.split(" ");
+    for (const word of words) {
+      await new Promise((r) => setTimeout(r, 30 + Math.random() * 40));
+      onToken(word + " ");
+    }
+    return;
   }
 
-  const reader = res.body?.getReader();
-  if (!reader) return;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
 
-  const decoder = new TextDecoder();
-  let buffer = "";
+  try {
+    const res = await fetch(`${API_BASE}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
+    if (!res.ok) {
+      const text = await res.text().catch(() => "Unknown error");
+      throw new ApiError(res.status, text);
+    }
 
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop() ?? "";
+    const reader = res.body?.getReader();
+    if (!reader) return;
 
-    for (const line of lines) {
-      if (!line.startsWith("data: ")) continue;
-      const data = line.slice(6);
-      try {
-        const parsed = JSON.parse(data);
-        if (parsed.done) return;
-        if (parsed.token) onToken(parsed.token);
-      } catch {
-        // skip malformed lines
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const data = line.slice(6);
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.done) return;
+          if (parsed.token) onToken(parsed.token);
+        } catch {
+          // skip malformed lines
+        }
       }
     }
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -109,7 +166,10 @@ export function postTts(payload: { text: string; language: string }) {
   });
 }
 
-export function postCategorize(payload: { transaction_ids: string[] }) {
+export async function postCategorize(payload: { transaction_ids: string[] }) {
+  if (USE_MOCK) {
+    return {};
+  }
   return request("/api/categorize-transactions", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -129,11 +189,16 @@ export function postTaxJarRule(payload: {
   });
 }
 
-export function postTaxJarTrigger(payload: {
+export async function postTaxJarTrigger(payload: {
   user_id: string;
   incoming_amount_lkr: number;
   description: string;
 }) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 600));
+    const taxAmount = Math.round(payload.incoming_amount_lkr * 0.1);
+    return { new_balance: 15070 + taxAmount, tax_saved: taxAmount };
+  }
   return request("/mock/tax-jar/trigger", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
