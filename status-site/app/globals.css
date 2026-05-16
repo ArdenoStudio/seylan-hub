@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "tw-animate-css";
 
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(8px); }
