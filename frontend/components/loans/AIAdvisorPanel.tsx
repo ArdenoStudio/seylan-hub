@@ -35,15 +35,18 @@ export function AIAdvisorPanel({ userId }: AIAdvisorPanelProps) {
       return () => { cancelled = true; };
     }
 
-    fetch(`${apiBase}/api/loans/advisor?user_id=${userId}`, {
-      signal: AbortSignal.timeout(5000),
+    fetch(`${apiBase}/api/loans/advisor`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: userId }),
+      signal: AbortSignal.timeout(10000),
     })
       .then((res) => {
         if (!res.ok) throw new Error("Failed");
         return res.json();
       })
       .then((data) => {
-        if (!cancelled) setAdvice(data.advice ?? data.text ?? JSON.stringify(data));
+        if (!cancelled) setAdvice(data.advisor_text ?? data.advice ?? data.text ?? JSON.stringify(data));
       })
       .catch(() => {
         if (!cancelled) setAdvice(MOCK_ADVICE[userId] ?? MOCK_ADVICE["SEY-USR-001"]);

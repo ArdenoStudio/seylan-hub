@@ -41,7 +41,28 @@ export async function getAccountContext(userId: string) {
 export async function getFamilyWallet(accountId: string) {
   if (USE_MOCK) return MOCK_WALLET;
   try {
-    return await request(`/mock/family-wallet/${accountId}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const raw = await request<any>(`/mock/family-wallet/${accountId}`);
+    // Normalise backend field names to our WalletState shape
+    return {
+      ...raw,
+      last_remittance: raw.last_remittance ? {
+        ...raw.last_remittance,
+        amount_gbp: raw.last_remittance.sender_amount_gbp ?? raw.last_remittance.amount_gbp,
+        fx_rate: raw.last_remittance.exchange_rate ?? raw.last_remittance.fx_rate,
+      } : undefined,
+      buckets: (raw.buckets ?? []).map((b: any) => ({
+        ...b,
+        bucket_id: b.bucket_id ?? b.id,
+        allocation_pct: b.allocation_pct ?? b.allocated_pct,
+      })),
+      recent_transactions: (raw.recent_transactions ?? []).map((t: any) => ({
+        ...t,
+        transaction_id: t.transaction_id ?? t.id,
+        timestamp: t.timestamp ?? t.date,
+        type: t.type ?? (t.amount_lkr < 0 ? "debit" : "credit"),
+      })),
+    };
   } catch {
     return MOCK_WALLET;
   }
@@ -50,7 +71,11 @@ export async function getFamilyWallet(accountId: string) {
 export async function getLoans(userId: string) {
   if (USE_MOCK) return getMockLoan(userId);
   try {
-    return await request(`/mock/loans/${userId}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data = await request<any>(`/mock/loans/${userId}`);
+    // Backend returns { loans: [...] }, unwrap to single Loan
+    if (data && Array.isArray(data.loans)) return data.loans[0] ?? getMockLoan(userId);
+    return Array.isArray(data) ? data[0] : data;
   } catch {
     return getMockLoan(userId);
   }
