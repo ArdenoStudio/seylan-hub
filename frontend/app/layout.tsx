@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Noto_Sans_Sinhala } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { AppShell } from "@/components/layout/AppShell";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -37,7 +38,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${notoSansSinhala.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <AppShell>{children}</AppShell>
+        <ErrorBoundary>
+          <AppShell>{children}</AppShell>
+        </ErrorBoundary>
         <Toaster />
       </body>
     </html>
