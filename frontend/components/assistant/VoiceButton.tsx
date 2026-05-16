@@ -14,7 +14,7 @@ interface VoiceButtonProps {
 }
 
 export function VoiceButton({ language, onTranscript, disabled }: VoiceButtonProps) {
-  const { isListening, transcript, supported, start, stop } = useVoice();
+  const { isListening, transcript, error, supported, start, stop } = useVoice();
 
   useEffect(() => {
     if (transcript) onTranscript(transcript);
@@ -38,17 +38,23 @@ export function VoiceButton({ language, onTranscript, disabled }: VoiceButtonPro
 
   return (
     <Button
+      type="button"
       size="icon"
       variant={isListening ? "destructive" : "outline"}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerCancel={stop}
+      onLostPointerCapture={stop}
       disabled={disabled}
       className={cn(
         "relative select-none touch-none",
         isListening && "ring-2 ring-red-500/50"
       )}
-      title="Hold to speak"
+      title={
+        error
+          ? `Speech recognition: ${error} — tap to try again`
+          : "Hold to speak (release when finished)"
+      }
     >
       {isListening ? (
         <>
