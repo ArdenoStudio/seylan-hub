@@ -29,8 +29,9 @@ import {
 } from "@/lib/remittance-fx";
 import { toast } from "sonner";
 import { EXTERNAL_LINK_REL, SEYLAN_LINKS } from "@/lib/seylan-external-links";
-import { ArrowRight, CreditCard, Zap, Send, ChevronRight, ChevronDown } from "lucide-react";
+import { ArrowRight, CreditCard, Zap, Send, ChevronRight, ChevronDown, RefreshCw } from "lucide-react";
 import { VerificationCard } from "@/components/ui/verification-card";
+import { CurrencyExchangeCard } from "@/components/wallet/CurrencyExchangeCard";
 
 interface SendMoneyModalProps {
   senderId: string;
@@ -70,6 +71,7 @@ export function SendMoneyModal({
   const [paymentMode, setPaymentMode] = useState<"card" | "demo">("card");
   const [amount, setAmount] = useState(600);
   const [currency, setCurrency] = useState<RemittanceCurrency>(DEFAULT_CURRENCY);
+  const [showFxCalc, setShowFxCalc] = useState(false);
   const [sending, setSending] = useState(false);
   const [sandboxRouting, setSandboxRouting] = useState<{
     source_account: string;
@@ -279,6 +281,38 @@ export function SendMoneyModal({
                 <span className="text-xs font-medium text-gray-400">{currency.symbol}</span>
               </div>
             </div>
+
+            {/* FX calculator toggle */}
+            <button
+              type="button"
+              onClick={() => setShowFxCalc((v) => !v)}
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-gray-200 py-2 text-xs font-medium text-gray-400 transition-colors hover:border-gray-300 hover:text-gray-600"
+            >
+              <RefreshCw className="h-3 w-3" />
+              {showFxCalc ? "Hide FX calculator" : "Open FX calculator"}
+              <ChevronDown className={`h-3 w-3 transition-transform ${showFxCalc ? "rotate-180" : ""}`} />
+            </button>
+
+            <AnimatePresence>
+              {showFxCalc && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25, ease: "easeInOut" }}
+                  className="overflow-hidden"
+                >
+                  <CurrencyExchangeCard
+                    initialFromCurrency={currency}
+                    onExchange={({ from, amount: a, amountLkr }) => {
+                      setCurrency(from);
+                      setAmount(a);
+                      setShowFxCalc(false);
+                    }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* LKR conversion */}
             <div className="relative overflow-hidden rounded-xl border border-gray-100 bg-gray-50 p-4">
