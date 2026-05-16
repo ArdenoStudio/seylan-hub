@@ -209,7 +209,7 @@ export function SendMoneyModal({
 
             {/* Recipient card */}
             <VerificationCard
-              backgroundImage="https://images.unsplash.com/photo-1566837945700-30057527ade0?w=640&q=80"
+              backgroundImage="https://pub-940ccf6255b54fa799a9b01050e6c227.r2.dev/ruixen_moon.png"
               label="Seylan Hub · Recipient"
               idNumber={recipientId}
               name={recipientAccountHolder.trim() || "Hub Wallet"}
