@@ -1,4 +1,4 @@
-const OWNER = process.env.UPPTIME_OWNER ?? "Cookie-Cat21";
+const OWNER = process.env.UPPTIME_OWNER ?? "ArdenoStudio";
 const REPO = process.env.UPPTIME_REPO ?? "seylan-uptime-monitor";
 const BRANCH = process.env.UPPTIME_BRANCH ?? "master";
 
