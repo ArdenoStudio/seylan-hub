@@ -174,7 +174,8 @@ export default function WalletPage() {
               provider: "Seylan Hub",
             });
           }
-          refetch();
+          // silent=true: update buckets in background without triggering skeleton
+          refetch(true);
         }}
         open={modalOpen}
         onOpenChange={setModalOpen}
