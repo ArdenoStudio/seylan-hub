@@ -48,8 +48,8 @@ export interface ScheduleEntry {
   month: number;
   due_date: string;
   amount_lkr: number;
-  /** Backend may send `"DUE"` as an alias for `"UPCOMING"`. */
-  status: "PAID" | "UPCOMING" | "MISSED";
+  /** `"DUE"` is an alias for `"UPCOMING"` (some API payloads). */
+  status: "PAID" | "UPCOMING" | "MISSED" | "DUE";
 }
 
 export interface ChatMessage {

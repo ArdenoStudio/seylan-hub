@@ -14,7 +14,16 @@ const STATUS_PILL = {
   PAID: "bg-green-100 text-green-700",
   UPCOMING: "bg-blue-100 text-blue-700",
   MISSED: "bg-red-100 text-red-700",
-};
+} as const;
+
+type PillKey = keyof typeof STATUS_PILL;
+
+function canonicalScheduleStatus(raw: string): PillKey {
+  const s = raw.toUpperCase();
+  if (s === "DUE") return "UPCOMING";
+  if (s === "PAID" || s === "UPCOMING" || s === "MISSED") return s;
+  return "UPCOMING";
+}
 
 export function RepaymentTimeline({ schedule }: RepaymentTimelineProps) {
   const [tab, setTab] = useState("all");
@@ -23,10 +32,10 @@ export function RepaymentTimeline({ schedule }: RepaymentTimelineProps) {
     tab === "all"
       ? schedule
       : schedule.filter((e) => {
-          const s = e.status.toUpperCase();
-          if (tab === "upcoming") return s === "UPCOMING" || s === "DUE";
-          if (tab === "paid") return s === "PAID";
-          if (tab === "missed") return s === "MISSED";
+          const key = canonicalScheduleStatus(e.status);
+          if (tab === "upcoming") return key === "UPCOMING";
+          if (tab === "paid") return key === "PAID";
+          if (tab === "missed") return key === "MISSED";
           return false;
         });
 
@@ -51,35 +60,38 @@ export function RepaymentTimeline({ schedule }: RepaymentTimelineProps) {
 
           <TabsContent value={tab}>
             <div className="max-h-[320px] overflow-y-auto space-y-2">
-              {filtered.map((entry) => (
-                <div
-                  key={`${entry.month}-${entry.due_date}`}
-                  className="flex items-center justify-between py-2 border-b border-seylan-border last:border-0"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted-foreground w-8">
-                      #{entry.month}
-                    </span>
-                    <span className="text-sm text-seylan-charcoal">
-                      {new Date(entry.due_date).toLocaleDateString("en-LK", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </span>
+              {filtered.map((entry) => {
+                const statusKey = canonicalScheduleStatus(entry.status);
+                return (
+                  <div
+                    key={`${entry.month}-${entry.due_date}`}
+                    className="flex items-center justify-between py-2 border-b border-seylan-border last:border-0"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-muted-foreground w-8">
+                        #{entry.month}
+                      </span>
+                      <span className="text-sm text-seylan-charcoal">
+                        {new Date(entry.due_date).toLocaleDateString("en-LK", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-medium">
+                        {formatLKR(entry.amount_lkr)}
+                      </span>
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded-full ${STATUS_PILL[statusKey]}`}
+                      >
+                        {statusKey}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium">
-                      {formatLKR(entry.amount_lkr)}
-                    </span>
-                    <span
-                      className={`text-xs px-2 py-0.5 rounded-full ${STATUS_PILL[entry.status]}`}
-                    >
-                      {entry.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               {filtered.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   No entries
