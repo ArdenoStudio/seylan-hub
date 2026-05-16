@@ -27,6 +27,9 @@ export function subscribeToTransactions(
       },
       (payload) => {
         const row = payload.new as Record<string, unknown>;
+        // #region agent log H-A
+        fetch('http://127.0.0.1:7903/ingest/f6b07d8c-426b-4e0d-9bf5-677b52351ced',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5ea4af'},body:JSON.stringify({sessionId:'5ea4af',location:'supabase.ts:29',message:'realtime INSERT row keys and timestamp fields',data:{rowKeys:Object.keys(row),timestamp:row.timestamp,txn_date:row.txn_date,created_at:row.created_at,id:row.id,merchant:row.merchant},hypothesisId:'H-A',timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         const tx: Transaction = {
           transaction_id: (row.id as string) ?? (row.transaction_id as string),
           account_id: row.account_id as string,

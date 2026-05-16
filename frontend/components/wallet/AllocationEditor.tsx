@@ -17,6 +17,11 @@ export function AllocationEditor({ buckets, onSave }: AllocationEditorProps) {
   const [allocations, setAllocations] = useState<Record<string, number>>(
     Object.fromEntries(buckets.map((b) => [b.bucket_id, b.allocation_pct]))
   );
+  // #region agent log H-D
+  const bucketPcts = Object.fromEntries(buckets.map(b => [b.bucket_id, b.allocation_pct]));
+  const stateMatchesProp = JSON.stringify(allocations) === JSON.stringify(bucketPcts);
+  if (!stateMatchesProp) { fetch('http://127.0.0.1:7903/ingest/f6b07d8c-426b-4e0d-9bf5-677b52351ced',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5ea4af'},body:JSON.stringify({sessionId:'5ea4af',location:'AllocationEditor.tsx:state-drift',message:'state/prop divergence detected',data:{stateAllocations:allocations,propPcts:bucketPcts},hypothesisId:'H-D',timestamp:Date.now()})}).catch(()=>{}); }
+  // #endregion
 
   const total = Object.values(allocations).reduce((sum, v) => sum + v, 0);
 

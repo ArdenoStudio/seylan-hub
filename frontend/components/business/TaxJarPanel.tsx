@@ -26,6 +26,9 @@ export function TaxJarPanel({
   const animRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   useEffect(() => {
+    // #region agent log H-B
+    fetch('http://127.0.0.1:7903/ingest/f6b07d8c-426b-4e0d-9bf5-677b52351ced',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5ea4af'},body:JSON.stringify({sessionId:'5ea4af',location:'TaxJarPanel.tsx:28',message:'animation effect fired',data:{balance,displayBalance,equal:displayBalance===balance},hypothesisId:'H-B',timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     if (displayBalance === balance) return;
     const diff = balance - displayBalance;
     const steps = 30;

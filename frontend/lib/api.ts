@@ -63,7 +63,10 @@ export async function getFamilyWallet(accountId: string) {
         type: t.type ?? (t.amount_lkr < 0 ? "debit" : "credit"),
       })),
     };
-  } catch {
+  } catch (err) {
+    // #region agent log H-E
+    fetch('http://127.0.0.1:7903/ingest/f6b07d8c-426b-4e0d-9bf5-677b52351ced',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'5ea4af'},body:JSON.stringify({sessionId:'5ea4af',location:'api.ts:getFamilyWallet-catch',message:'getFamilyWallet fell back to MOCK_WALLET',data:{error:String(err)},hypothesisId:'H-E',timestamp:Date.now()})}).catch(()=>{});
+    // #endregion
     return MOCK_WALLET;
   }
 }
