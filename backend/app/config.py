@@ -30,6 +30,14 @@ class Settings(BaseSettings):
     seylan_sandbox_source_account: str = "064000012548001"
     seylan_sandbox_destination_account: str = "001213437904100"
 
+    # MPGS (Mastercard Payment Gateway Services) — Hosted Checkout v79
+    mpgs_host: str = "test-seylan.mtf.gateway.mastercard.com"
+    mpgs_merchant_id: str = ""  # CURSOR1
+    mpgs_api_password: str = ""
+    mpgs_operator_id: str = "CURSOR1op"
+    mpgs_api_version: str = "79"
+    mpgs_enable: bool = False
+
     # AI
     groq_api_key: str = ""
     elevenlabs_api_key: str = ""
@@ -41,6 +49,7 @@ class Settings(BaseSettings):
 
     # App
     cors_origins: str = "http://localhost:3000,https://seylan-hub.vercel.app"
+    frontend_base_url: str = "https://seylan-hub.vercel.app"
 
     @property
     def cors_list(self) -> list[str]:

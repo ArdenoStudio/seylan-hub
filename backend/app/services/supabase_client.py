@@ -172,3 +172,40 @@ def ping() -> bool:
     """Quick connectivity check — SELECT 1 equivalent."""
     result = get_client().table("transactions").select("id").limit(1).execute()
     return result is not None
+
+# --- Payments (MPGS) ---
+
+def save_payment(payment: dict) -> dict:
+    from datetime import datetime, timezone
+    payment.setdefault("created_at", datetime.now(timezone.utc).isoformat())
+    payment.setdefault("updated_at", datetime.now(timezone.utc).isoformat())
+    result = get_client().table("payments").insert(payment).execute()
+    return result.data[0] if result.data else {}
+
+
+def update_payment_status(order_id: str, status: str, gateway_response: dict) -> dict:
+    from datetime import datetime, timezone
+    result = (
+        get_client()
+        .table("payments")
+        .update({
+            "status": status,
+            "gateway_response": gateway_response,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        })
+        .eq("order_id", order_id)
+        .execute()
+    )
+    return result.data[0] if result.data else {}
+
+
+def get_payment(order_id: str) -> dict | None:
+    result = (
+        get_client()
+        .table("payments")
+        .select("*")
+        .eq("order_id", order_id)
+        .limit(1)
+        .execute()
+    )
+    return result.data[0] if result.data else None

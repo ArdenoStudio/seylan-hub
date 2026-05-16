@@ -68,3 +68,21 @@ create index if not exists idx_tax_jar_user on tax_jar_rules(user_id);
 insert into tax_jar_rules (user_id, from_account_id, to_account_id, percentage, label, status)
 values ('SEY-BIZ-001', 'SEY-BIZ-001', 'SEY-SAV-001', 10, 'Tax Savings', 'ACTIVE')
   on conflict (user_id, from_account_id) do nothing;
+
+-- payments (MPGS Hosted Checkout)
+CREATE TABLE IF NOT EXISTS payments (
+  id               uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id         text        UNIQUE NOT NULL,
+  session_id       text,
+  amount_lkr       numeric     NOT NULL,
+  currency         text        DEFAULT 'LKR',
+  purpose          text        NOT NULL,
+  description      text,
+  status           text        DEFAULT 'PENDING',
+  metadata         jsonb       DEFAULT '{}'::jsonb,
+  gateway_response jsonb,
+  created_at       timestamptz DEFAULT now(),
+  updated_at       timestamptz DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_payments_order_id ON payments(order_id);
+CREATE INDEX IF NOT EXISTS idx_payments_status   ON payments(status);

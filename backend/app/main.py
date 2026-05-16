@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import settings
-from app.routers import mock, wallet, chat, tts, loans, business
+from app.routers import mock, wallet, chat, tts, loans, business, payments
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
 log = logging.getLogger(__name__)
@@ -116,6 +116,7 @@ app.include_router(chat.router)
 app.include_router(tts.router)
 app.include_router(loans.router)
 app.include_router(business.router)
+app.include_router(payments.router)
 
 
 @app.exception_handler(Exception)
