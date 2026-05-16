@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter
 
 from app.config import settings
-from app.models.schemas import WalletTransferRequest, WalletTransferResponse, BucketCredit
+from app.models.schemas import WalletTransferRequest, WalletTransferResponse, BucketCredit, SaveAllocationRulesRequest
 from app.services import supabase_client
 
 log = logging.getLogger(__name__)
@@ -75,6 +75,25 @@ async def wallet_transfer(req: WalletTransferRequest):
         timestamp=datetime.now(timezone.utc).isoformat(),
         buckets_credited=buckets_credited,
     )
+
+
+@router.post("/wallet/rules/{sender_id}")
+async def save_wallet_rules(sender_id: str, req: SaveAllocationRulesRequest):
+    total_pct = sum(r.pct for r in req.allocation_rules)
+    if abs(total_pct - 100) > 0.01:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=422, detail=f"Allocation percentages must sum to 100 (got {total_pct})")
+    try:
+        result = supabase_client.save_allocation_rule(
+            sender_id=sender_id,
+            account_id=req.account_id,
+            buckets=[{"id": r.bucket_id, "pct": r.pct} for r in req.allocation_rules],
+        )
+        return {"status": "saved", "data": result}
+    except Exception as exc:
+        log.error("save_wallet_rules failed: %s", exc)
+        from fastapi import HTTPException
+        raise HTTPException(status_code=500, detail="Failed to save allocation rules")
 
 
 @router.get("/wallet/rules/{sender_id}")

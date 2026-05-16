@@ -9,6 +9,8 @@ import { TransactionFeed } from "@/components/wallet/TransactionFeed";
 import { LastRemittanceBanner } from "@/components/wallet/LastRemittanceBanner";
 import { SendMoneyModal } from "@/components/wallet/SendMoneyModal";
 import { fireSpendToast } from "@/components/wallet/SpendNotificationToast";
+import { saveAllocationRules } from "@/lib/api";
+import { toast } from "sonner";
 import { InsightActionStrip } from "@/components/insights/InsightActionStrip";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -148,11 +150,21 @@ export default function WalletPage() {
       <section id="allocation-editor" className="scroll-mt-6">
         <AllocationEditor
           buckets={buckets}
-          onSave={(newAllocations) => {
+          onSave={async (newAllocations) => {
             localStorage.setItem(
               "seylan_allocation_rules",
               JSON.stringify(newAllocations)
             );
+            try {
+              await saveAllocationRules(
+                user?.id ?? "SEY-USR-001",
+                newAllocations,
+                FAMILY_ACCOUNT_ID
+              );
+              toast.success("Allocation rules saved");
+            } catch {
+              toast.error("Failed to save rules — try again");
+            }
           }}
         />
       </section>

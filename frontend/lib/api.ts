@@ -124,6 +124,28 @@ export async function postWalletTransfer(payload: {
   });
 }
 
+export async function saveAllocationRules(
+  senderId: string,
+  allocations: Record<string, number>,
+  accountId = "SEY-ACC-002"
+) {
+  if (USE_MOCK) {
+    await new Promise((r) => setTimeout(r, 400));
+    return { status: "saved" };
+  }
+  return request(`/api/wallet/rules/${senderId}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      account_id: accountId,
+      allocation_rules: Object.entries(allocations).map(([bucket_id, pct]) => ({
+        bucket_id,
+        pct,
+      })),
+    }),
+  });
+}
+
 export async function postChat(
   payload: {
     user_id: string;

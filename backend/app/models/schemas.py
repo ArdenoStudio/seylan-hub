@@ -8,6 +8,11 @@ class AllocationRule(BaseModel):
     pct: float = Field(..., ge=0, le=100)
 
 
+class SaveAllocationRulesRequest(BaseModel):
+    allocation_rules: list[AllocationRule]
+    account_id: str = "SEY-ACC-002"
+
+
 class WalletTransferRequest(BaseModel):
     sender_account_id: str
     recipient_account_id: str
