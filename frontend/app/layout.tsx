@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Noto_Sans_Sinhala } from "next/font/google";
+import { Cal_Sans, Geist_Mono, Noto_Sans_Sinhala } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { AppShell } from "@/components/layout/AppShell";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const calSans = Cal_Sans({
+  variable: "--font-cal-sans",
   subsets: ["latin"],
+  weight: "400",
 });
 
 const geistMono = Geist_Mono({
@@ -49,7 +50,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${notoSansSinhala.variable} h-full antialiased`}
+      className={`${calSans.variable} ${geistMono.variable} ${notoSansSinhala.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <ErrorBoundary>
