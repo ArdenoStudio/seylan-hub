@@ -6,9 +6,11 @@ import { PlSummaryCard } from "@/components/business/PlSummaryCard";
 import { ExpenseBreakdown } from "@/components/business/ExpenseBreakdown";
 import { TaxJarPanel } from "@/components/business/TaxJarPanel";
 import { CategorisedTransactionFeed } from "@/components/business/CategorisedTransactionFeed";
+import { InsightActionStrip } from "@/components/insights/InsightActionStrip";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Transaction } from "@/types";
+import { Bot, PiggyBank, ReceiptText, TrendingUp } from "lucide-react";
 
 const BUSINESS_USER_ID = "SEY-BIZ-001";
 const INITIAL_TAX_JAR_BALANCE = 15070;
@@ -37,7 +39,7 @@ export default function BusinessPage() {
   }
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+    <div className="space-y-5 p-4 sm:space-y-6 sm:p-6 lg:p-8">
       <PageHeader
         eyebrow="SME bookkeeper"
         title="Silva Hardware & Electricals"
@@ -49,12 +51,45 @@ export default function BusinessPage() {
         }
       />
 
+      <InsightActionStrip
+        eyebrow="SME command center"
+        title="Keep cash, categories, and tax moving together"
+        insights={[
+          {
+            label: "Cash runway",
+            value: "14 days",
+            detail: "Current weekly margin can cover two more restock cycles.",
+            tone: "success",
+            icon: TrendingUp,
+          },
+          {
+            label: "Tax jar",
+            value: "72%",
+            detail: "Projected weekly liability is mostly covered before month-end.",
+            tone: "info",
+            icon: PiggyBank,
+          },
+          {
+            label: "Needs review",
+            value: `${extraTransactions.length || 3}`,
+            detail: "Recent transactions should be checked before filing.",
+            tone: "neutral",
+            icon: ReceiptText,
+          },
+        ]}
+        actions={[
+          { label: "Ask bookkeeper", icon: Bot, href: "/assistant" },
+          { label: "Review tax jar", icon: PiggyBank, href: "#tax-jar" },
+          { label: "Check categories", icon: ReceiptText, href: "#business-feed" },
+        ]}
+      />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <PlSummaryCard userId={BUSINESS_USER_ID} />
           <ExpenseBreakdown userId={BUSINESS_USER_ID} />
         </div>
-        <div>
+        <div id="tax-jar">
           <TaxJarPanel
             userId={BUSINESS_USER_ID}
             initialBalance={INITIAL_TAX_JAR_BALANCE}
@@ -63,10 +98,12 @@ export default function BusinessPage() {
         </div>
       </div>
 
-      <CategorisedTransactionFeed
-        userId={BUSINESS_USER_ID}
-        extraTransactions={extraTransactions}
-      />
+      <section id="business-feed">
+        <CategorisedTransactionFeed
+          userId={BUSINESS_USER_ID}
+          extraTransactions={extraTransactions}
+        />
+      </section>
     </div>
   );
 }

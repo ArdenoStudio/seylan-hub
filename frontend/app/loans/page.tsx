@@ -9,8 +9,10 @@ import { RepaymentProgressBar } from "@/components/loans/RepaymentProgressBar";
 import { PaymentCountdown } from "@/components/loans/PaymentCountdown";
 import { AIAdvisorPanel } from "@/components/loans/AIAdvisorPanel";
 import { RepaymentTimeline } from "@/components/loans/RepaymentTimeline";
+import { InsightActionStrip } from "@/components/insights/InsightActionStrip";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AlertTriangle, Bot, CalendarCheck, Gauge, WalletCards } from "lucide-react";
 
 export default function LoansPage() {
   const { user, mounted } = useCurrentUser();
@@ -55,8 +57,21 @@ export default function LoansPage() {
     );
   }
 
+  const progressPct = Math.round((loan.payments_made / loan.total_payments) * 100);
+  const nextDate = new Date(loan.next_payment_date);
+  const daysUntil = Math.max(
+    0,
+    Math.ceil((nextDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+  );
+  const riskCopy =
+    loan.health_score === "ON_TRACK"
+      ? "On track"
+      : loan.health_score === "AT_RISK"
+        ? "Watch closely"
+        : "Needs action";
+
   return (
-    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+    <div className="space-y-5 p-4 sm:space-y-6 sm:p-6 lg:p-8">
       <PageHeader
         eyebrow="Loan health"
         title="Understand your repayment position at a glance"
@@ -74,9 +89,50 @@ export default function LoansPage() {
         <LoanSummaryCard loan={loan} />
         <PaymentCountdown loan={loan} />
       </div>
+
+      <InsightActionStrip
+        eyebrow="Repayment signal"
+        title="Your next safest move"
+        insights={[
+          {
+            label: "Health",
+            value: riskCopy,
+            detail:
+              loan.health_score === "ON_TRACK"
+                ? "Payment pattern is healthy. Keep the next date protected."
+                : "A payment reminder and partial plan can reduce stress now.",
+            tone: loan.health_score === "ON_TRACK" ? "success" : "alert",
+            icon: Gauge,
+          },
+          {
+            label: "Due window",
+            value: `${daysUntil} days`,
+            detail: "Paying before the due date keeps the account from sliding into risk.",
+            tone: daysUntil <= 3 ? "alert" : "info",
+            icon: CalendarCheck,
+          },
+          {
+            label: "Progress",
+            value: `${progressPct}%`,
+            detail: `${loan.payments_made} of ${loan.total_payments} repayments are already complete.`,
+            tone: "neutral",
+            icon: WalletCards,
+          },
+        ]}
+        actions={[
+          { label: "Ask scenario", icon: Bot, href: "/assistant" },
+          { label: "View timeline", icon: CalendarCheck, href: "#repayment-timeline" },
+          { label: "Risk check", icon: AlertTriangle, href: "#loan-advisor" },
+        ]}
+      />
+
       <RepaymentProgressBar loan={loan} />
-      <AIAdvisorPanel userId={userId} />
-      <RepaymentTimeline schedule={loan.schedule} />
+      <section id="loan-advisor">
+        <AIAdvisorPanel userId={userId} />
+      </section>
+      <section id="repayment-timeline">
+        <RepaymentTimeline schedule={loan.schedule} />
+      </section>
     </div>
   );
 }
