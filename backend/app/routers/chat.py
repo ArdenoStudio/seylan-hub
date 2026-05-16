@@ -59,7 +59,8 @@ async def chat(req: ChatRequest):
             yield 'data: {"done": true}\n\n'
         except Exception as exc:
             log.error("Groq streaming error: %s", exc)
-            yield f'data: {{"error": "{str(exc)}", "done": true}}\n\n'
+            error_payload = json.dumps({"error": str(exc), "done": True}, ensure_ascii=False)
+            yield f"data: {error_payload}\n\n"
         finally:
             # Fire-and-forget session save
             try:

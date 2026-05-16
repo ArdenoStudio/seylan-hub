@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { ChatMessage, Language } from "@/types";
 import { postChat } from "@/lib/api";
 
@@ -9,6 +9,11 @@ export function useChat(userId: string) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [language, setLanguage] = useState<Language>("en");
   const sessionIdRef = useRef(crypto.randomUUID());
+  const messagesRef = useRef<ChatMessage[]>([]);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   const send = useCallback(
     async (content: string) => {
@@ -33,6 +38,11 @@ export function useChat(userId: string) {
       };
       setMessages((prev) => [...prev, aiMsg]);
 
+      const history = messagesRef.current.map((m) => ({
+        role: m.role,
+        content: m.content,
+      }));
+
       try {
         await postChat(
           {
@@ -40,15 +50,21 @@ export function useChat(userId: string) {
             session_id: sessionIdRef.current,
             message: content,
             language,
-            history: messages.map((m) => ({
-              role: m.role,
-              content: m.content,
-            })),
+            history,
           },
           (token) => {
             setMessages((prev) =>
               prev.map((m) =>
                 m.id === aiMsgId ? { ...m, content: m.content + token } : m
+              )
+            );
+          },
+          (errorMessage) => {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === aiMsgId
+                  ? { ...m, content: `Sorry, something went wrong: ${errorMessage}` }
+                  : m
               )
             );
           }
@@ -69,7 +85,7 @@ export function useChat(userId: string) {
         setIsStreaming(false);
       }
     },
-    [userId, language, messages]
+    [userId, language]
   );
 
   return { messages, isStreaming, language, setLanguage, send };
