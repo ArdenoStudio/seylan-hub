@@ -8,8 +8,6 @@ import { TransactionFeed } from "@/components/wallet/TransactionFeed";
 import { LastRemittanceBanner } from "@/components/wallet/LastRemittanceBanner";
 import { SendMoneyModal } from "@/components/wallet/SendMoneyModal";
 import { fireSpendToast } from "@/components/wallet/SpendNotificationToast";
-import { saveAllocationRules } from "@/lib/api";
-import { toast } from "sonner";
 import { InsightActionStrip } from "@/components/insights/InsightActionStrip";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -147,13 +145,6 @@ export default function WalletPage() {
               "seylan_allocation_rules",
               JSON.stringify(newAllocations)
             );
-            toast.success("Allocation rules saved");
-            // Best-effort backend persist — silently ignore if unreachable
-            saveAllocationRules(
-              user?.id ?? "SEY-USR-001",
-              newAllocations,
-              FAMILY_ACCOUNT_ID
-            ).catch(() => {});
           }}
         />
       </section>
