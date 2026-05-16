@@ -22,7 +22,7 @@ const requiredSnippets = [
   ["app/page.tsx", "Open Seylan Hub"],
   ["hooks/useWalletRealtime.ts", "subscribeToTransactions"],
   ["app/wallet/page.tsx", "Track money sent home"],
-  ["components/layout/AppShell.tsx", "pathnameShowsSeylanHandoff"],
+  ["components/layout/AppShell.tsx", "showSeylanHandoff"],
   ["components/assistant/MessageBubble.tsx", "<AudioPlayer"],
   ["app/demo/page.tsx", "Trigger wallet spend"],
   ["public/manifest.json", "/seylan-logo.svg"],
