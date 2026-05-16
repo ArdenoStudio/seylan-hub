@@ -6,9 +6,11 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
 export function subscribeToTransactions(
   accountId: string,
-  onInsert: (transaction: Transaction) => void
+  onInsert: (transaction: Transaction) => void,
+  onStatusChange?: (connected: boolean) => void
 ) {
   if (!supabaseUrl || !supabaseAnonKey) {
+    onStatusChange?.(false);
     return () => {};
   }
 
@@ -27,7 +29,9 @@ export function subscribeToTransactions(
         onInsert(payload.new as Transaction);
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      onStatusChange?.(status === "SUBSCRIBED");
+    });
 
   return () => {
     supabase.removeChannel(channel);

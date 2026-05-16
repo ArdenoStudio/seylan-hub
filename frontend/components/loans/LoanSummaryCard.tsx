@@ -11,7 +11,7 @@ interface LoanSummaryCardProps {
 
 export function LoanSummaryCard({ loan }: LoanSummaryCardProps) {
   return (
-    <Card className="border-seylan-border bg-white/95 shadow-lg shadow-seylan-plum/5">
+    <Card className="card-glass shadow-brand-lg border-0">
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-4 mb-5">
           <div>

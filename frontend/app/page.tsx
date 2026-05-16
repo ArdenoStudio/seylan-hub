@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Globe, CreditCard, Home, Store, ArrowRight, ShieldCheck } from "lucide-react";
@@ -42,10 +43,24 @@ const PERSONA_CARDS = [
 export default function OnboardingPage() {
   const { switchUser } = useCurrentUser();
   const router = useRouter();
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   function handleSelect(userId: string, route: string) {
     switchUser(userId);
     router.push(route);
+  }
+
+  function handleMouseMove(
+    e: React.MouseEvent<HTMLDivElement>,
+    idx: number
+  ) {
+    const card = cardRefs.current[idx];
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    card.style.setProperty("--mouse-x", `${x}%`);
+    card.style.setProperty("--mouse-y", `${y}%`);
   }
 
   return (
@@ -92,13 +107,15 @@ export default function OnboardingPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {PERSONA_CARDS.map((card) => (
+          {PERSONA_CARDS.map((card, idx) => (
             <Card
               key={card.user.id}
-              className="group cursor-pointer border-seylan-border bg-white/90 shadow-sm transition-all hover:-translate-y-1 hover:border-seylan-red/40 hover:shadow-xl hover:shadow-seylan-plum/10"
+              ref={(el) => { cardRefs.current[idx] = el; }}
+              className="persona-card-spotlight group cursor-pointer card-glass shadow-brand border-0 transition-all hover:-translate-y-1 hover:shadow-brand-lg"
               onClick={() =>
                 handleSelect(card.user.id, card.user.defaultRoute)
               }
+              onMouseMove={(e) => handleMouseMove(e, idx)}
             >
               <CardContent className="p-6">
                 <div className="flex items-start gap-4">

@@ -45,7 +45,9 @@ export function ChatInput({ onSend, disabled, language }: ChatInputProps) {
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={
-            language === "si" ? "ප්‍රශ්නයක් අසන්න..." : "Ask a question..."
+            language === "si"
+              ? "වියදම්, ණය, හෝ බදු ගැන අසන්න..."
+              : "Ask about spending, loans, or tax..."
           }
           disabled={disabled}
           className="flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
@@ -59,6 +61,7 @@ export function ChatInput({ onSend, disabled, language }: ChatInputProps) {
           size="icon"
           onClick={handleSubmit}
           disabled={disabled || !value.trim()}
+          aria-label="Send message"
           className="rounded-full"
         >
           <Send className="h-4 w-4" />

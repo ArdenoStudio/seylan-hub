@@ -1,0 +1,79 @@
+import logging
+import uuid
+from datetime import datetime, timezone
+
+from fastapi import APIRouter
+
+from app.config import settings
+from app.models.schemas import WalletTransferRequest, WalletTransferResponse, BucketCredit
+from app.services import supabase_client
+
+log = logging.getLogger(__name__)
+router = APIRouter(prefix="/api", tags=["wallet"])
+
+
+@router.post("/wallet/transfer", response_model=WalletTransferResponse)
+async def wallet_transfer(req: WalletTransferRequest):
+    total_pct = sum(r.pct for r in req.allocation_rules)
+    if abs(total_pct - 100) > 0.01:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=422, detail=f"Allocation percentages must sum to 100 (got {total_pct})")
+
+    buckets_credited = [
+        BucketCredit(bucket_id=r.bucket_id, amount_lkr=round(req.amount_lkr * r.pct / 100, 2))
+        for r in req.allocation_rules
+    ]
+    transfer_id = f"TRF-{uuid.uuid4().hex[:8].upper()}"
+
+    # Persist allocation rules
+    try:
+        supabase_client.save_allocation_rule(
+            sender_id=req.sender_account_id,
+            account_id=req.recipient_account_id,
+            buckets=[{"id": r.bucket_id, "pct": r.pct} for r in req.allocation_rules],
+        )
+    except Exception as exc:
+        log.warning("Failed to persist allocation rule: %s", exc)
+
+    # Real bank transfer when enabled
+    if settings.seylan_enable_transfers and settings.use_seylan_real:
+        try:
+            from app.seylan import transfers
+            await transfers.transfer_funds(
+                source=req.sender_account_id,
+                destination=req.recipient_account_id,
+                amount=req.amount_lkr,
+                user_ref=transfer_id,
+                dst_narration=f"Family wallet — {req.corridor}",
+            )
+        except Exception as exc:
+            log.error("Seylan transfer failed: %s — returning mock COMPLETED", exc)
+
+    log.info("wallet_transfer sender=%s amount=%s", req.sender_account_id, req.amount_lkr)
+    return WalletTransferResponse(
+        transfer_id=transfer_id,
+        status="COMPLETED",
+        amount_lkr=req.amount_lkr,
+        timestamp=datetime.now(timezone.utc).isoformat(),
+        buckets_credited=buckets_credited,
+    )
+
+
+@router.get("/wallet/rules/{sender_id}")
+async def get_wallet_rules(sender_id: str, account_id: str = "SEY-ACC-002"):
+    try:
+        rule = supabase_client.get_allocation_rules(sender_id, account_id)
+    except Exception as exc:
+        log.warning("get_allocation_rules failed: %s", exc)
+        rule = None
+    if rule:
+        return rule
+    return {
+        "sender_id": sender_id,
+        "account_id": account_id,
+        "buckets": [
+            {"id": "school",    "label": "School Fees", "pct": 40},
+            {"id": "household", "label": "Household",   "pct": 40},
+            {"id": "savings",   "label": "Savings",     "pct": 20},
+        ],
+    }

@@ -2,6 +2,7 @@
 
 import { ChatMessage } from "@/types";
 import { cn } from "@/lib/utils";
+import { AudioPlayer } from "./AudioPlayer";
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -31,6 +32,9 @@ export function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
         </p>
         {isStreaming && (
           <span className="inline-block w-2 h-4 bg-current opacity-50 animate-pulse ml-0.5" />
+        )}
+        {!isUser && !isStreaming && message.content && (
+          <AudioPlayer text={message.content} language={message.language} />
         )}
       </div>
     </div>

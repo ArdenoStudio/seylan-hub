@@ -16,10 +16,11 @@ export function useWalletRealtime({ accountId, onSpend }: UseWalletRealtimeOptio
   const [buckets, setBuckets] = useState<Bucket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [realtimeConnected, setRealtimeConnected] = useState(false);
 
-  const fetchWallet = useCallback(async () => {
+  const fetchWallet = useCallback(async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const data = (await getFamilyWallet(accountId)) as WalletState;
       setWallet(data);
       setBuckets(data.buckets);
@@ -54,25 +55,95 @@ export function useWalletRealtime({ accountId, onSpend }: UseWalletRealtimeOptio
   }, [accountId]);
 
   useEffect(() => {
-    const unsubscribe = subscribeToTransactions(accountId, (newTx) => {
-      setTransactions((prev) => [newTx, ...prev]);
-
-      setBuckets((prev) => {
-        const updated = prev.map((b) => {
-          if (b.bucket_id === newTx.bucket_id) {
-            const newBalance = b.balance_lkr - newTx.amount_lkr;
-            const newSpent = b.spent_lkr + newTx.amount_lkr;
-            if (onSpend) onSpend(newTx, newBalance);
-            return { ...b, balance_lkr: newBalance, spent_lkr: newSpent };
+    const unsubscribe = subscribeToTransactions(
+      accountId,
+      (newTx) => {
+        setTransactions((prev) => {
+          if (prev.some((tx) => tx.transaction_id === newTx.transaction_id)) {
+            return prev;
           }
-          return b;
+          return [newTx, ...prev];
         });
-        return updated;
-      });
-    });
+
+        setBuckets((prev) => {
+          const updated = prev.map((b) => {
+            if (b.bucket_id === newTx.bucket_id) {
+              const newBalance = b.balance_lkr - newTx.amount_lkr;
+              const newSpent = b.spent_lkr + newTx.amount_lkr;
+              if (onSpend) onSpend(newTx, newBalance);
+              return { ...b, balance_lkr: newBalance, spent_lkr: newSpent };
+            }
+            return b;
+          });
+          return updated;
+        });
+      },
+      setRealtimeConnected
+    );
 
     return unsubscribe;
   }, [accountId, onSpend]);
 
-  return { wallet, transactions, buckets, loading, error, refetch: fetchWallet };
+  useEffect(() => {
+    function handleMockTransaction(event: Event) {
+      const newTx = (event as CustomEvent<Transaction>).detail;
+      if (!newTx || newTx.account_id !== accountId) return;
+
+      setTransactions((prev) => {
+        if (prev.some((tx) => tx.transaction_id === newTx.transaction_id)) {
+          return prev;
+        }
+        return [newTx, ...prev];
+      });
+
+      setBuckets((prev) =>
+        prev.map((b) => {
+          if (b.bucket_id !== newTx.bucket_id) return b;
+
+          const newBalance = b.balance_lkr - newTx.amount_lkr;
+          if (onSpend) onSpend(newTx, newBalance);
+          return {
+            ...b,
+            balance_lkr: newBalance,
+            spent_lkr: b.spent_lkr + newTx.amount_lkr,
+          };
+        })
+      );
+    }
+
+    function handleDemoReset() {
+      fetchWallet();
+    }
+
+    window.addEventListener("seylan:mock-transaction", handleMockTransaction);
+    window.addEventListener("seylan:demo-reset", handleDemoReset);
+
+    return () => {
+      window.removeEventListener(
+        "seylan:mock-transaction",
+        handleMockTransaction
+      );
+      window.removeEventListener("seylan:demo-reset", handleDemoReset);
+    };
+  }, [accountId, fetchWallet, onSpend]);
+
+  useEffect(() => {
+    if (realtimeConnected) return;
+
+    const interval = window.setInterval(() => {
+      fetchWallet(true);
+    }, 5000);
+
+    return () => window.clearInterval(interval);
+  }, [fetchWallet, realtimeConnected]);
+
+  return {
+    wallet,
+    transactions,
+    buckets,
+    loading,
+    error,
+    realtimeConnected,
+    refetch: fetchWallet,
+  };
 }

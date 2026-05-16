@@ -1,14 +1,20 @@
 import type { Metadata } from "next";
-import { Cal_Sans, Geist_Mono, Noto_Sans_Sinhala } from "next/font/google";
+import { DM_Sans, Geist_Mono, Noto_Sans_Sinhala, Sora } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { AppShell } from "@/components/layout/AppShell";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import "./globals.css";
 
-const calSans = Cal_Sans({
+const headingFont = Sora({
   variable: "--font-cal-sans",
   subsets: ["latin"],
-  weight: "400",
+  weight: ["400", "600", "700"],
+});
+
+const bodyFont = DM_Sans({
+  variable: "--font-dm-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
 const geistMono = Geist_Mono({
@@ -23,6 +29,9 @@ const notoSansSinhala = Noto_Sans_Sinhala({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL ?? "https://seylan-hub.vercel.app"
+  ),
   title: "Seylan Hub",
   description:
     "AI banking for Sri Lanka — diaspora wallets, voice assistant, loan health, and bookkeeping for SMEs",
@@ -54,7 +63,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${calSans.variable} ${geistMono.variable} ${notoSansSinhala.variable} h-full antialiased`}
+      className={`${headingFont.variable} ${bodyFont.variable} ${geistMono.variable} ${notoSansSinhala.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <ErrorBoundary>

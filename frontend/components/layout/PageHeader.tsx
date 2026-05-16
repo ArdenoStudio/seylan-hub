@@ -18,7 +18,7 @@ export function PageHeader({
   action,
 }: PageHeaderProps) {
   return (
-    <header className="relative overflow-hidden rounded-[2rem] border border-seylan-border bg-[linear-gradient(135deg,#fffdf8_0%,#fff1df_48%,#f9d9bd_100%)] p-5 shadow-[0_24px_80px_rgba(114,28,36,0.10)] sm:p-7">
+    <header className="relative overflow-hidden rounded-[1.5rem] border border-seylan-border bg-[linear-gradient(135deg,#fffdf8_0%,#fff1df_48%,#f9d9bd_100%)] p-4 shadow-[0_24px_80px_rgba(114,28,36,0.10)] sm:rounded-[2rem] sm:p-7">
       <div className="absolute -right-16 -top-20 h-48 w-48 rounded-full bg-seylan-red/10 blur-3xl" />
       <div className="absolute -bottom-24 left-1/3 h-56 w-56 rounded-full bg-seylan-gold/20 blur-3xl" />
       <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
@@ -28,7 +28,7 @@ export function PageHeader({
               {eyebrow}
             </p>
           )}
-          <h1 className="font-heading text-3xl font-semibold leading-tight text-seylan-charcoal sm:text-4xl">
+          <h1 className="font-heading text-2xl font-semibold leading-tight text-seylan-charcoal sm:text-4xl">
             {title}
           </h1>
           <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
