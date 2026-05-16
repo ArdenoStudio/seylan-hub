@@ -121,7 +121,11 @@ export async function createPaymentSession(args: {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(args),
   });
-  if (!res.ok) throw new Error(`Failed to create payment session [${res.status}]`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const detail = (body as { detail?: string }).detail ?? "";
+    throw new Error(`Failed to create payment session [${res.status}]${detail ? ": " + detail : ""}`);
+  }
   return res.json();
 }
 

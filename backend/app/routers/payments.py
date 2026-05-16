@@ -142,13 +142,20 @@ async def create_payment_session(body: CreateSessionRequest):
     order_id = f"SH-{body.purpose.upper()}-{uuid4().hex[:10].upper()}"
     return_url = f"{settings.frontend_base_url}/payments/return?order_id={order_id}"
 
-    session = await mpgs.create_checkout_session(
-        order_id=order_id,
-        amount_lkr=body.amount_lkr,
-        description=body.description,
-        return_url=return_url,
-        purpose=body.purpose,
-    )
+    try:
+        session = await mpgs.create_checkout_session(
+            order_id=order_id,
+            amount_lkr=body.amount_lkr,
+            description=body.description,
+            return_url=return_url,
+            purpose=body.purpose,
+        )
+    except RuntimeError as exc:
+        msg = str(exc)
+        log.error("MPGS session creation failed: %s", msg)
+        if "[401]" in msg:
+            raise HTTPException(status_code=502, detail="MPGS authentication failed — check MPGS_MERCHANT_ID and MPGS_API_PASSWORD credentials.")
+        raise HTTPException(status_code=502, detail=f"MPGS gateway error: {msg}")
 
     supabase_client.save_payment({
         "order_id": order_id,
