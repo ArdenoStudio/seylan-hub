@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Wallet, Bot, CreditCard, Store } from "lucide-react";
@@ -23,8 +24,19 @@ export function Sidebar() {
       {/* Desktop sidebar */}
       <aside className="hidden md:flex w-60 flex-col bg-seylan-charcoal text-white fixed inset-y-0 left-0 z-30">
         <div className="p-4 border-b border-sidebar-border">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/seylan-logo-white.svg" alt="Seylan Hub" className="h-8" />
+          <div className="flex items-center gap-3 rounded-xl bg-white px-3 py-2 shadow-sm">
+            <Image
+              src="/seylan-bank-logo.png"
+              alt="Seylan Bank"
+              width={172}
+              height={80}
+              className="h-9 w-auto"
+              priority
+            />
+            <span className="text-sm font-bold tracking-wide text-seylan-red">
+              Hub
+            </span>
+          </div>
         </div>
 
         {user && (
@@ -48,7 +60,7 @@ export function Sidebar() {
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
                   isActive
-                    ? "border-l-[3px] border-seylan-red text-seylan-red bg-sidebar-accent"
+                    ? "border-l-[3px] border-seylan-gold text-seylan-gold bg-sidebar-accent"
                     : "text-gray-300 hover:bg-sidebar-accent hover:text-white"
                 )}
               >
