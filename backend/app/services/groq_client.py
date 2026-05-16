@@ -43,3 +43,19 @@ async def complete(system_prompt: str, messages: list[dict],
         stream=False,
     )
     return resp.choices[0].message.content or ""
+
+
+async def complete_with_tools(system_prompt: str, messages: list[dict],
+                               tools: list[dict], max_tokens: int = 512,
+                               temperature: float = 0.3):
+    """Non-streaming completion with tool calling support. Returns the full response message."""
+    msgs = [{"role": "system", "content": system_prompt}] + messages
+    resp = await _get_client().chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=msgs,
+        tools=tools,
+        max_tokens=max_tokens,
+        temperature=temperature,
+        stream=False,
+    )
+    return resp.choices[0].message

@@ -13,6 +13,23 @@ log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["wallet"])
 
 
+@router.get("/fx")
+async def get_fx_rate(from_currency: str = "GBP", to_currency: str = "LKR"):
+    rates = {
+        ("GBP", "LKR"): 408.30,
+        ("USD", "LKR"): 323.50,
+        ("EUR", "LKR"): 351.20,
+        ("AUD", "LKR"): 211.40,
+    }
+    rate = rates.get((from_currency.upper(), to_currency.upper()), 0)
+    return {
+        "from": from_currency.upper(),
+        "to": to_currency.upper(),
+        "rate": rate,
+        "source": "demo_fixture",
+    }
+
+
 @router.post("/wallet/transfer", response_model=WalletTransferResponse)
 async def wallet_transfer(req: WalletTransferRequest):
     total_pct = sum(r.pct for r in req.allocation_rules)

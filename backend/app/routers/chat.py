@@ -9,6 +9,7 @@ from app.config import settings
 from app.models.schemas import ChatRequest
 from app.services import groq_client, supabase_client
 from app.services.context_builder import build_assistant_system_prompt
+from app.services.chat_tools import TOOL_DEFINITIONS, execute_tool
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["chat"])
@@ -73,3 +74,37 @@ async def chat(req: ChatRequest):
 
     return StreamingResponse(event_stream(), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+
+
+@router.post("/chat/actions")
+async def chat_with_actions(req: ChatRequest):
+    """Non-streaming chat that supports tool calling. Returns text + any actions taken."""
+    account_ctx = _get_account_context(req.user_id)
+    system_prompt = build_assistant_system_prompt(account_ctx, req.language)
+    messages = [{"role": m.role, "content": m.content} for m in req.history]
+    messages.append({"role": "user", "content": req.message})
+
+    actions_taken = []
+    try:
+        response_msg = await groq_client.complete_with_tools(
+            system_prompt, messages, tools=TOOL_DEFINITIONS, max_tokens=512, temperature=0.3,
+        )
+
+        if response_msg.tool_calls:
+            for tool_call in response_msg.tool_calls:
+                fn_name = tool_call.function.name
+                fn_args = json.loads(tool_call.function.arguments)
+                result = execute_tool(fn_name, fn_args)
+                actions_taken.append({"tool": fn_name, "arguments": fn_args, "result": json.loads(result)})
+                messages.append({"role": "assistant", "content": None, "tool_calls": [{"id": tool_call.id, "type": "function", "function": {"name": fn_name, "arguments": tool_call.function.arguments}}]})
+                messages.append({"role": "tool", "tool_call_id": tool_call.id, "content": result})
+
+            final_text = await groq_client.complete(system_prompt, messages, max_tokens=512, temperature=0.3)
+        else:
+            final_text = response_msg.content or ""
+
+        return {"text": final_text, "actions": actions_taken, "language": req.language}
+
+    except Exception as exc:
+        log.error("Chat with actions error: %s", exc)
+        return {"text": "I'm having trouble right now. Please try again.", "actions": [], "language": req.language}
