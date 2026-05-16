@@ -153,7 +153,7 @@ export function CategorisedTransactionFeed({
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-seylan-red">
             AI categorised feed
           </p>
-          <h3 className="font-heading text-lg font-semibold text-seylan-charcoal">
+          <h3 className="font-heading text-lg font-semibold text-seylan-charcoal dark:text-white">
             Transactions needing review
           </h3>
         </div>
@@ -173,8 +173,8 @@ export function CategorisedTransactionFeed({
                 );
                 return (
                   <div key={day} className="mb-4">
-                    <div className="sticky top-0 bg-white/95 z-10 flex justify-between items-center py-2 border-b border-seylan-border mb-2 backdrop-blur">
-                      <span className="text-xs font-medium text-seylan-charcoal">
+                    <div className="sticky top-0 bg-white/95 dark:bg-[#0c0407]/95 z-10 flex justify-between items-center py-2 border-b border-seylan-border dark:border-white/[0.08] mb-2 backdrop-blur">
+                      <span className="text-xs font-medium text-seylan-charcoal dark:text-white/70">
                         {day}
                       </span>
                       <span
@@ -189,10 +189,10 @@ export function CategorisedTransactionFeed({
                     {txs.map((tx) => (
                       <div
                         key={tx.transaction_id}
-                        className="flex items-center justify-between py-2 border-b border-seylan-border/50 last:border-0"
+                        className="flex items-center justify-between py-2 border-b border-seylan-border/50 dark:border-white/[0.06] last:border-0"
                       >
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm text-seylan-charcoal truncate">
+                          <div className="text-sm text-seylan-charcoal dark:text-white/80 truncate">
                             {tx.description ?? tx.merchant}
                           </div>
                           {tx.category_en && (
@@ -218,7 +218,7 @@ export function CategorisedTransactionFeed({
                 );
               })}
               {filtered.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">
+                <p className="text-sm text-muted-foreground dark:text-white/30 text-center py-4">
                   No transactions
                 </p>
               )}

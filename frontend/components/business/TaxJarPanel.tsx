@@ -74,31 +74,31 @@ export function TaxJarPanel({
 
   return (
     <>
-    <Card className="border-seylan-border bg-[linear-gradient(135deg,#fffdf8_0%,#fff0d5_100%)] shadow-lg shadow-seylan-gold/10">
+    <Card className="border-seylan-border dark:border-[#D9A441]/20 bg-[linear-gradient(135deg,#fffdf8_0%,#fff0d5_100%)] dark:bg-[linear-gradient(135deg,#1a1200_0%,#0f0a00_100%)] shadow-lg shadow-seylan-gold/10">
       <CardContent className="p-5">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-seylan-red">
               Auto-save rule
             </p>
-            <h3 className="font-heading text-xl font-semibold text-seylan-charcoal">
+            <h3 className="font-heading text-xl font-semibold text-seylan-charcoal dark:text-white">
               Tax Jar
             </h3>
           </div>
-          <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">
+          <span className="inline-flex items-center rounded-full bg-green-100 dark:bg-green-900/30 px-2.5 py-1 text-xs font-semibold text-green-700 dark:text-green-400">
             ACTIVE
           </span>
         </div>
 
-        <div className="text-4xl font-semibold text-seylan-charcoal mb-1">
+        <div className="text-4xl font-semibold text-seylan-charcoal dark:text-white mb-1">
           {formatLKR(displayBalance)}
         </div>
 
-        <div className="text-xs text-muted-foreground mb-2">
+        <div className="text-xs text-muted-foreground dark:text-white/40 mb-2">
           Rule: 10% of every incoming payment
         </div>
 
-        <div className="mb-4 h-2 overflow-hidden rounded-full bg-white">
+        <div className="mb-4 h-2 overflow-hidden rounded-full bg-white dark:bg-white/10">
           <div className="h-full w-3/5 rounded-full bg-seylan-gold" />
         </div>
 

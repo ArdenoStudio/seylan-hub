@@ -49,8 +49,8 @@ function CustomTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-xl border border-seylan-border bg-white/95 px-3 py-2 text-xs shadow-brand">
-      <p className="font-semibold capitalize text-seylan-charcoal">
+    <div className="rounded-xl border border-white/10 bg-[#1a0a0b] px-3 py-2 text-xs shadow-lg">
+      <p className="font-semibold capitalize text-white">
         {payload[0].name.toLowerCase()}
       </p>
       <p className="text-seylan-red">{formatLKR(payload[0].value)}</p>
@@ -120,7 +120,7 @@ export function ExpenseBreakdown({ userId }: ExpenseBreakdownProps) {
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-seylan-red">
           Spend categories
         </p>
-        <h3 className="mb-4 font-heading text-lg font-semibold text-seylan-charcoal">
+        <h3 className="mb-4 font-heading text-lg font-semibold text-seylan-charcoal dark:text-white">
           Expense Breakdown
         </h3>
         <ResponsiveContainer width="100%" height={180}>
@@ -131,7 +131,7 @@ export function ExpenseBreakdown({ userId }: ExpenseBreakdownProps) {
           >
             <XAxis
               dataKey="category"
-              tick={{ fontSize: 10, fill: "#79565B", textAnchor: "middle" }}
+              tick={{ fontSize: 10, fill: "rgba(255,255,255,0.3)", textAnchor: "middle" }}
               tickFormatter={(v: string) =>
                 v.charAt(0) + v.slice(1).toLowerCase()
               }
@@ -139,14 +139,14 @@ export function ExpenseBreakdown({ userId }: ExpenseBreakdownProps) {
               tickLine={false}
             />
             <YAxis
-              tick={{ fontSize: 10, fill: "#79565B" }}
+              tick={{ fontSize: 10, fill: "rgba(255,255,255,0.3)" }}
               tickFormatter={(v: number) =>
                 v >= 1000 ? `${Math.round(v / 1000)}k` : String(v)
               }
               axisLine={false}
               tickLine={false}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(234,215,194,0.25)" }} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: "rgba(255,255,255,0.05)" }} />
             <Bar dataKey="amount" radius={[6, 6, 0, 0]} name="category">
               {chartData.map(({ category }) => (
                 <Cell

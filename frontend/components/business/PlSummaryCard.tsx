@@ -66,43 +66,43 @@ export function PlSummaryCard({ userId }: PlSummaryCardProps) {
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-seylan-red">
               Profit & loss
             </p>
-            <h3 className="font-heading text-lg font-semibold text-seylan-charcoal">
+            <h3 className="font-heading text-lg font-semibold text-seylan-charcoal dark:text-white">
               This week
             </h3>
           </div>
-          <div className="rounded-full bg-seylan-mist px-3 py-1 text-xs text-muted-foreground">
+          <div className="rounded-full bg-seylan-mist dark:bg-white/[0.06] px-3 py-1 text-xs text-muted-foreground dark:text-white/40">
             {data.week_label}
           </div>
         </div>
         <div className="grid grid-cols-1 gap-3 mb-4 sm:grid-cols-3">
-          <div className="rounded-2xl bg-seylan-mist/70 p-4">
-            <div className="text-xs text-muted-foreground">Revenue</div>
-            <div className="text-xl font-semibold text-seylan-charcoal">
+          <div className="rounded-2xl bg-seylan-mist/70 dark:bg-white/[0.06] p-4">
+            <div className="text-xs text-muted-foreground dark:text-white/40">Revenue</div>
+            <div className="text-xl font-semibold text-seylan-charcoal dark:text-white">
               {formatLKR(data.revenue_lkr)}
             </div>
           </div>
-          <div className="rounded-2xl bg-red-50 p-4">
-            <div className="text-xs text-muted-foreground">Expenses</div>
-            <div className="text-xl font-semibold text-red-600">
+          <div className="rounded-2xl bg-red-50 dark:bg-red-900/20 p-4">
+            <div className="text-xs text-muted-foreground dark:text-white/40">Expenses</div>
+            <div className="text-xl font-semibold text-red-600 dark:text-red-400">
               {formatLKR(data.expenses_lkr)}
             </div>
           </div>
-          <div className="rounded-2xl bg-emerald-50 p-4">
-            <div className="text-xs text-muted-foreground">Net</div>
-            <div className="text-xl font-semibold text-emerald-600">
+          <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 p-4">
+            <div className="text-xs text-muted-foreground dark:text-white/40">Net</div>
+            <div className="text-xl font-semibold text-emerald-600 dark:text-emerald-400">
               {formatLKR(data.net_lkr)}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-3xl font-semibold text-seylan-charcoal">
+          <span className="text-3xl font-semibold text-seylan-charcoal dark:text-white">
             {data.margin_pct}%
           </span>
-          <span className={`text-sm ${isUp ? "text-emerald-600" : "text-red-600"}`}>
+          <span className={`text-sm ${isUp ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
             {isUp ? "↑" : "↓"} {Math.abs(marginDiff).toFixed(1)}pp
           </span>
         </div>
-        <div className="text-xs text-muted-foreground mt-1">
+        <div className="text-xs text-muted-foreground dark:text-white/40 mt-1">
           Last week: {data.previous_margin_pct}%
         </div>
         {(() => {
