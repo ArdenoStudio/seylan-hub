@@ -128,3 +128,25 @@ async def global_error(request: Request, exc: Exception):
 @app.get("/health")
 async def health():
     return {"status": "ok", "version": "0.1.0"}
+
+
+@app.get("/health/deep")
+async def health_deep():
+    deps: dict[str, str] = {}
+
+    if settings.supabase_url and settings.supabase_service_key:
+        try:
+            from app.services import supabase_client
+            supabase_client.get_client()
+            deps["supabase"] = "configured"
+        except Exception:
+            deps["supabase"] = "error"
+    else:
+        deps["supabase"] = "not_configured"
+
+    deps["groq"] = "configured" if settings.groq_api_key else "not_configured"
+    deps["elevenlabs"] = "configured" if settings.elevenlabs_api_key else "not_configured"
+    deps["seylan_real"] = "enabled" if settings.use_seylan_real else "disabled"
+
+    overall = "ok" if deps.get("groq") == "configured" else "degraded"
+    return {"status": overall, "version": "0.1.0", "dependencies": deps}
