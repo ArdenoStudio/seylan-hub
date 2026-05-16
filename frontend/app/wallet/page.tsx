@@ -62,7 +62,7 @@ export default function WalletPage() {
         : 0;
     return bPct - aPct;
   })[0];
-  const latestSpend = transactions.find((tx) => tx.amount_lkr < 0);
+  const latestSpend = transactions.find((tx) => tx.type === "debit");
 
   return (
     <div data-module="wallet" className="space-y-5 p-4 sm:space-y-6 sm:p-6 lg:p-8">

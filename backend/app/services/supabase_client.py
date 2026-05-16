@@ -15,7 +15,8 @@ def get_client() -> Client:
 
 def insert_transaction(account_id: str, merchant: str, amount_lkr: float,
                        bucket_id: str | None = None, bucket_label: str | None = None,
-                       source: str = "mock") -> dict:
+                       source: str = "mock", txn_type: str = "debit") -> dict:
+    from datetime import datetime, timezone
     row = {
         "account_id": account_id,
         "merchant": merchant,
@@ -23,6 +24,8 @@ def insert_transaction(account_id: str, merchant: str, amount_lkr: float,
         "bucket_id": bucket_id,
         "bucket_label": bucket_label,
         "source": source,
+        "type": txn_type,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
     result = get_client().table("transactions").insert(row).execute()
     return result.data[0] if result.data else {}
