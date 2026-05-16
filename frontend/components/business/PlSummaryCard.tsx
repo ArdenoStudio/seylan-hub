@@ -59,7 +59,7 @@ export function PlSummaryCard({ userId }: PlSummaryCardProps) {
   const isUp = marginDiff >= 0;
 
   return (
-    <Card className="border-seylan-border bg-white/95 shadow-lg shadow-seylan-plum/5">
+    <Card className="card-glass shadow-brand-lg border-0">
       <CardContent className="p-5">
         <div className="mb-4 flex items-center justify-between">
           <div>

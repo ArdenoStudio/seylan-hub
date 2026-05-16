@@ -74,7 +74,7 @@ export default function LoansPage() {
         : "Needs action";
 
   return (
-    <div className="space-y-5 p-4 sm:space-y-6 sm:p-6 lg:p-8">
+    <div data-module="loans" className="space-y-5 p-4 sm:space-y-6 sm:p-6 lg:p-8">
       <PageHeader
         eyebrow="Loan health"
         title="Understand your repayment position at a glance"

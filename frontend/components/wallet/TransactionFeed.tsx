@@ -12,7 +12,7 @@ export function TransactionFeed({ transactions }: TransactionFeedProps) {
   const recent = transactions.slice(0, 10);
 
   return (
-    <Card className="border-seylan-border bg-white/95 shadow-sm">
+    <Card className="card-glass shadow-brand border-0">
       <CardContent className="p-5">
         <div className="mb-4 flex items-end justify-between gap-3">
           <div>

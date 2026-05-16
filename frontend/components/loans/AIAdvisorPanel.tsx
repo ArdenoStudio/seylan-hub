@@ -55,7 +55,7 @@ export function AIAdvisorPanel({ userId }: AIAdvisorPanelProps) {
   }, [userId]);
 
   return (
-    <Card className="border-seylan-border bg-white/95 shadow-sm">
+    <Card className="card-glass shadow-brand border-0">
       <CardContent className="p-5">
         <div className="flex items-center gap-2 mb-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-seylan-red/10">

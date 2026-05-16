@@ -43,7 +43,7 @@ export function InsightActionStrip({
   actions = [],
 }: InsightActionStripProps) {
   return (
-    <section className="rounded-[1.5rem] border border-seylan-border bg-white/95 p-4 shadow-lg shadow-seylan-plum/5 sm:p-5">
+    <section className="rounded-[1.5rem] card-glass shadow-brand p-4 sm:p-5">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-seylan-red">

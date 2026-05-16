@@ -17,7 +17,7 @@ export function LastRemittanceBanner({
   const { last_remittance } = wallet;
 
   return (
-    <Card className="border-seylan-border bg-white/95 shadow-lg shadow-seylan-plum/5">
+    <Card className="card-glass shadow-brand border-0">
       <CardContent className="p-5">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>

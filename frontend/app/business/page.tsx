@@ -57,7 +57,7 @@ export default function BusinessPage() {
       : extraTransactions.length;
 
   return (
-    <div className="space-y-5 p-4 sm:space-y-6 sm:p-6 lg:p-8">
+    <div data-module="business" className="space-y-5 p-4 sm:space-y-6 sm:p-6 lg:p-8">
       <PageHeader
         eyebrow="SME bookkeeper"
         title="Silva Hardware & Electricals"

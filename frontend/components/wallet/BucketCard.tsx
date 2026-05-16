@@ -44,7 +44,7 @@ export function BucketCard({ bucket, onClick }: BucketCardProps) {
 
   return (
     <Card
-      className="cursor-pointer border-seylan-border bg-white/95 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-seylan-plum/10"
+      className="cursor-pointer card-glass shadow-brand border-0 transition-all hover:-translate-y-0.5 hover:shadow-brand-lg"
       onClick={onClick}
     >
       <CardContent className="p-5">

@@ -34,7 +34,7 @@ function AssistantPageContent() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-88px)] flex-col md:h-screen">
+    <div data-module="assistant" className="flex h-[calc(100vh-88px)] flex-col md:h-screen">
       <div className="flex items-center justify-between border-b border-seylan-border bg-white/90 px-4 py-3 backdrop-blur sm:px-6">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-seylan-red">

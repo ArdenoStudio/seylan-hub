@@ -65,7 +65,7 @@ export default function WalletPage() {
   const latestSpend = transactions.find((tx) => tx.amount_lkr < 0);
 
   return (
-    <div className="space-y-5 p-4 sm:space-y-6 sm:p-6 lg:p-8">
+    <div data-module="wallet" className="space-y-5 p-4 sm:space-y-6 sm:p-6 lg:p-8">
       <PageHeader
         eyebrow="Diaspora family wallet"
         title="Track money sent home with confidence"

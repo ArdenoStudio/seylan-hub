@@ -147,7 +147,7 @@ export function CategorisedTransactionFeed({
   }
 
   return (
-    <Card className="border-seylan-border bg-white/95 shadow-sm">
+    <Card className="card-glass shadow-brand border-0">
       <CardContent className="p-5">
         <div className="mb-4">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-seylan-red">
