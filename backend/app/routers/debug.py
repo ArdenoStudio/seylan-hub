@@ -15,14 +15,23 @@ async def seylan_ping():
     params = {"AccountCategory": "EXT", "AccountNumber": TEST_ACCOUNT}
     headers = {"x-api-key": settings.seylan_api_key, "Accept": "application/json"}
     try:
-        async with httpx.AsyncClient(verify=False, timeout=12.0) as c:
+        async with httpx.AsyncClient(verify=False, timeout=25.0) as c:
             resp = await c.get(url, headers=headers, params=params)
+            ct = resp.headers.get("content-type", "")
+            body = resp.json() if "json" in ct else resp.text[:500]
             return {
                 "http_status": resp.status_code,
                 "gateway": settings.seylan_gateway_default,
                 "api_key_set": bool(settings.seylan_api_key),
-                "body": resp.json() if resp.headers.get("content-type","").startswith("application/json") else resp.text[:500],
+                "body": body,
             }
-    except Exception as exc:
-        return {"error": str(exc), "gateway": settings.seylan_gateway_default,
+    except httpx.TimeoutException as exc:
+        return {"error_type": "TimeoutException", "error": repr(exc),
+                "gateway": settings.seylan_gateway_default,
                 "api_key_set": bool(settings.seylan_api_key)}
+    except httpx.ConnectError as exc:
+        return {"error_type": "ConnectError", "error": repr(exc),
+                "gateway": settings.seylan_gateway_default}
+    except Exception as exc:
+        return {"error_type": type(exc).__name__, "error": repr(exc),
+                "gateway": settings.seylan_gateway_default}
