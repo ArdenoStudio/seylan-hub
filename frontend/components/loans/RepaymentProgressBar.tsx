@@ -16,9 +16,9 @@ export function RepaymentProgressBar({ loan }: RepaymentProgressBarProps) {
   const remainingLkr = remaining * loan.monthly_payment_lkr;
 
   return (
-    <Card className="border-seylan-border">
+    <Card className="border-seylan-border bg-white/95 shadow-sm">
       <CardContent className="p-5 space-y-3">
-        <div className="flex justify-between text-sm">
+        <div className="flex flex-col justify-between gap-1 text-sm sm:flex-row">
           <span className="text-seylan-charcoal font-medium">
             Paid: {loan.payments_made} of {loan.total_payments} payments
           </span>
@@ -27,7 +27,7 @@ export function RepaymentProgressBar({ loan }: RepaymentProgressBarProps) {
           </span>
         </div>
         <Progress value={pct} className="h-3" />
-        <div className="text-xs text-center font-medium text-seylan-charcoal">
+        <div className="text-center text-sm font-semibold text-seylan-charcoal">
           {pct}% complete
         </div>
         <div className="flex justify-between text-xs text-muted-foreground">

@@ -36,9 +36,12 @@ export function ExpenseBreakdown({ userId }: ExpenseBreakdownProps) {
   const maxVal = entries[0]?.[1] ?? 1;
 
   return (
-    <Card className="border-seylan-border">
+    <Card className="border-seylan-border bg-white/95 shadow-sm">
       <CardContent className="p-5">
-        <h3 className="text-sm font-medium text-seylan-charcoal mb-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-seylan-red">
+          Spend categories
+        </p>
+        <h3 className="mb-4 font-heading text-lg font-semibold text-seylan-charcoal">
           Expense Breakdown
         </h3>
         <div className="space-y-3">

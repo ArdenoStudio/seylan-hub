@@ -9,6 +9,8 @@ import { TransactionFeed } from "@/components/wallet/TransactionFeed";
 import { LastRemittanceBanner } from "@/components/wallet/LastRemittanceBanner";
 import { SendMoneyModal } from "@/components/wallet/SendMoneyModal";
 import { fireSpendToast } from "@/components/wallet/SpendNotificationToast";
+import { PageHeader } from "@/components/layout/PageHeader";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Transaction } from "@/types";
 
@@ -47,15 +49,24 @@ export default function WalletPage() {
   );
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-xl font-bold text-seylan-charcoal">
-        Family Wallet
-        {user && (
-          <span className="text-sm font-normal text-muted-foreground ml-2">
-            Viewing as {user.name}
-          </span>
-        )}
-      </h1>
+    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+      <PageHeader
+        eyebrow="Diaspora family wallet"
+        title="Track money sent home with confidence"
+        description="See the latest remittance, how the family is using each bucket, and adjust the next split before sending again."
+        meta={
+          user && (
+            <span className="inline-flex rounded-full border border-seylan-border bg-white/70 px-3 py-1 text-xs font-medium text-seylan-charcoal">
+              Viewing as {user.name}
+            </span>
+          )
+        }
+        action={
+          <Button onClick={() => setModalOpen(true)} className="rounded-full">
+            Send Money
+          </Button>
+        }
+      />
 
       {wallet && (
         <LastRemittanceBanner

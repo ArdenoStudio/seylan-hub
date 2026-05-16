@@ -25,8 +25,16 @@ export function RepaymentTimeline({ schedule }: RepaymentTimelineProps) {
       : schedule.filter((e) => e.status.toLowerCase() === tab);
 
   return (
-    <Card className="border-seylan-border">
+    <Card className="border-seylan-border bg-white/95 shadow-sm">
       <CardContent className="p-5">
+        <div className="mb-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-seylan-red">
+            Repayment history
+          </p>
+          <h3 className="font-heading text-lg font-semibold text-seylan-charcoal">
+            Payment timeline
+          </h3>
+        </div>
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="mb-4">
             <TabsTrigger value="all">All</TabsTrigger>

@@ -55,12 +55,14 @@ export function AIAdvisorPanel({ userId }: AIAdvisorPanelProps) {
   }, [userId]);
 
   return (
-    <Card className="border-seylan-border">
+    <Card className="border-seylan-border bg-white/95 shadow-sm">
       <CardContent className="p-5">
         <div className="flex items-center gap-2 mb-3">
-          <Bot className="h-4 w-4 text-seylan-red" />
-          <h3 className="text-sm font-medium text-seylan-charcoal">
-            AI Advisor
+          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-seylan-red/10">
+            <Bot className="h-4 w-4 text-seylan-red" />
+          </div>
+          <h3 className="font-heading text-lg font-semibold text-seylan-charcoal">
+            What this means
           </h3>
         </div>
 
@@ -91,7 +93,7 @@ export function AIAdvisorPanel({ userId }: AIAdvisorPanelProps) {
         {loading ? (
           <Skeleton className="h-16 w-full" />
         ) : (
-          <p className="text-sm text-muted-foreground leading-relaxed">
+          <p className="text-sm text-muted-foreground leading-7">
             {advice}
           </p>
         )}

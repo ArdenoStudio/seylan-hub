@@ -23,11 +23,16 @@ export default function AssistantPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] md:h-screen">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-seylan-border bg-white">
-        <h1 className="text-lg font-bold text-seylan-charcoal">
-          AI Assistant
-        </h1>
+    <div className="flex h-[calc(100vh-88px)] flex-col md:h-screen">
+      <div className="flex items-center justify-between border-b border-seylan-border bg-white/90 px-4 py-3 backdrop-blur sm:px-6">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-seylan-red">
+            Bilingual banking AI
+          </p>
+          <h1 className="font-heading text-xl font-semibold text-seylan-charcoal">
+            Seylan Assistant
+          </h1>
+        </div>
         <LanguageToggle language={language} onChange={setLanguage} />
       </div>
 

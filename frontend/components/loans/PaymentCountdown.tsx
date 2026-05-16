@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { CalendarClock } from "lucide-react";
 import { Loan } from "@/types";
 import { formatLKR } from "@/lib/utils";
 
@@ -15,15 +16,21 @@ export function PaymentCountdown({ loan }: PaymentCountdownProps) {
   const daysUntil = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
 
   return (
-    <Card className="border-seylan-border">
-      <CardContent className="p-5 text-center">
-        <div className="text-3xl font-bold text-seylan-charcoal">
+    <Card className="border-seylan-border bg-[linear-gradient(135deg,#721c24_0%,#3c0d13_100%)] text-white shadow-lg shadow-seylan-plum/20">
+      <CardContent className="p-5">
+        <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10">
+          <CalendarClock className="h-5 w-5 text-seylan-gold" />
+        </div>
+        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
+          Next payment
+        </div>
+        <div className="mt-1 text-3xl font-semibold">
           {formatLKR(loan.monthly_payment_lkr)}
         </div>
-        <div className="text-sm text-muted-foreground mt-1">
+        <div className="mt-3 inline-flex rounded-full bg-white px-3 py-1 text-sm font-semibold text-seylan-plum">
           due in {daysUntil} days
         </div>
-        <div className="text-xs text-muted-foreground mt-1">
+        <div className="mt-3 text-xs text-white/60">
           {nextDate.toLocaleDateString("en-LK", {
             day: "numeric",
             month: "long",
