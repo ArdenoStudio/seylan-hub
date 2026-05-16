@@ -1,3 +1,6 @@
+import { MOCK_PL_SUMMARY, MOCK_BUSINESS_TRANSACTIONS } from "./business";
+import { MOCK_WALLET } from "./wallet";
+
 const MOCK_RESPONSES: Record<string, Record<string, string>> = {
   "SEY-USR-001": {
     "what is my savings balance": "Your savings bucket currently holds LKR 49,000. This is 20% of your last remittance of LKR 245,000 sent on 1 May 2026. No withdrawals have been made from savings this month.",
@@ -21,9 +24,101 @@ const MOCK_RESPONSES: Record<string, Record<string, string>> = {
 
 const DEFAULT_RESPONSE = "Based on your account activity, everything looks normal. Is there something specific I can help you with? You can ask about balances, payments, spending patterns, or loan status.";
 
+const EXPENSE_KEYWORDS = [
+  "expense",
+  "expenses",
+  "spend",
+  "spending",
+  "spent",
+  "cost",
+  "costs",
+  "debit",
+  "debits",
+  "outgoing",
+  "outgoings",
+];
+
+const BIGGEST_EXPENSE_KEYWORDS = ["biggest", "largest", "highest", "top"];
+
+function formatLkr(amount: number): string {
+  return `LKR ${amount.toLocaleString("en-LK")}`;
+}
+
+function normalizeMessage(message: string): string {
+  return message.toLowerCase().replace(/[?!.,]/g, "").trim();
+}
+
+function hasAnyKeyword(message: string, keywords: string[]): boolean {
+  return keywords.some((keyword) => message.includes(keyword));
+}
+
+function getWalletExpenseSummary(includeOnlyBiggest: boolean): string {
+  const debitTransactions = MOCK_WALLET.recent_transactions
+    .filter((transaction) => transaction.type === "debit")
+    .sort((a, b) => b.amount_lkr - a.amount_lkr);
+
+  const totalSpent = MOCK_WALLET.buckets.reduce(
+    (total, bucket) => total + bucket.spent_lkr,
+    0
+  );
+  const bucketBreakdown = MOCK_WALLET.buckets
+    .filter((bucket) => bucket.spent_lkr > 0)
+    .map((bucket) => `${bucket.label}: ${formatLkr(bucket.spent_lkr)}`)
+    .join(", ");
+  const topTransactions = debitTransactions
+    .slice(0, includeOnlyBiggest ? 1 : 3)
+    .map((transaction) => `${transaction.merchant} (${formatLkr(transaction.amount_lkr)})`)
+    .join("; ");
+
+  if (includeOnlyBiggest) {
+    return `Your biggest recent expense was ${topTransactions}. Total bucket spending this month is ${formatLkr(totalSpent)} (${bucketBreakdown}).`;
+  }
+
+  return `Your recent expenses total ${formatLkr(totalSpent)} across your wallet buckets. Breakdown: ${bucketBreakdown}. Top expenses: ${topTransactions}.`;
+}
+
+function getBusinessExpenseSummary(includeOnlyBiggest: boolean): string {
+  const debitTransactions = MOCK_BUSINESS_TRANSACTIONS
+    .filter((transaction) => transaction.type === "debit")
+    .sort((a, b) => b.amount_lkr - a.amount_lkr);
+
+  const topTransactions = debitTransactions
+    .slice(0, includeOnlyBiggest ? 1 : 3)
+    .map((transaction) => `${transaction.merchant} (${formatLkr(transaction.amount_lkr)})`)
+    .join("; ");
+  const categoryBreakdown = Object.entries(MOCK_PL_SUMMARY.expense_breakdown)
+    .sort(([, a], [, b]) => b - a)
+    .map(([category, amount]) => `${category}: ${formatLkr(amount)}`)
+    .join(", ");
+
+  if (includeOnlyBiggest) {
+    return `Your biggest business expense this week was ${topTransactions}. Total expenses for ${MOCK_PL_SUMMARY.week_label.toLowerCase()} are ${formatLkr(MOCK_PL_SUMMARY.expenses_lkr)}.`;
+  }
+
+  return `Your business expenses for ${MOCK_PL_SUMMARY.week_label.toLowerCase()} total ${formatLkr(MOCK_PL_SUMMARY.expenses_lkr)}. Breakdown: ${categoryBreakdown}. Top payments: ${topTransactions}.`;
+}
+
+function getExpenseResponse(userId: string, message: string): string {
+  const includeOnlyBiggest = hasAnyKeyword(message, BIGGEST_EXPENSE_KEYWORDS);
+
+  if (userId === "SEY-BIZ-001") {
+    return getBusinessExpenseSummary(includeOnlyBiggest);
+  }
+
+  if (userId === "SEY-USR-003") {
+    return MOCK_RESPONSES["SEY-USR-003"]["what's my biggest expense this month"];
+  }
+
+  return getWalletExpenseSummary(includeOnlyBiggest);
+}
+
 export function getMockChatResponse(userId: string, message: string): string {
   const userResponses = MOCK_RESPONSES[userId] ?? MOCK_RESPONSES["SEY-USR-001"];
-  const lower = message.toLowerCase().replace(/[?!.,]/g, "").trim();
+  const lower = normalizeMessage(message);
+
+  if (hasAnyKeyword(lower, EXPENSE_KEYWORDS)) {
+    return getExpenseResponse(userId, lower);
+  }
 
   for (const [key, response] of Object.entries(userResponses)) {
     if (lower.includes(key) || key.includes(lower)) {
