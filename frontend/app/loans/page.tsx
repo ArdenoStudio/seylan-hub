@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { getLoans } from "@/lib/api";
 import { Loan } from "@/types";
 import { LoanSummaryCard } from "@/components/loans/LoanSummaryCard";
@@ -18,14 +17,12 @@ const ASSISTANT_PROMPT =
   "Show me repayment scenarios for my current loan: paying today, paying three days late, and making a partial payment.";
 
 export default function LoansPage() {
-  const { user, mounted } = useCurrentUser();
   const [loan, setLoan] = useState<Loan | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const userId = user?.id ?? "SEY-USR-001";
+  const userId = "SEY-USR-001";
 
   useEffect(() => {
-    if (!mounted) return;
     let cancelled = false;
     getLoans(userId)
       .then((data) => {
@@ -36,9 +33,9 @@ export default function LoansPage() {
       .catch(() => { if (!cancelled) setLoan(null); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [userId, mounted]);
+  }, [userId]);
 
-  if (!mounted || loading) {
+  if (loading) {
     return (
       <div className="p-6 space-y-4">
         <Skeleton className="h-8 w-48" />
@@ -79,13 +76,7 @@ export default function LoansPage() {
         eyebrow="Loan health"
         title="Understand your repayment position at a glance"
         description="A calmer loan dashboard that explains what is due next, how much is complete, and which action keeps the account healthy."
-        meta={
-          user && (
-            <span className="inline-flex rounded-full border border-seylan-border bg-white/70 px-3 py-1 text-xs font-medium text-seylan-charcoal">
-              {user.name}
-            </span>
-          )
-        }
+        
       />
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.5fr_1fr]">

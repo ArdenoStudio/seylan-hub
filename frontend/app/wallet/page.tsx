@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useWalletRealtime } from "@/hooks/useWalletRealtime";
 import { BucketGrid } from "@/components/wallet/BucketGrid";
 import { AllocationEditor } from "@/components/wallet/AllocationEditor";
@@ -23,7 +22,6 @@ const ASSISTANT_PROMPT =
   "Explain the latest family wallet activity and tell me whether any bucket needs attention before the next transfer.";
 
 export default function WalletPage() {
-  const { user, mounted } = useCurrentUser();
   const [modalOpen, setModalOpen] = useState(false);
 
   const handleSpend = useCallback((tx: Transaction, newBalance: number) => {
@@ -36,7 +34,7 @@ export default function WalletPage() {
       onSpend: handleSpend,
     });
 
-  if (!mounted || loading) {
+  if (loading) {
     return (
       <div className="p-6 space-y-4">
         <Skeleton className="h-24 w-full" />
@@ -72,13 +70,7 @@ export default function WalletPage() {
         eyebrow="Diaspora family wallet"
         title="Track money sent home with confidence"
         description="See the latest remittance, how the family is using each bucket, and adjust the next split before sending again."
-        meta={
-          user && (
-            <span className="inline-flex rounded-full border border-seylan-border bg-white/70 px-3 py-1 text-xs font-medium text-seylan-charcoal">
-              Viewing as {user.name}
-            </span>
-          )
-        }
+        
         action={
           <Button onClick={() => setModalOpen(true)} className="rounded-full">
             Send Money
@@ -169,7 +161,7 @@ export default function WalletPage() {
       <TransactionFeed transactions={transactions} />
 
       <SendMoneyModal
-        senderId={user?.id ?? "SEY-USR-001"}
+        senderId="SEY-USR-001"
         recipientId={FAMILY_ACCOUNT_ID}
         allocations={allocations}
         onSuccess={refetch}

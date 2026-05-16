@@ -1,72 +1,45 @@
 "use client";
 
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useRef } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import Link from "next/link";
+import { Wallet, Bot, CreditCard, Store, ArrowRight, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Globe, CreditCard, Home, Store, ArrowRight, ShieldCheck } from "lucide-react";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
-import { DEMO_USERS } from "@/lib/demo-users";
+import { Card, CardContent } from "@/components/ui/card";
 
-const PERSONA_CARDS = [
+const MODULES = [
   {
-    user: DEMO_USERS[0],
-    icon: Globe,
-    title: "Diaspora Sender",
-    description: "Send money home and track how it's spent in real time",
-    outcome: "Know every rupee is used with care",
+    href: "/wallet",
+    icon: Wallet,
+    label: "Family Wallet",
+    description: "Track remittances and control how each rupee is spent across buckets.",
   },
   {
-    user: DEMO_USERS[2],
+    href: "/assistant",
+    icon: Bot,
+    label: "AI Assistant",
+    description: "Ask anything in English or Sinhala — balances, loans, transactions.",
+  },
+  {
+    href: "/loans",
     icon: CreditCard,
-    title: "Borrower",
-    description: "See your loan health and know exactly where you stand",
-    outcome: "Reduce repayment anxiety",
+    label: "Loan Dashboard",
+    description: "See your repayment health, next due date, and an AI advisor summary.",
   },
   {
-    user: DEMO_USERS[1],
-    icon: Home,
-    title: "Family Member",
-    description: "Manage household finances with an AI assistant",
-    outcome: "Get help in English or Sinhala",
-  },
-  {
-    user: DEMO_USERS[3],
+    href: "/business",
     icon: Store,
-    title: "Business Owner",
-    description: "Simple bookkeeping and automatic tax savings",
-    outcome: "Keep tax money ready automatically",
+    label: "Business Bookkeeper",
+    description: "Weekly P&L, AI-categorised transactions, and automatic tax savings.",
   },
 ];
 
-export default function OnboardingPage() {
-  const { switchUser } = useCurrentUser();
-  const router = useRouter();
-  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
-
-  function handleSelect(userId: string, route: string) {
-    switchUser(userId);
-    router.push(route);
-  }
-
-  function handleMouseMove(
-    e: React.MouseEvent<HTMLDivElement>,
-    idx: number
-  ) {
-    const card = cardRefs.current[idx];
-    if (!card) return;
-    const rect = card.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
-    card.style.setProperty("--mouse-x", `${x}%`);
-    card.style.setProperty("--mouse-y", `${y}%`);
-  }
-
+export default function HomePage() {
   return (
     <div className="min-h-screen px-4 py-8 sm:px-6 lg:px-10">
-      <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-6xl flex-col justify-center">
-        <div className="mb-8 overflow-hidden rounded-[2.25rem] border border-seylan-border bg-[linear-gradient(135deg,#fffdf8_0%,#fff0db_52%,#ffd7bd_100%)] p-6 text-center shadow-[0_28px_100px_rgba(114,28,36,0.12)] sm:p-10">
+      <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-5xl flex-col justify-center gap-8">
+
+        {/* Hero */}
+        <div className="overflow-hidden rounded-[2.25rem] border border-seylan-border bg-[linear-gradient(135deg,#fffdf8_0%,#fff0db_52%,#ffd7bd_100%)] p-6 text-center shadow-[0_28px_100px_rgba(114,28,36,0.12)] sm:p-10">
           <div className="mx-auto mb-5 inline-flex rounded-2xl border border-seylan-border bg-white px-5 py-3 shadow-sm">
             <Image
               src="/seylan-bank-logo.png"
@@ -84,92 +57,51 @@ export default function OnboardingPage() {
           <h1 className="mx-auto max-w-3xl font-heading text-4xl font-semibold leading-tight text-seylan-charcoal sm:text-6xl">
             Money clarity for families, borrowers, and small businesses.
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
-            Choose a guided demo path and see how Seylan Hub turns banking data
-            into simple next steps.
+          <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">
+            Real-time Seylan Bank data. Bilingual AI. Four modules built for how Sri Lankans actually use money.
           </p>
-          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Button
-              size="lg"
-              onClick={() => handleSelect("SEY-USR-001", "/wallet")}
-              className="rounded-full px-6"
-            >
-              Start with Family Wallet
-              <ArrowRight className="ml-2 h-4 w-4" />
+          <div className="mt-6">
+            <Button asChild size="lg" className="rounded-full px-8">
+              <Link href="/wallet">
+                Open Seylan Hub
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
             </Button>
-            <button
-              onClick={() => handleSelect("SEY-BIZ-001", "/business")}
-              className="text-sm font-medium text-seylan-charcoal underline-offset-4 hover:text-seylan-red hover:underline"
-            >
-              Or explore business banking
-            </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {PERSONA_CARDS.map((card, idx) => (
+        {/* Module cards */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {MODULES.map((mod) => (
             <Card
-              key={card.user.id}
-              ref={(el) => { cardRefs.current[idx] = el; }}
-              className="persona-card-spotlight group cursor-pointer card-glass shadow-brand border-0 transition-all hover:-translate-y-1 hover:shadow-brand-lg"
-              onClick={() =>
-                handleSelect(card.user.id, card.user.defaultRoute)
-              }
-              onMouseMove={(e) => handleMouseMove(e, idx)}
+              key={mod.href}
+              className="group cursor-pointer card-glass shadow-brand border-0 transition-all hover:-translate-y-1 hover:shadow-brand-lg"
             >
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-seylan-red/10 transition-colors group-hover:bg-seylan-red group-hover:text-white">
-                    <card.icon className="h-5 w-5 text-seylan-red transition-colors group-hover:text-white" />
+              <Link href={mod.href}>
+                <CardContent className="flex items-start gap-4 p-6">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-seylan-red/10 transition-colors group-hover:bg-seylan-red">
+                    <mod.icon className="h-5 w-5 text-seylan-red transition-colors group-hover:text-white" />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-2 flex items-center gap-2">
-                      <span className="rounded-full bg-seylan-mist px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-seylan-plum">
-                        {card.user.personaCode}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {card.user.name} &middot; {card.user.location}
-                      </span>
-                    </div>
-                    <h3 className="font-heading text-lg font-semibold text-seylan-charcoal">
-                      {card.title}
+                  <div>
+                    <h3 className="font-heading text-base font-semibold text-seylan-charcoal">
+                      {mod.label}
                     </h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {card.description}
-                    </p>
-                    <p className="mt-3 text-sm font-medium text-seylan-red">
-                      {card.outcome}
-                    </p>
+                    <p className="mt-1 text-sm text-muted-foreground">{mod.description}</p>
                   </div>
-                </div>
-              </CardContent>
+                </CardContent>
+              </Link>
             </Card>
           ))}
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3 text-center text-xs font-medium text-muted-foreground sm:grid-cols-4">
-          {[
-            "Real-time wallet",
-            "Sinhala + English AI",
-            "Loan health clarity",
-            "Auto tax savings",
-          ].map((item) => (
-            <div
-              key={item}
-              className="rounded-full border border-seylan-border bg-white/70 px-3 py-2"
-            >
-              {item}
-            </div>
-          ))}
-        </div>
-
-        <div className="text-center mt-6">
-          <button
-            onClick={() => handleSelect("SEY-USR-001", "/wallet")}
-            className="text-sm text-muted-foreground hover:text-seylan-red transition-colors underline"
-          >
-            Skip — view as Nimal Fernando
-          </button>
+        <div className="grid grid-cols-2 gap-3 text-center text-xs font-medium text-muted-foreground sm:grid-cols-4">
+          {["Real-time wallet", "Sinhala + English AI", "Loan health clarity", "Auto tax savings"].map(
+            (item) => (
+              <div key={item} className="rounded-full border border-seylan-border bg-white/70 px-3 py-2">
+                {item}
+              </div>
+            )
+          )}
         </div>
       </div>
     </div>

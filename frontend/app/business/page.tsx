@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useState, useCallback } from "react";
 import { PlSummaryCard } from "@/components/business/PlSummaryCard";
 import { ExpenseBreakdown } from "@/components/business/ExpenseBreakdown";
 import { TaxJarPanel } from "@/components/business/TaxJarPanel";
@@ -19,20 +18,13 @@ const ASSISTANT_PROMPT =
   "Act as my SME bookkeeper. Review this week's revenue, expenses, tax jar readiness, and transactions that need category review.";
 
 export default function BusinessPage() {
-  const { mounted, user, switchUser } = useCurrentUser();
   const [extraTransactions, setExtraTransactions] = useState<Transaction[]>([]);
 
   const handleNewTransaction = useCallback((tx: Transaction) => {
     setExtraTransactions((prev) => [tx, ...prev]);
   }, []);
 
-  useEffect(() => {
-    if (mounted && user?.id !== BUSINESS_USER_ID) {
-      switchUser(BUSINESS_USER_ID);
-    }
-  }, [mounted, user?.id, switchUser]);
-
-  if (!mounted) {
+  if (false) {
     return (
       <div className="p-6 space-y-4">
         <Skeleton className="h-8 w-64" />

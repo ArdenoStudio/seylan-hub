@@ -3,21 +3,18 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Wallet, Bot, CreditCard, Store, Sparkles } from "lucide-react";
+import { Wallet, Bot, CreditCard, Store } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { UserSwitcher } from "./UserSwitcher";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
 
 const NAV_ITEMS = [
-  { href: "/wallet", label: "Wallet", icon: Wallet },
-  { href: "/assistant", label: "Assistant", icon: Bot },
-  { href: "/loans", label: "Loans", icon: CreditCard },
-  { href: "/business", label: "Business", icon: Store },
+  { href: "/wallet",    label: "Wallet",    icon: Wallet    },
+  { href: "/assistant", label: "Assistant", icon: Bot       },
+  { href: "/loans",     label: "Loans",     icon: CreditCard },
+  { href: "/business",  label: "Business",  icon: Store     },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { user } = useCurrentUser();
 
   return (
     <>
@@ -39,23 +36,12 @@ export function Sidebar() {
           </div>
         </div>
 
-        {user && (
-          <div className="border-b border-white/10 px-3 py-4">
-            <div className="rounded-2xl border border-white/10 bg-white/10 p-3">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="rounded-full bg-seylan-gold px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-seylan-charcoal">
-                  {user.personaCode}
-                </span>
-                <Sparkles className="h-4 w-4 text-seylan-gold" />
-              </div>
-              <div className="text-sm font-semibold">{user.name}</div>
-              <div className="text-xs text-white/60">{user.location}</div>
-            </div>
-            <div className="mt-2">
-              <UserSwitcher />
-            </div>
+        <div className="border-b border-white/10 px-3 py-4">
+          <div className="rounded-2xl border border-white/10 bg-white/10 p-3">
+            <div className="text-sm font-semibold">Nimal Fernando</div>
+            <div className="text-xs text-white/60">VOXVERSE STUDIO · 0640-0001254-001</div>
           </div>
-        )}
+        </div>
 
         <nav className="flex-1 space-y-1 px-3 py-4">
           {NAV_ITEMS.map((item) => {
