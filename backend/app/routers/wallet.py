@@ -35,17 +35,21 @@ async def wallet_transfer(req: WalletTransferRequest):
     except Exception as exc:
         log.warning("Failed to persist allocation rule: %s", exc)
 
-    # Real bank transfer when enabled
+    # Real bank transfer when enabled — always uses the sandbox test accounts
+    _SOURCE_ACCOUNT = "064000012548001"
+    _DEST_ACCOUNT   = "001213437904100"
     if settings.seylan_enable_transfers and settings.use_seylan_real:
         try:
             from app.seylan import transfers
-            await transfers.transfer_funds(
-                source=req.sender_account_id,
-                destination=req.recipient_account_id,
+            result = await transfers.transfer_funds(
+                source=_SOURCE_ACCOUNT,
+                destination=_DEST_ACCOUNT,
                 amount=req.amount_lkr,
-                user_ref=transfer_id,
+                user_ref=transfer_id[:16],
+                src_narration=f"Seylan Hub remit {req.corridor}",
                 dst_narration=f"Family wallet — {req.corridor}",
             )
+            log.info("Seylan transfer succeeded: ref=%s", result.get("transaction_reference"))
         except Exception as exc:
             log.error("Seylan transfer failed: %s — returning mock COMPLETED", exc)
 

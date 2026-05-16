@@ -6,6 +6,7 @@ from pathlib import Path
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
+from app.config import settings
 from app.models.schemas import TriggerSpendRequest, TaxJarTriggerRequest
 from app.services import supabase_client
 
@@ -14,9 +15,34 @@ router = APIRouter(prefix="/mock", tags=["mock"])
 
 _FX = Path(__file__).parent.parent.parent / "fixtures"
 
+# Map demo user_id → real sandbox account number
+_REAL_ACCOUNTS = {
+    "SEY-USR-001": "064000012548001",
+    "SEY-USR-003": "064000012548001",
+}
+
 
 def _load(name: str) -> dict:
     return json.loads((_FX / name).read_text(encoding="utf-8"))
+
+
+def _map_seylan_txn(t: dict) -> dict:
+    amount_raw = t.get("Posting_amount", "0") or "0"
+    try:
+        amount = float(amount_raw)
+    except ValueError:
+        amount = 0.0
+    desc = t.get("Narrative_4") or t.get("Transaction_Code_Name", "Transaction")
+    if t.get("Users_own_reference"):
+        desc = f"{desc} — {t['Users_own_reference']}"
+    return {
+        "id": t.get("Event_key") or t.get("Narrative_4", uuid.uuid4().hex[:8]),
+        "date": t.get("Posting_date", ""),
+        "description": desc,
+        "amount_lkr": amount,
+        "type": "credit" if amount >= 0 else "debit",
+        "bucket_id": None,
+    }
 
 
 @router.get("/account-context/{user_id}")
@@ -24,8 +50,27 @@ async def account_context(user_id: str):
     data = _load("account_context.json")
     if user_id not in data:
         return JSONResponse(status_code=404, content={"error": f"Unknown user {user_id}"})
-    log.info("mock_call account-context user_id=%s", user_id)
-    return data[user_id]
+    ctx = dict(data[user_id])
+    log.info("mock_call account-context user_id=%s real=%s", user_id, settings.use_seylan_real)
+
+    if settings.use_seylan_real and user_id in _REAL_ACCOUNTS:
+        account_number = _REAL_ACCOUNTS[user_id]
+        try:
+            from app.seylan import account as seylan_acct
+            # Real balance
+            bal = await seylan_acct.get_balance(account_number)
+            ctx["savings_balance"] = bal.get("balance_lkr", ctx.get("savings_balance"))
+            ctx["balance_lkr"] = bal.get("balance_lkr", ctx.get("balance_lkr"))
+            # Real last 5 transactions
+            txns = await seylan_acct.get_recent_transactions(account_number, n=5)
+            if txns:
+                ctx["recent_transactions"] = txns
+            log.info("enriched account-context with real data for %s balance=%.2f txns=%d",
+                     account_number, bal.get("balance_lkr", 0), len(txns))
+        except Exception as exc:
+            log.warning("Seylan enrichment failed for %s: %s — using fixture", user_id, exc)
+
+    return ctx
 
 
 @router.get("/family-wallet/{account_id}")
