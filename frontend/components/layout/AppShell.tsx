@@ -1,6 +1,7 @@
 "use client";
 
 import { Sidebar } from "./Sidebar";
+import { DemoModeBadge } from "./DemoModeBadge";
 import { usePathname } from "next/navigation";
 
 interface AppShellProps {
@@ -12,7 +13,12 @@ export function AppShell({ children }: AppShellProps) {
   const isOnboarding = pathname === "/";
 
   if (isOnboarding) {
-    return <>{children}</>;
+    return (
+      <>
+        <DemoModeBadge />
+        {children}
+      </>
+    );
   }
 
   return (
@@ -21,6 +27,7 @@ export function AppShell({ children }: AppShellProps) {
       <main className="flex-1 md:ml-60 pb-16 md:pb-0 overflow-auto">
         {children}
       </main>
+      <DemoModeBadge />
     </div>
   );
 }

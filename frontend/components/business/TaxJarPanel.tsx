@@ -7,7 +7,7 @@ import { formatLKR } from "@/lib/utils";
 import { postTaxJarTrigger } from "@/lib/api";
 import { toast } from "sonner";
 import { Transaction } from "@/types";
-import { Loader2 } from "lucide-react";
+import { Bell, Loader2 } from "lucide-react";
 
 interface TaxJarPanelProps {
   userId: string;
@@ -25,10 +25,10 @@ export function TaxJarPanel({
   const [triggering, setTriggering] = useState(false);
   const animRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
-  if (balance !== initialBalance && displayBalance === balance) {
+  useEffect(() => {
     setBalance(initialBalance);
     setDisplayBalance(initialBalance);
-  }
+  }, [initialBalance]);
 
   useEffect(() => {
     if (displayBalance === balance) return;
@@ -65,7 +65,7 @@ export function TaxJarPanel({
       setBalance(newBalance);
 
       toast("LKR 8,200 received — LKR 820 auto-saved to Tax Jar", {
-        icon: "🔔",
+        icon: <Bell className="h-4 w-4 text-seylan-red" />,
       });
 
       if (onNewTransaction) {

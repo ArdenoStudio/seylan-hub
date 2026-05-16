@@ -10,24 +10,33 @@ import { PaymentCountdown } from "@/components/loans/PaymentCountdown";
 import { AIAdvisorPanel } from "@/components/loans/AIAdvisorPanel";
 import { RepaymentTimeline } from "@/components/loans/RepaymentTimeline";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ErrorState";
 
 export default function LoansPage() {
   const { user, mounted } = useCurrentUser();
   const [loan, setLoan] = useState<Loan | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const userId = user?.id ?? "SEY-USR-001";
 
   useEffect(() => {
     if (!mounted) return;
     let cancelled = false;
+    setLoading(true);
+    setError(null);
     getLoans(userId)
       .then((data) => {
         if (cancelled) return;
         const loans = data as Loan | Loan[];
         setLoan(Array.isArray(loans) ? loans[0] : loans);
       })
-      .catch(() => { if (!cancelled) setLoan(null); })
+      .catch((err) => {
+        if (!cancelled) {
+          setLoan(null);
+          setError(err instanceof Error ? err.message : "Failed to load loans");
+        }
+      })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [userId, mounted]);
@@ -49,7 +58,10 @@ export default function LoansPage() {
         <h1 className="text-xl font-bold text-seylan-charcoal mb-4">
           Loan Dashboard
         </h1>
-        <p className="text-muted-foreground">No loan data available.</p>
+        <ErrorState
+          message={error ?? "No loan data available for this persona."}
+          onRetry={() => window.location.reload()}
+        />
       </div>
     );
   }

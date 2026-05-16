@@ -2,6 +2,7 @@
 
 import { ChatMessage } from "@/types";
 import { cn } from "@/lib/utils";
+import { AudioPlayer } from "./AudioPlayer";
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -21,9 +22,19 @@ export function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
             : "bg-seylan-mist text-seylan-charcoal rounded-tr-[18px] rounded-br-[18px] rounded-bl-[18px] rounded-tl-[4px]"
         )}
       >
-        <p className="whitespace-pre-wrap">{message.content}</p>
+        <p
+          className={cn(
+            "whitespace-pre-wrap",
+            message.language === "si" && "sinhala"
+          )}
+        >
+          {message.content}
+        </p>
         {isStreaming && (
           <span className="inline-block w-2 h-4 bg-current opacity-50 animate-pulse ml-0.5" />
+        )}
+        {!isUser && !isStreaming && message.content && (
+          <AudioPlayer text={message.content} language={message.language} />
         )}
       </div>
     </div>

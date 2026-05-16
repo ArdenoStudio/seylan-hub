@@ -28,11 +28,21 @@ export function ChatThread({
     return (
       <div className="flex-1 flex flex-col items-center justify-center">
         <div className="text-center mb-6">
-          <h2 className="text-lg font-semibold text-seylan-charcoal">
-            Seylan Assistant
+          <h2
+            className={`text-lg font-semibold text-seylan-charcoal ${
+              language === "si" ? "sinhala" : ""
+            }`}
+          >
+            {language === "si" ? "Seylan සහායක" : "Seylan Assistant"}
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Ask me anything about your accounts
+          <p
+            className={`text-sm text-muted-foreground mt-1 ${
+              language === "si" ? "sinhala" : ""
+            }`}
+          >
+            {language === "si"
+              ? "ඔබේ ගිණුම් ගැන ඕනෑම දෙයක් අසන්න"
+              : "Ask me anything about your accounts"}
           </p>
         </div>
         <SuggestedQuestions language={language} onSelect={onSuggestedSelect} />

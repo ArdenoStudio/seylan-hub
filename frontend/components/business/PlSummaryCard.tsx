@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ErrorState";
 import { formatLKR } from "@/lib/utils";
 import { getPlSummary } from "@/lib/api";
 import { PlSummary } from "@/types";
@@ -14,15 +15,26 @@ interface PlSummaryCardProps {
 export function PlSummaryCard({ userId }: PlSummaryCardProps) {
   const [data, setData] = useState<PlSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setLoading(true);
+    setError(null);
     getPlSummary(userId)
       .then((res) => setData(res as PlSummary))
-      .catch(() => setData(null))
+      .catch((err) => {
+        setData(null);
+        setError(err instanceof Error ? err.message : "Failed to load P&L");
+      })
       .finally(() => setLoading(false));
   }, [userId]);
 
+  useEffect(() => {
+    load();
+  }, [load]);
+
   if (loading) return <Skeleton className="h-48 w-full" />;
+  if (error && !data) return <ErrorState message={error} onRetry={load} />;
   if (!data) return null;
 
   const marginDiff = data.margin_pct - data.previous_margin_pct;

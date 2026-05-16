@@ -5,6 +5,7 @@ import {
   MOCK_BUSINESS_TRANSACTIONS,
   getMockChatResponse,
 } from "./mock-data";
+import { Transaction } from "@/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
 const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK !== "false";
@@ -159,6 +160,10 @@ export async function postChat(
 }
 
 export function postTts(payload: { text: string; language: string }) {
+  if (USE_MOCK) {
+    throw new ApiError(503, "TTS is only available when connected to the backend");
+  }
+
   return request<{ audio_base64: string; content_type: string }>("/api/tts", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -174,6 +179,30 @@ export async function postCategorize(payload: { transaction_ids: string[] }) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
+  });
+}
+
+export async function prewarmDemoData() {
+  await Promise.all([
+    getFamilyWallet("SEY-ACC-002"),
+    getLoans("SEY-USR-001"),
+    getLoans("SEY-USR-003"),
+    getBusinessAccount("SEY-BIZ-001"),
+    getPlSummary("SEY-BIZ-001"),
+    postCategorize({ transaction_ids: [] }).catch(() => null),
+  ]);
+}
+
+export async function postDemoReset() {
+  if (USE_MOCK) {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("seylan:demo-reset"));
+    }
+    return { success: true, mode: "mock" };
+  }
+
+  return request("/admin/seed", {
+    method: "POST",
   });
 }
 
@@ -212,6 +241,34 @@ export function postTriggerSpend(payload: {
   merchant: string;
   bucket_id: string;
 }) {
+  if (USE_MOCK) {
+    const tx: Transaction = {
+      transaction_id: `mock-${Date.now()}`,
+      account_id: payload.account_id,
+      bucket_id: payload.bucket_id,
+      bucket_label:
+        payload.bucket_id === "bucket_school"
+          ? "School"
+          : payload.bucket_id === "bucket_savings"
+          ? "Savings"
+          : "Household",
+      amount_lkr: payload.amount_lkr,
+      merchant: payload.merchant,
+      timestamp: new Date().toISOString(),
+      type: "debit",
+    };
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent<Transaction>("seylan:mock-transaction", {
+          detail: tx,
+        })
+      );
+    }
+
+    return Promise.resolve({ success: true, transaction: tx });
+  }
+
   return request("/mock/trigger-spend", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

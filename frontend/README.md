@@ -4,7 +4,7 @@ AI banking platform for Sri Lanka: diaspora wallets, voice assistant, loan healt
 
 ## Deploy URL
 
-_(To be added after Vercel deploy)_
+https://seylan-hub.vercel.app
 
 ## Tech Stack
 
@@ -31,6 +31,17 @@ Open [http://localhost:3000](http://localhost:3000).
 | `NEXT_PUBLIC_API_BASE` | Backend API URL (default: `http://localhost:8000`) |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon/public key |
+| `NEXT_PUBLIC_USE_MOCK` | Set to `false` to use the live backend. Defaults to mock demo data. |
+
+## Demo Reliability
+
+- `/demo` contains the demo control panel for wallet spend, tax jar trigger,
+  reset, and data prewarm actions.
+- The wallet uses Supabase Realtime when connected and falls back to polling
+  when realtime is unavailable.
+- Mock mode is visible in the UI through the "Demo data" badge.
+- Run `npm run test:smoke` before presenting to verify demo-critical files and
+  routes are present.
 
 ## Modules
 

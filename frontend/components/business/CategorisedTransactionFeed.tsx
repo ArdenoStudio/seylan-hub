@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ErrorState";
 import { Transaction } from "@/types";
 import { getBusinessAccount, postCategorize } from "@/lib/api";
 import { formatLKR } from "@/lib/utils";
@@ -21,37 +22,44 @@ export function CategorisedTransactionFeed({
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("all");
+  const [error, setError] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = (await getBusinessAccount(userId)) as {
+        transactions: Transaction[];
+      };
+      const txs = data.transactions ?? [];
+
+      try {
+        const ids = txs.map((t) => t.transaction_id);
+        const categories = (await postCategorize({ transaction_ids: ids })) as Record<
+          string,
+          { category_en: string; category_si: string; subcategory: string }
+        >;
+        const merged = txs.map((t) => ({
+          ...t,
+          ...categories[t.transaction_id],
+        }));
+        setTransactions(merged);
+      } catch {
+        setTransactions(txs);
+      }
+    } catch (err) {
+      setTransactions([]);
+      setError(
+        err instanceof Error ? err.message : "Failed to load transactions"
+      );
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
 
   useEffect(() => {
-    async function load() {
-      try {
-        const data = (await getBusinessAccount(userId)) as {
-          transactions: Transaction[];
-        };
-        const txs = data.transactions ?? [];
-
-        try {
-          const ids = txs.map((t) => t.transaction_id);
-          const categories = (await postCategorize({ transaction_ids: ids })) as Record<
-            string,
-            { category_en: string; category_si: string; subcategory: string }
-          >;
-          const merged = txs.map((t) => ({
-            ...t,
-            ...categories[t.transaction_id],
-          }));
-          setTransactions(merged);
-        } catch {
-          setTransactions(txs);
-        }
-      } catch {
-        setTransactions([]);
-      } finally {
-        setLoading(false);
-      }
-    }
     load();
-  }, [userId]);
+  }, [load]);
 
   const allTxs = [...extraTransactions, ...transactions];
 
@@ -86,6 +94,10 @@ export function CategorisedTransactionFeed({
         </CardContent>
       </Card>
     );
+  }
+
+  if (error && transactions.length === 0) {
+    return <ErrorState message={error} onRetry={load} />;
   }
 
   return (

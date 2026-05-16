@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Wallet, Bot, CreditCard, Store } from "lucide-react";
+import { Wallet, Bot, CreditCard, Store, FlaskConical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UserSwitcher } from "./UserSwitcher";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: "/assistant", label: "Assistant", icon: Bot },
   { href: "/loans", label: "Loans", icon: CreditCard },
   { href: "/business", label: "Business", icon: Store },
+  { href: "/demo", label: "Demo", icon: FlaskConical },
 ];
 
 export function Sidebar() {
@@ -26,7 +27,7 @@ export function Sidebar() {
         <div className="p-4 border-b border-sidebar-border">
           <div className="flex items-center gap-3 rounded-xl bg-white px-3 py-2 shadow-sm">
             <Image
-              src="/seylan-bank-logo.png"
+              src="/seylan-logo.svg"
               alt="Seylan Bank"
               width={172}
               height={80}

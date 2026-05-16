@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ErrorState";
 import { formatLKR } from "@/lib/utils";
 import { getPlSummary } from "@/lib/api";
 
@@ -17,18 +18,31 @@ interface ExpenseBreakdownProps {
 export function ExpenseBreakdown({ userId }: ExpenseBreakdownProps) {
   const [breakdown, setBreakdown] = useState<Record<string, number> | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setLoading(true);
+    setError(null);
     getPlSummary(userId)
       .then((res) => {
         const data = res as PlData;
         setBreakdown(data.expense_breakdown);
       })
-      .catch(() => setBreakdown(null))
+      .catch((err) => {
+        setBreakdown(null);
+        setError(
+          err instanceof Error ? err.message : "Failed to load expenses"
+        );
+      })
       .finally(() => setLoading(false));
   }, [userId]);
 
+  useEffect(() => {
+    load();
+  }, [load]);
+
   if (loading) return <Skeleton className="h-48 w-full" />;
+  if (error && !breakdown) return <ErrorState message={error} onRetry={load} />;
   if (!breakdown) return null;
 
   const entries = Object.entries(breakdown).sort(([, a], [, b]) => b - a);

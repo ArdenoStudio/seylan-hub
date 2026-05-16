@@ -8,14 +8,14 @@
   "theme_color": "#E31821",
   "icons": [
     {
-      "src": "/seylan-bank-icon.png",
-      "sizes": "24x24",
-      "type": "image/png"
+      "src": "/seylan-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
     },
     {
-      "src": "/seylan-bank-logo.png",
-      "sizes": "3385x1575",
-      "type": "image/png"
+      "src": "/seylan-logo-white.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
     }
   ]
 }

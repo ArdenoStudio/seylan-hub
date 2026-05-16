@@ -15,6 +15,8 @@ interface ChatInputProps {
 
 export function ChatInput({ onSend, disabled, language }: ChatInputProps) {
   const [value, setValue] = useState("");
+  const placeholder =
+    language === "si" ? "ඔබේ ප්‍රශ්නය අසන්න..." : "Ask a question...";
 
   function handleSubmit() {
     const trimmed = value.trim();
@@ -44,9 +46,10 @@ export function ChatInput({ onSend, disabled, language }: ChatInputProps) {
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask a question..."
+          placeholder={placeholder}
           disabled={disabled}
-          className="flex-1"
+          className={`flex-1 ${language === "si" ? "sinhala" : ""}`}
+          aria-label="Assistant question"
         />
         <VoiceButton
           language={language}

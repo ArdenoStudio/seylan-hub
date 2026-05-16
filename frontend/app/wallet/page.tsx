@@ -10,6 +10,7 @@ import { LastRemittanceBanner } from "@/components/wallet/LastRemittanceBanner";
 import { SendMoneyModal } from "@/components/wallet/SendMoneyModal";
 import { fireSpendToast } from "@/components/wallet/SpendNotificationToast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ErrorState";
 import { Transaction } from "@/types";
 
 const FAMILY_ACCOUNT_ID = "SEY-ACC-002";
@@ -22,7 +23,7 @@ export default function WalletPage() {
     fireSpendToast(tx, newBalance);
   }, []);
 
-  const { wallet, transactions, buckets, loading, refetch } =
+  const { wallet, transactions, buckets, loading, error, realtimeConnected, refetch } =
     useWalletRealtime({
       accountId: FAMILY_ACCOUNT_ID,
       onSpend: handleSpend,
@@ -42,6 +43,14 @@ export default function WalletPage() {
     );
   }
 
+  if (error && !wallet) {
+    return (
+      <div className="p-6">
+        <ErrorState message={error} onRetry={refetch} />
+      </div>
+    );
+  }
+
   const allocations = Object.fromEntries(
     buckets.map((b) => [b.bucket_id, b.allocation_pct])
   );
@@ -55,6 +64,9 @@ export default function WalletPage() {
             Viewing as {user.name}
           </span>
         )}
+        <span className="ml-2 rounded-full bg-seylan-mist px-2 py-0.5 text-xs font-medium text-muted-foreground">
+          {realtimeConnected ? "Realtime connected" : "Polling fallback"}
+        </span>
       </h1>
 
       {wallet && (

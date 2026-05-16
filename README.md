@@ -46,6 +46,14 @@ uvicorn main:app --port 8000
 
 See `frontend/.env.example` for all required variables. Set `NEXT_PUBLIC_USE_MOCK=true` to run with demo data (no backend needed).
 
+## Demo Notes
+
+- Frontend demo controls live at `/demo` for spend trigger, tax jar trigger,
+  reset, and prewarm actions.
+- The deployed UI shows whether it is using demo data or the live API.
+- Wallet realtime has a polling fallback so the demo can continue if Supabase
+  realtime is unavailable.
+
 ## Credits
 
 - **Seylan Bank** — Sponsor & banking domain

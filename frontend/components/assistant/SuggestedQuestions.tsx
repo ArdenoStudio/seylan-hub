@@ -32,10 +32,11 @@ export function SuggestedQuestions({
         const isSinhala = /[\u0D80-\u0DFF]/.test(q);
         return (
           <button
+            type="button"
             key={q}
             onClick={() => onSelect(q)}
             className={cn(
-              "px-3 py-2 text-sm rounded-full border border-seylan-border hover:border-seylan-red/50 hover:bg-seylan-red/5 transition-colors text-seylan-charcoal",
+              "px-3 py-2 text-sm rounded-full border border-seylan-border hover:border-seylan-red/50 hover:bg-seylan-red/5 transition-colors text-seylan-charcoal focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-seylan-red/30",
               isSinhala && "sinhala"
             )}
           >

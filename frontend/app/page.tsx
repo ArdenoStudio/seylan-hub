@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
 import { Globe, CreditCard, Home, Store } from "lucide-react";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { DEMO_USERS } from "@/lib/demo-users";
@@ -49,7 +48,7 @@ export default function OnboardingPage() {
         <div className="text-center mb-8">
           <div className="mx-auto mb-4 inline-flex rounded-2xl border border-seylan-border bg-white px-5 py-3 shadow-sm">
             <Image
-              src="/seylan-bank-logo.png"
+              src="/seylan-logo.svg"
               alt="Seylan Bank"
               width={215}
               height={100}
@@ -67,32 +66,32 @@ export default function OnboardingPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {PERSONA_CARDS.map((card) => (
-            <Card
+            <button
+              type="button"
               key={card.user.id}
-              className="cursor-pointer border-seylan-border hover:border-seylan-red/50 hover:shadow-md transition-all"
+              className="rounded-xl border border-seylan-border bg-white text-left shadow-sm transition-all hover:border-seylan-red/50 hover:shadow-md focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-seylan-red/30"
               onClick={() =>
                 handleSelect(card.user.id, card.user.defaultRoute)
               }
+              aria-label={`Continue as ${card.title}, ${card.user.name}`}
             >
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-seylan-red/10">
-                    <card.icon className="h-5 w-5 text-seylan-red" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-seylan-charcoal">
-                      {card.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {card.description}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {card.user.name} &middot; {card.user.location}
-                    </p>
-                  </div>
+              <div className="flex items-start gap-4 p-6">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-seylan-red/10">
+                  <card.icon className="h-5 w-5 text-seylan-red" />
                 </div>
-              </CardContent>
-            </Card>
+                <div>
+                  <h3 className="font-semibold text-seylan-charcoal">
+                    {card.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {card.description}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {card.user.name} &middot; {card.user.location}
+                  </p>
+                </div>
+              </div>
+            </button>
           ))}
         </div>
 

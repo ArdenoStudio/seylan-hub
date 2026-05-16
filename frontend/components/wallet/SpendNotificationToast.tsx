@@ -1,4 +1,5 @@
 import { toast } from "sonner";
+import { Bell } from "lucide-react";
 import { Transaction } from "@/types";
 import { formatLKR } from "@/lib/utils";
 
@@ -9,6 +10,6 @@ export function fireSpendToast(transaction: Transaction, newBucketBalance?: numb
 
   toast(`Kumari just spent ${formatLKR(transaction.amount_lkr)} — ${transaction.merchant}`, {
     description,
-    icon: "🔔",
+    icon: <Bell className="h-4 w-4 text-seylan-red" />,
   });
 }
