@@ -44,7 +44,9 @@ export function ChatInput({ onSend, disabled, language }: ChatInputProps) {
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask a question..."
+          placeholder={
+            language === "si" ? "ප්‍රශ්නයක් අසන්න..." : "Ask a question..."
+          }
           disabled={disabled}
           className="flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
         />

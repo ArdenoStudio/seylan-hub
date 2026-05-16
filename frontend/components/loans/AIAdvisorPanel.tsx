@@ -11,9 +11,9 @@ interface AIAdvisorPanelProps {
 
 const MOCK_ADVICE: Record<string, string> = {
   "SEY-USR-001":
-    "Great progress, Nimal! You've completed 66% of your loan (24/36 payments). At your current pace, you'll be debt-free by May 2027. If you make one extra payment of LKR 20,000 this quarter, you could save LKR 18,400 in interest and finish 2 months early.",
+    "Your repayments are on track — great discipline. With 12 payments remaining, you'll clear this loan by June 2027.\nConsider setting up a LankaPay JustPay standing order for the 1st of each month so payments never miss.\nBased on your current trajectory, you qualify for a top-up loan of up to LKR 200,000 at our current rate.",
   "SEY-USR-003":
-    "Sunil, your loan health is AT_RISK because of the missed payment in April. To recover: (1) Make your May 20 payment on time — it's in 4 days. (2) Contact the branch to discuss a catch-up plan for the missed LKR 45,000. (3) Consider reducing non-essential expenses by LKR 5,000/month to build a buffer. Your health score can return to ON_TRACK within 3 months of consistent payments.",
+    "You have one missed payment from April 2026. This has triggered a CRIB flag — acting now prevents it from affecting your credit profile.\nPay LKR 45,000 via SeylanPay before 20 May to clear the arrear.\nWe can also restructure your schedule to reduce monthly burden — speak to your relationship manager.",
 };
 
 export function AIAdvisorPanel({ userId }: AIAdvisorPanelProps) {
@@ -93,7 +93,7 @@ export function AIAdvisorPanel({ userId }: AIAdvisorPanelProps) {
         {loading ? (
           <Skeleton className="h-16 w-full" />
         ) : (
-          <p className="text-sm text-muted-foreground leading-7">
+          <p className="text-sm text-muted-foreground leading-7 whitespace-pre-wrap">
             {advice}
           </p>
         )}

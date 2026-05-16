@@ -8,6 +8,7 @@ import { getPlSummary } from "@/lib/api";
 
 interface PlData {
   expense_breakdown: Record<string, number>;
+  previous_expense_breakdown?: Record<string, number>;
 }
 
 interface ExpenseBreakdownProps {
@@ -16,6 +17,10 @@ interface ExpenseBreakdownProps {
 
 export function ExpenseBreakdown({ userId }: ExpenseBreakdownProps) {
   const [breakdown, setBreakdown] = useState<Record<string, number> | null>(null);
+  const [prevBreakdown, setPrevBreakdown] = useState<Record<
+    string,
+    number
+  > | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,6 +28,7 @@ export function ExpenseBreakdown({ userId }: ExpenseBreakdownProps) {
       .then((res) => {
         const data = res as PlData;
         setBreakdown(data.expense_breakdown);
+        setPrevBreakdown(data.previous_expense_breakdown ?? null);
       })
       .catch(() => setBreakdown(null))
       .finally(() => setLoading(false));
@@ -48,14 +54,20 @@ export function ExpenseBreakdown({ userId }: ExpenseBreakdownProps) {
           {entries.map(([category, amount]) => {
             const pct = total > 0 ? Math.round((amount / total) * 100) : 0;
             const barWidth = maxVal > 0 ? (amount / maxVal) * 100 : 0;
+            const prev = prevBreakdown?.[category];
+            const diff = prev !== undefined ? amount - prev : null;
+            const isUp = diff !== null && diff > 0;
+            const isDown = diff !== null && diff < 0;
             return (
               <div key={category}>
                 <div className="flex justify-between text-xs mb-1">
                   <span className="text-seylan-charcoal capitalize">
                     {category.toLowerCase()}
                   </span>
-                  <span className="text-muted-foreground">
+                  <span className="flex items-center gap-1 text-muted-foreground">
                     {formatLKR(amount)} ({pct}%)
+                    {isUp && <span className="text-red-500">↑</span>}
+                    {isDown && <span className="text-emerald-500">↓</span>}
                   </span>
                 </div>
                 <div className="h-2 bg-seylan-mist rounded-full overflow-hidden">

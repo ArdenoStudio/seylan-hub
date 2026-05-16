@@ -21,7 +21,14 @@ export function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
             : "border border-seylan-border bg-white text-seylan-charcoal rounded-tr-[20px] rounded-br-[20px] rounded-bl-[20px] rounded-tl-md"
         )}
       >
-        <p className="whitespace-pre-wrap">{message.content}</p>
+        <p
+          className={cn(
+            "whitespace-pre-wrap",
+            message.language === "si" && "sinhala"
+          )}
+        >
+          {message.content}
+        </p>
         {isStreaming && (
           <span className="inline-block w-2 h-4 bg-current opacity-50 animate-pulse ml-0.5" />
         )}
