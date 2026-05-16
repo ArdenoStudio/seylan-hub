@@ -8,7 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatLKR } from "@/lib/utils";
 import {
@@ -150,32 +149,28 @@ export function SendMoneyModal({
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent
-        className="max-w-sm overflow-hidden border-0 p-0 shadow-2xl [background:linear-gradient(160deg,#0d1421_0%,#0a1628_60%,#060e1a_100%)] [box-shadow:0_32px_80px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.07)]"
+        className="max-w-sm overflow-hidden border border-gray-100 p-0 shadow-2xl [background:#ffffff] [box-shadow:0_24px_64px_rgba(0,0,0,0.18),0_4px_16px_rgba(0,0,0,0.08)]"
         showCloseButton={false}
       >
-        {/* Top accent bar */}
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#E0AF49]/60 to-transparent" />
+        {/* Top red accent bar */}
+        <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-[#E31821] via-[#E0AF49] to-[#E31821]" />
 
-        {/* Ambient glow */}
-        <div className="pointer-events-none absolute -top-20 left-1/2 h-48 w-80 -translate-x-1/2 rounded-full bg-[#1d4ed8]/15 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-10 right-0 h-40 w-60 rounded-full bg-[#E0AF49]/8 blur-3xl" />
-
-        <div className="relative z-10 flex flex-col gap-0">
+        <div className="relative flex flex-col gap-0">
           {/* Header */}
           <DialogHeader className="px-5 pt-5 pb-4">
             <div className="flex items-start justify-between">
               <div>
-                <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-[#E0AF49]/70">
+                <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.15em] text-[#E31821]">
                   Seylan Hub
                 </p>
-                <DialogTitle className="font-heading text-lg font-semibold text-white">
+                <DialogTitle className="font-heading text-lg font-semibold text-gray-900">
                   Send to Sri Lanka
                 </DialogTitle>
               </div>
               <button
                 type="button"
                 onClick={() => handleDialogOpenChange(false)}
-                className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-full text-white/30 transition-colors hover:bg-white/10 hover:text-white/70"
+                className="mt-0.5 flex h-7 w-7 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
                 aria-label="Close"
               >
                 ×
@@ -185,7 +180,7 @@ export function SendMoneyModal({
 
           <div className="space-y-3 px-5 pb-5">
             {/* Mode toggle */}
-            <div className="flex rounded-xl border border-white/8 bg-white/4 p-1">
+            <div className="flex rounded-xl border border-gray-100 bg-gray-50 p-1">
               {(["card", "demo"] as const).map((mode) => (
                 <button
                   key={mode}
@@ -196,11 +191,11 @@ export function SendMoneyModal({
                   {paymentMode === mode && (
                     <motion.div
                       layoutId="mode-pill"
-                      className="absolute inset-0 rounded-lg bg-[#1d4ed8] shadow-[0_2px_12px_rgba(29,78,216,0.45)]"
+                      className="absolute inset-0 rounded-lg bg-white shadow-sm ring-1 ring-gray-200"
                       transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     />
                   )}
-                  <span className={`relative flex items-center gap-1.5 ${paymentMode === mode ? "text-white" : "text-white/40"}`}>
+                  <span className={`relative flex items-center gap-1.5 ${paymentMode === mode ? "text-gray-900" : "text-gray-400"}`}>
                     {mode === "card" ? <CreditCard className="h-3 w-3" /> : <Zap className="h-3 w-3" />}
                     {mode === "card" ? "Card (MPGS)" : "Demo Mode"}
                   </span>
@@ -217,11 +212,11 @@ export function SendMoneyModal({
               validThru="GBP→LKR"
             />
 
-            {/* Sandbox routing (shown below card when available) */}
+            {/* Sandbox routing */}
             {sandboxRoutingLoaded && sandboxRouting && (
-              <div className="flex items-center gap-2 rounded-lg border border-white/8 bg-white/4 px-3 py-2 font-mono text-[11px] text-white/40">
+              <div className="flex items-center gap-2 rounded-lg border border-gray-100 bg-gray-50 px-3 py-2 font-mono text-[11px] text-gray-400">
                 <span className="truncate">{sandboxRouting.source_account}</span>
-                <ArrowRight className="h-3 w-3 shrink-0 text-[#E0AF49]/50" />
+                <ArrowRight className="h-3 w-3 shrink-0 text-gray-300" />
                 <span className="truncate">{sandboxRouting.destination_account}</span>
               </div>
             )}
@@ -229,7 +224,7 @@ export function SendMoneyModal({
             {/* Amount input */}
             <div className="relative">
               <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center">
-                <span className="text-sm font-bold text-white/30">£</span>
+                <span className="text-sm font-bold text-gray-400">£</span>
               </div>
               <Input
                 id="amount"
@@ -241,27 +236,27 @@ export function SendMoneyModal({
                   const v = parseFloat(e.target.value);
                   setAmountGbp(Number.isFinite(v) && v >= 0 ? v : 0);
                 }}
-                className="border-white/10 bg-white/5 pl-8 text-sm font-semibold text-white placeholder:text-white/20 focus-visible:border-[#E0AF49]/40 focus-visible:ring-[#E0AF49]/20"
+                className="border-gray-200 bg-white pl-8 text-sm font-semibold text-gray-900 placeholder:text-gray-300 focus-visible:border-[#E31821]/40 focus-visible:ring-[#E31821]/10"
               />
               <div className="pointer-events-none absolute inset-y-0 right-3.5 flex items-center">
-                <span className="text-xs font-medium text-white/30">GBP</span>
+                <span className="text-xs font-medium text-gray-400">GBP</span>
               </div>
             </div>
 
             {/* LKR conversion */}
-            <div className="relative overflow-hidden rounded-xl border border-[#E0AF49]/20 bg-gradient-to-br from-[#E0AF49]/8 to-transparent p-4">
+            <div className="relative overflow-hidden rounded-xl border border-gray-100 bg-gray-50 p-4">
               <div className="flex items-end justify-between">
                 <div>
-                  <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-widest text-[#E0AF49]/60">
+                  <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
                     You send
                   </p>
-                  <p className="font-heading text-2xl font-bold tracking-tight text-[#E0AF49]">
+                  <p className="font-heading text-2xl font-bold tracking-tight text-[#E31821]">
                     {formatLKR(amountLkr)}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] text-white/30">Rate</p>
-                  <p className="font-mono text-xs font-semibold text-white/50">
+                  <p className="text-[10px] text-gray-400">Rate</p>
+                  <p className="font-mono text-xs font-semibold text-gray-500">
                     {GBP_LKR_RATE}
                   </p>
                 </div>
@@ -269,8 +264,8 @@ export function SendMoneyModal({
             </div>
 
             {/* Allocation */}
-            <div className="rounded-xl border border-white/8 bg-white/4 p-3.5">
-              <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-white/30">
+            <div className="rounded-xl border border-gray-100 bg-white p-3.5">
+              <p className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
                 Allocation
               </p>
               <div className="space-y-2.5">
@@ -279,14 +274,14 @@ export function SendMoneyModal({
                   return (
                     <div key={id}>
                       <div className="mb-1 flex items-center justify-between">
-                        <span className="text-xs font-medium capitalize text-white/70">
+                        <span className="text-xs font-medium capitalize text-gray-700">
                           {id.replace(/_/g, " ")}
                         </span>
-                        <span className="font-mono text-xs font-semibold text-white/50">
+                        <span className="font-mono text-xs font-semibold text-gray-500">
                           {pct}%
                         </span>
                       </div>
-                      <div className="h-1 overflow-hidden rounded-full bg-white/8">
+                      <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${pct}%` }}
@@ -309,16 +304,16 @@ export function SendMoneyModal({
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -4 }}
                 transition={{ duration: 0.2 }}
-                className="text-[11px] leading-relaxed text-white/30"
+                className="text-[11px] leading-relaxed text-gray-400"
               >
                 {paymentMode === "card" ? (
                   <>
                     Test card:{" "}
-                    <span className="font-mono font-semibold text-white/50">5123 4500 0000 0008</span>
+                    <span className="font-mono font-semibold text-gray-600">5123 4500 0000 0008</span>
                     {" "}· exp{" "}
-                    <span className="font-mono font-semibold text-white/50">01/39</span>
+                    <span className="font-mono font-semibold text-gray-600">01/39</span>
                     {" "}· CVV{" "}
-                    <span className="font-mono font-semibold text-white/50">100</span>
+                    <span className="font-mono font-semibold text-gray-600">100</span>
                     . Real cards not accepted.
                   </>
                 ) : (
@@ -328,7 +323,7 @@ export function SendMoneyModal({
                       href={SEYLAN_LINKS.internetBankingPersonalLogin}
                       target="_blank"
                       rel={EXTERNAL_LINK_REL}
-                      className="font-medium text-[#E0AF49]/70 underline-offset-2 hover:text-[#E0AF49] hover:underline"
+                      className="font-medium text-[#E31821] underline-offset-2 hover:underline"
                     >
                       Personal Internet Banking
                     </a>
@@ -343,12 +338,12 @@ export function SendMoneyModal({
               type="button"
               disabled={sending || !isValid}
               onClick={handleSubmit}
-              className="group relative w-full overflow-hidden rounded-xl bg-[#E31821] py-3.5 text-sm font-semibold text-white shadow-[0_4px_20px_rgba(227,24,33,0.4)] transition-all hover:bg-[#c41219] hover:shadow-[0_6px_28px_rgba(227,24,33,0.5)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+              className="group relative w-full overflow-hidden rounded-xl bg-[#E31821] py-3.5 text-sm font-semibold text-white shadow-[0_4px_16px_rgba(227,24,33,0.3)] transition-all hover:bg-[#c41219] hover:shadow-[0_6px_24px_rgba(227,24,33,0.4)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
             >
               <span className="relative flex items-center justify-center gap-2">
                 {sending ? (
                   <>
-                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/40 border-t-white" />
                     {paymentMode === "card" ? "Redirecting…" : "Sending…"}
                   </>
                 ) : (
