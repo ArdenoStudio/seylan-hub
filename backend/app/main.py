@@ -38,9 +38,46 @@ def _check_rate_limit(path: str, client_ip: str) -> bool:
     return True
 
 
+async def _prewarm():
+    """Pre-generate cached LLM responses so first page loads are instant."""
+    if not settings.groq_api_key:
+        log.info("PREWARM skipped — GROQ_API_KEY not set")
+        return
+    try:
+        from app.routers.loans import _get_loans, _advisor_cache
+        from app.services import groq_client
+        from app.services.context_builder import build_loan_advisor_prompt
+        for uid in ("SEY-USR-001", "SEY-USR-003"):
+            cache_key = f"{uid}:primary"
+            if cache_key not in _advisor_cache:
+                loans = _get_loans(uid)
+                if loans:
+                    prompt = build_loan_advisor_prompt(loans[0])
+                    text = await groq_client.complete(prompt, [{"role": "user", "content": "Give me my loan summary."}], max_tokens=256, temperature=0.3)
+                    _advisor_cache[cache_key] = text
+                    log.info("PREWARM advisor %s OK", uid)
+    except Exception as exc:
+        log.warning("PREWARM advisor failed: %s", exc)
+
+    try:
+        from app.services.categorizer import categorize_transactions
+        import json
+        from pathlib import Path
+        fx = Path(__file__).parent.parent / "fixtures" / "business_account.json"
+        data = json.loads(fx.read_text(encoding="utf-8"))
+        txns = data.get("SEY-BIZ-001", {}).get("transactions", [])
+        if txns:
+            await categorize_transactions(txns)
+            log.info("PREWARM categorization OK (%d txns)", len(txns))
+    except Exception as exc:
+        log.warning("PREWARM categorization failed: %s", exc)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     log.info("SEYLAN HUB API STARTING — USE_SEYLAN_REAL=%s", settings.use_seylan_real)
+    import asyncio
+    asyncio.create_task(_prewarm())
     yield
     log.info("shutdown")
 

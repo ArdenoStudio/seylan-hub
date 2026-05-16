@@ -169,3 +169,29 @@ async def reset_demo():
         "demo_transactions_cleared": cleared,
         "sessions_cleared": True,
     }
+
+
+@router.post("/seed")
+async def admin_seed():
+    tables_reset = []
+    try:
+        cleared = supabase_client.clear_demo_transactions("SEY-ACC-002")
+        tables_reset.append(f"transactions ({cleared} rows)")
+    except Exception as exc:
+        log.warning("seed: transactions clear failed: %s", exc)
+
+    try:
+        supabase_client.reset_demo_state()
+        tables_reset.append("demo_state")
+    except Exception as exc:
+        log.warning("seed: demo_state reset failed: %s", exc)
+
+    from app.routers.loans import _advisor_cache
+    from app.routers.business import _insight_cache
+    from app.services.categorizer import _cache as cat_cache
+    _advisor_cache.clear()
+    _insight_cache.clear()
+    cat_cache.clear()
+    tables_reset.append("in-process caches (advisor, categorizer, insight)")
+
+    return {"status": "seeded", "tables_reset": tables_reset}

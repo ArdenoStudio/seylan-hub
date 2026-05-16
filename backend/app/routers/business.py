@@ -31,6 +31,48 @@ async def categorize(req: CategorizeRequest):
     return CategorizeResponse(categorized=result)
 
 
+_insight_cache: dict[str, str] = {}
+
+
+@router.get("/business/insight")
+async def business_insight(user_id: str = "SEY-BIZ-001"):
+    if user_id in _insight_cache:
+        return {"insight_text": _insight_cache[user_id], "language": "en"}
+
+    pl_data = json.loads((_FX / "pl_summary.json").read_text(encoding="utf-8"))
+    entry = pl_data.get(user_id, {})
+    current = entry.get("current_week", {})
+    previous = entry.get("previous_week", {})
+
+    try:
+        from app.services import groq_client
+        prompt = (
+            "You are a concise business advisor for a Sri Lankan SME. "
+            "Summarize this week's P&L in 2-3 sentences. Be specific with numbers."
+        )
+        content = (
+            f"Revenue: LKR {current.get('revenue_lkr', 0):,}, "
+            f"Expenses: LKR {current.get('expenses_lkr', 0):,}, "
+            f"Net: LKR {current.get('net_lkr', 0):,}, "
+            f"Margin: {current.get('margin_pct', 0)}%. "
+            f"Previous week margin: {previous.get('margin_pct', 0)}%."
+        )
+        text = await groq_client.complete(prompt, [{"role": "user", "content": content}], max_tokens=150, temperature=0.3)
+    except Exception as exc:
+        log.warning("Business insight Groq failed: %s — using fallback", exc)
+        rev = current.get("revenue_lkr", 0)
+        margin = current.get("margin_pct", 0)
+        prev_margin = previous.get("margin_pct", 0)
+        direction = "up" if margin > prev_margin else "down"
+        text = (
+            f"This week your business generated LKR {rev:,} in revenue with a {margin}% margin, "
+            f"{direction} from {prev_margin}% last week."
+        )
+
+    _insight_cache[user_id] = text
+    return {"insight_text": text, "language": "en"}
+
+
 @router.post("/tax-jar/rule", response_model=TaxJarRuleResponse)
 async def tax_jar_rule(req: TaxJarRuleRequest):
     rule_id = f"TAX-RULE-{uuid.uuid4().hex[:6].upper()}"
