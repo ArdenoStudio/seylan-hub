@@ -101,11 +101,23 @@ async def _fulfill(order_id: str, purpose: str, amount_lkr: float, metadata: dic
             )
 
         elif purpose == "loan":
+            from app.services import loan_state
+            loan_id: str = metadata.get("loan_id", "")
+            user_id_loan: str = metadata.get("user_id", "SEY-USR-001")
+            updated = loan_state.apply_payment(user_id_loan, loan_id, amount_lkr)
+            supabase_client.insert_transaction(
+                account_id=user_id_loan,
+                merchant="Loan Payment — " + loan_id,
+                amount_lkr=amount_lkr,
+                source="mpgs",
+                txn_type="debit",
+            )
             log.info(
-                "MPGS loan payment captured order_id=%s amount=%.2f -- "
-                "manual reconciliation required (fixture-backed loan store).",
-                order_id,
-                amount_lkr,
+                "MPGS loan payment applied loan_id=%s user=%s amount=%.2f "
+                "new_outstanding=%.2f health=%s",
+                loan_id, user_id_loan, amount_lkr,
+                updated.get("outstanding_lkr", 0),
+                updated.get("health_score", "?"),
             )
 
     except Exception as exc:

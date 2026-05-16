@@ -13,6 +13,7 @@ function PaymentReturnContent() {
 
   const [state, setState] = useState<PollState>("polling");
   const [failReason, setFailReason] = useState("");
+  const [purpose, setPurpose] = useState<string>("");
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const elapsedRef = useRef(0);
 
@@ -28,18 +29,21 @@ function PaymentReturnContent() {
       try {
         const data = await getPaymentStatus(orderId);
         const status: string = data?.status ?? "UNKNOWN";
+        if (data?.purpose) setPurpose(data.purpose as string);
 
         if (status === "CAPTURED") {
           clearInterval(intervalRef.current!);
           setState("success");
-          setTimeout(() => router.replace("/wallet"), 2000);
+          const destination =
+            data?.purpose === "loan" ? "/loans?paid=1" : "/wallet";
+          setTimeout(() => router.replace(destination), 2000);
           return;
         }
 
         if (status === "FAILED" || status === "CANCELLED" || status === "VOIDED") {
           clearInterval(intervalRef.current!);
           setState("failed");
-          setFailReason(`Payment ${status.toLowerCase()}.`);
+          setFailReason("Payment " + status.toLowerCase() + ".");
           return;
         }
       } catch {
@@ -84,18 +88,16 @@ function PaymentReturnContent() {
                 stroke="currentColor"
                 strokeWidth={2.5}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M5 13l4 4L19 7"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
             <h1 className="text-lg font-semibold text-seylan-charcoal">
               Payment successful
             </h1>
             <p className="text-sm text-muted-foreground">
-              Funding buckets&hellip; Redirecting to your wallet.
+              {purpose === "loan"
+                ? "Loan payment recorded. Redirecting to your loan dashboard."
+                : "Funding buckets. Redirecting to your wallet."}
             </p>
           </>
         )}
@@ -110,11 +112,7 @@ function PaymentReturnContent() {
                 stroke="currentColor"
                 strokeWidth={2.5}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 18L18 6M6 6l12 12"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </div>
             <h1 className="text-lg font-semibold text-seylan-charcoal">
@@ -122,10 +120,10 @@ function PaymentReturnContent() {
             </h1>
             <p className="text-sm text-muted-foreground">{failReason}</p>
             <button
-              onClick={() => router.replace("/wallet")}
+              onClick={() => router.replace(purpose === "loan" ? "/loans" : "/wallet")}
               className="mt-2 w-full rounded-lg bg-seylan-plum px-4 py-2 text-sm font-medium text-white hover:bg-seylan-red transition-colors"
             >
-              Back to wallet
+              {purpose === "loan" ? "Back to loans" : "Back to wallet"}
             </button>
           </>
         )}

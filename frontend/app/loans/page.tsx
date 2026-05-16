@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getLoans } from "@/lib/api";
 import { Loan } from "@/types";
+import { toast } from "sonner";
 import { LoanSummaryCard } from "@/components/loans/LoanSummaryCard";
 import { RepaymentProgressBar } from "@/components/loans/RepaymentProgressBar";
 import { PaymentCountdown } from "@/components/loans/PaymentCountdown";
@@ -21,6 +22,21 @@ export default function LoansPage() {
   const [loading, setLoading] = useState(true);
 
   const userId = "SEY-USR-001";
+
+  useEffect(() => {
+    // Show success toast when redirected back from MPGS payment
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("paid") === "1") {
+        toast.success("Payment confirmed", {
+          description: "Your loan payment has been processed. Instalment marked as paid.",
+        });
+        // Clean the query param from the URL without a reload
+        const clean = window.location.pathname;
+        window.history.replaceState({}, "", clean);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;

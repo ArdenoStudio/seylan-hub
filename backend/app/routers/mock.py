@@ -31,45 +31,6 @@ def _load(name: str) -> dict:
     return _fixture_cache[name]
 
 
-def _coerce_txn_type(row: dict) -> str:
-    t = str(row.get("type") or "").strip().lower()
-    if t in ("credit", "debit"):
-        return t
-    if str(row.get("source", "")) == "transfer":
-        return "credit"
-    amt = float(row.get("amount_lkr") or 0)
-    if amt > 0 and "remittance" in str(row.get("merchant", "")).lower():
-        return "credit"
-    return "debit"
-
-
-def _derive_last_remittance_from_transactions(wallet: dict, txns: list | None = None) -> None:
-    """Override last_remittance from the newest remittance credit batch in activity."""
-    src = txns if txns is not None else wallet.get("recent_transactions") or []
-    by_second: dict[str, float] = {}
-    for t in src:
-        if "Remittance from" not in str(t.get("merchant", "")):
-            continue
-        if str(t.get("type", "")).lower() != "credit":
-            continue
-        dt = str(t.get("date") or t.get("timestamp") or "")
-        key = dt[:19] if len(dt) >= 19 else dt
-        by_second[key] = by_second.get(key, 0.0) + float(t.get("amount_lkr") or 0)
-    if not by_second:
-        return
-    best_key = max(by_second.keys())
-    amt = round(by_second[best_key], 2)
-    lr = dict(wallet.get("last_remittance") or {})
-    lr["amount_lkr"] = amt
-    lr["date"] = best_key[:10] if len(best_key) >= 10 else lr.get("date", "")
-    lr["exchange_rate"] = 408.30
-    lr["sender_amount_gbp"] = round(amt / 408.30, 2)
-    lr["corridor"] = lr.get("corridor", "GBPLKR")
-    lr["provider"] = lr.get("provider", "Seylan Hub")
-    lr["id"] = lr.get("id", "REM-LIVE")
-    wallet["last_remittance"] = lr
-
-
 def _apply_live_rows_to_wallet_buckets(wallet: dict, live_rows: list[dict]) -> None:
     """Adjust fixture bucket balances by Supabase-only activity (fixture txns already baked in)."""
     buckets = wallet.get("buckets") or []
@@ -84,16 +45,13 @@ def _apply_live_rows_to_wallet_buckets(wallet: dict, live_rows: list[dict]) -> N
         }
     ordered = sorted(
         live_rows,
-        key=lambda r: (
-            str(r.get("timestamp") or r.get("created_at") or ""),
-            str(r.get("id") or r.get("transaction_id") or ""),
-        ),
+        key=lambda r: str(r.get("timestamp") or r.get("created_at") or ""),
     )
     orphan_credit = 0.0
     for row in ordered:
         bid = row.get("bucket_id")
         amt = float(row.get("amount_lkr") or 0)
-        typ = _coerce_txn_type(row)
+        typ = str(row.get("type") or "debit").lower()
         if typ == "credit" and not bid:
             orphan_credit += amt
             continue
@@ -155,9 +113,7 @@ async def family_wallet(account_id: str):
 
     # Merge live Supabase transactions on top of fixture
     try:
-        live_rows = supabase_client.get_recent_transactions(
-            account_id, limit=500, ascending=True
-        )
+        live_rows = supabase_client.get_recent_transactions(account_id, limit=20)
         if live_rows:
             fixture_txns = {t["id"]: t for t in wallet.get("recent_transactions", [])}
             for row in live_rows:
@@ -167,16 +123,12 @@ async def family_wallet(account_id: str):
                     "date": row.get("timestamp") or row.get("created_at"),
                     "merchant": row.get("merchant", ""),
                     "amount_lkr": row.get("amount_lkr", 0),
-                    "type": _coerce_txn_type(row),
+                    "type": row.get("type", "debit"),
                     "bucket_id": row.get("bucket_id"),
                     "bucket_label": row.get("bucket_label"),
                 }
-            merged = sorted(
-                fixture_txns.values(),
-                key=lambda t: (t.get("date") or "", str(t.get("id") or "")),
-                reverse=True,
-            )
-            _derive_last_remittance_from_transactions(wallet, merged)
+            merged = sorted(fixture_txns.values(),
+                            key=lambda t: t.get("date") or "", reverse=True)
             wallet["recent_transactions"] = merged[:10]
             _apply_live_rows_to_wallet_buckets(wallet, live_rows)
     except Exception as exc:
@@ -206,43 +158,16 @@ async def family_wallet(account_id: str):
 
 @router.get("/loans/{user_id}")
 async def loans(user_id: str):
+    from app.services import loan_state
+    override = loan_state.get_loan_data(user_id)
+    if override is not None:
+        log.info("mock_call loans user_id=%s (in-memory override)", user_id)
+        return override
     data = _load("loans.json")
     if user_id not in data:
         return JSONResponse(status_code=404, content={"error": f"Unknown user {user_id}"})
-    log.info("mock_call loans user_id=%s", user_id)
+    log.info("mock_call loans user_id=%s (fixture)", user_id)
     return data[user_id]
-
-
-_BIZ_ACCOUNT_MAP = {
-    "SEY-BIZ-001": "064000012548001",
-}
-
-
-def _normalize_db_txn(row: dict, user_id: str) -> dict:
-    """Map a Supabase transactions row → business_account fixture schema."""
-    return {
-        "transaction_id": row.get("id", ""),
-        "account_id": user_id,
-        "timestamp": row.get("timestamp", ""),
-        "merchant": row.get("merchant", ""),
-        "description": row.get("merchant", ""),
-        "amount_lkr": float(row.get("amount_lkr") or 0),
-        "type": row.get("type", "debit"),
-    }
-
-
-def _normalise_seylan_txn(t: dict, user_id: str) -> dict:
-    """Map app.seylan.account._map_transactions format → business_account fixture schema."""
-    date_str = t.get("date", "")
-    return {
-        "transaction_id": t.get("id") or f"seylan_{uuid.uuid4().hex[:6]}",
-        "account_id": user_id,
-        "timestamp": f"{date_str}T00:00:00Z" if date_str else "",
-        "merchant": t.get("description", "Transaction"),
-        "description": t.get("description", "Transaction"),
-        "amount_lkr": abs(float(t.get("amount_lkr") or 0)),
-        "type": t.get("type", "debit"),
-    }
 
 
 @router.get("/business-account/{user_id}")
@@ -251,58 +176,16 @@ async def business_account(user_id: str):
     if user_id not in data:
         return JSONResponse(status_code=404, content={"error": f"Unknown user {user_id}"})
     log.info("mock_call business-account user_id=%s", user_id)
-    result = dict(data[user_id])
-
-    # Transactions: prefer Supabase (seeded fixture rows + any live activity)
-    try:
-        db_rows = supabase_client.get_recent_transactions(user_id, limit=200, ascending=True)
-        if db_rows:
-            result["transactions"] = [_normalize_db_txn(r, user_id) for r in db_rows]
-            log.info("business-account loaded %d txns from Supabase", len(db_rows))
-    except Exception as exc:
-        log.warning("Supabase txn fetch failed for %s: %s — using fixture", user_id, exc)
-
-    # Balance: real Seylan API when enabled
-    if settings.use_seylan_real and user_id in _BIZ_ACCOUNT_MAP:
-        try:
-            from app.seylan import account as seylan_acct
-            bal = await seylan_acct.get_balance(_BIZ_ACCOUNT_MAP[user_id])
-            result["current_balance"] = bal["balance_lkr"]
-        except Exception as exc:
-            log.warning("Seylan balance failed for %s: %s", user_id, exc)
-
-    return result
+    return data[user_id]
 
 
 @router.get("/pl-summary/{user_id}")
 async def pl_summary(user_id: str):
-    biz_data = _load("business_account.json")
-    if user_id not in biz_data:
+    data = _load("pl_summary.json")
+    if user_id not in data:
         return JSONResponse(status_code=404, content={"error": f"Unknown user {user_id}"})
     log.info("mock_call pl-summary user_id=%s", user_id)
-
-    # Prefer Supabase transactions (includes seeded fixture rows + live activity)
-    txns = []
-    try:
-        db_rows = supabase_client.get_recent_transactions(user_id, limit=200, ascending=True)
-        if db_rows:
-            txns = [_normalize_db_txn(r, user_id) for r in db_rows]
-            log.info("pl-summary loaded %d txns from Supabase for %s", len(txns), user_id)
-    except Exception as exc:
-        log.warning("Supabase txn fetch failed for pl-summary %s: %s", user_id, exc)
-
-    if not txns:
-        txns = biz_data[user_id].get("transactions", [])
-    try:
-        from app.services.pl_calculator import compute_pl
-        result = await compute_pl(user_id, txns)
-        if result:
-            return result
-    except Exception as exc:
-        log.warning("pl_calculator failed for %s: %s — falling back to fixture", user_id, exc)
-
-    data = _load("pl_summary.json")
-    return data.get(user_id, {})
+    return data[user_id]
 
 
 @router.post("/trigger-spend")
@@ -368,43 +251,6 @@ async def reset_demo():
     }
 
 
-@router.post("/seed-business")
-async def seed_business_transactions():
-    """
-    Idempotently seed all business_account.json fixture transactions into Supabase.
-    Skips if rows with source='fixture' already exist for SEY-BIZ-001.
-    """
-    user_id = "SEY-BIZ-001"
-    try:
-        existing = supabase_client.count_transactions(user_id, source="fixture")
-        if existing > 0:
-            log.info("seed-business: %d fixture rows already present, skipping", existing)
-            return {"status": "skipped", "reason": "already_seeded", "existing_rows": existing}
-
-        biz_data = _load("business_account.json")
-        fixture_txns = biz_data.get(user_id, {}).get("transactions", [])
-
-        rows = [
-            {
-                "account_id": user_id,
-                "merchant": t["merchant"],
-                "amount_lkr": float(t["amount_lkr"]),
-                "bucket_id": t.get("bucket_id"),
-                "bucket_label": t.get("bucket_label"),
-                "source": "fixture",
-                "type": t.get("type", "debit"),
-                "timestamp": t.get("timestamp") or t.get("date", ""),
-            }
-            for t in fixture_txns
-        ]
-        inserted = supabase_client.batch_insert_transactions(rows)
-        log.info("seed-business: inserted %d rows for %s", inserted, user_id)
-        return {"status": "seeded", "rows_inserted": inserted}
-    except Exception as exc:
-        log.error("seed-business failed: %s", exc)
-        return {"status": "error", "detail": str(exc)}
-
-
 @router.post("/seed")
 async def admin_seed():
     tables_reset = []
@@ -428,13 +274,6 @@ async def admin_seed():
     cat_cache.clear()
     _fixture_cache.clear()
     tables_reset.append("in-process caches (advisor, categorizer, insight, fixtures)")
-
-    # Ensure business fixture transactions are in Supabase
-    try:
-        biz_seed = await seed_business_transactions()
-        tables_reset.append(f"business_transactions ({biz_seed.get('status')})")
-    except Exception as exc:
-        log.warning("seed: business seed failed: %s", exc)
 
     return {"status": "seeded", "tables_reset": tables_reset}
 
