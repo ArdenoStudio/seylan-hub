@@ -30,14 +30,15 @@ class Settings(BaseSettings):
     seylan_sandbox_source_account: str = "064000012548001"
     seylan_sandbox_destination_account: str = "001213437904100"
 
-    # MPGS (Mastercard Payment Gateway Services) — Hosted Checkout v79
+    # MPGS (Mastercard Payment Gateway Services) — Hosted Checkout
     mpgs_host: str = "test-seylan.mtf.gateway.mastercard.com"
     mpgs_merchant_id: str = ""  # e.g. CURSOR1
     mpgs_api_password: str = ""
     # Leave empty when using merchant-level Integration Authentication passwords.
     # Operator-scoped usernames (merchant.<mid>.operator.<op>) require matching credentials.
     mpgs_operator_id: str = ""
-    mpgs_api_version: str = "79"
+    # Hosted Checkout's browser script and REST session version must match.
+    mpgs_api_version: str = "62"
     mpgs_enable: bool = False
 
     # AI

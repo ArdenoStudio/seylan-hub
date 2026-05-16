@@ -25,6 +25,19 @@ def _auth() -> tuple[str, str]:
     return (username, settings.mpgs_api_password)
 
 
+def _checkout_url(session_id: str) -> str:
+    base = settings.frontend_base_url.rstrip("/")
+    return (
+        base
+        + "/payments/checkout?session="
+        + quote(session_id, safe="")
+        + "&merchant="
+        + quote(settings.mpgs_merchant_id, safe="")
+        + "&version="
+        + quote(settings.mpgs_api_version, safe="")
+    )
+
+
 async def create_checkout_session(
     order_id: str,
     amount_lkr: float,
@@ -35,7 +48,7 @@ async def create_checkout_session(
     """Initiate a Hosted Checkout session (POST /session).
 
     Browser Hosted Checkout loads checkout.js from a path like /checkout/version/{N}/checkout.js.
-    Mastercard ships a stub for N >= 63 that does not run configure(); use the frontend loader with N < 63 (default 62).
+    The script version must match the REST API version that initiated the session.
     """
     url = _base_url() + "/merchant/" + settings.mpgs_merchant_id + "/session"
     payload: dict[str, Any] = {
@@ -68,23 +81,12 @@ async def create_checkout_session(
     data = resp.json()
     session_id: str = data.get("session", {}).get("id", "")
     success_indicator: str = data.get("successIndicator", "")
-    # Seylan / many MPGS hosts do not serve checkout.html (404). Hosted Checkout
-    # is started from our app via checkout.js + Checkout.showPaymentPage().
-    base = settings.frontend_base_url.rstrip("/")
-    checkout_url = (
-        base
-        + "/payments/checkout?session="
-        + quote(session_id, safe="")
-        + "&merchant="
-        + quote(settings.mpgs_merchant_id, safe="")
-    )
-
     log.info("MPGS session created session_id=%s", session_id)
     return {
         "session_id": session_id,
         "success_indicator": success_indicator,
         "order_id": order_id,
-        "checkout_url": checkout_url,
+        "checkout_url": _checkout_url(session_id),
     }
 
 

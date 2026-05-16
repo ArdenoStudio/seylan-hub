@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 const DEFAULT_MPGS_HOST = "test-seylan.mtf.gateway.mastercard.com";
-/** Script path version: MUST stay below 63. Bundles for v63+ only log an error and skip configure(); REST API can still use a higher version (e.g. 79). */
+/** The checkout.js path version must match the REST version used to create the MPGS session. */
 const DEFAULT_MPGS_CHECKOUT_JS_VERSION = "62";
 
 const MPGS_SESSION_STORAGE_PREFIX = "HostedCheckout";
@@ -159,10 +159,12 @@ function CheckoutContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session") ?? "";
   const merchantId = searchParams.get("merchant") ?? "";
+  const versionParam = searchParams.get("version") ?? "";
 
   const mpgsHost =
     (process.env.NEXT_PUBLIC_MPGS_HOST ?? "").trim() || DEFAULT_MPGS_HOST;
   const checkoutJsVersion =
+    versionParam.trim() ||
     (process.env.NEXT_PUBLIC_MPGS_CHECKOUT_JS_VERSION ?? "").trim() ||
     DEFAULT_MPGS_CHECKOUT_JS_VERSION;
 
