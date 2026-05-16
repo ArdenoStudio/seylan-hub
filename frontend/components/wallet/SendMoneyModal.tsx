@@ -21,7 +21,7 @@ interface SendMoneyModalProps {
   senderId: string;
   recipientId: string;
   allocations: Record<string, number>;
-  onSuccess: () => void;
+  onSuccess: (amountLkr?: number, amountGbp?: number) => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -51,7 +51,7 @@ export function SendMoneyModal({
       });
       toast.success(`Sent ${formatLKR(amountLkr)} to Kumari`);
       onOpenChange(false);
-      onSuccess();
+      onSuccess(amountLkr, amountGbp);
     } catch {
       toast.error("Transfer failed. Please try again.");
     } finally {

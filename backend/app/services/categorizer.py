@@ -18,13 +18,15 @@ _RULES = [
 
 
 def _heuristic(txn: dict) -> dict:
+    tid = txn.get("transaction_id") or txn.get("id", "")
     desc = txn.get("description", "")
+    amount = txn.get("amount_lkr", 0)
     for cat_en, cat_si, sub, pattern in _RULES:
         if re.search(pattern, desc, re.IGNORECASE):
-            return {"id": txn.get("transaction_id") or txn.get("id", ""), "description": desc, "amount_lkr": txn["amount_lkr"],
+            return {"id": tid, "description": desc, "amount_lkr": amount,
                     "category_en": cat_en, "category_si": cat_si,
                     "subcategory": sub, "confidence": 0.75}
-    return {"id": txn.get("transaction_id") or txn.get("id", ""), "description": desc, "amount_lkr": txn["amount_lkr"],
+    return {"id": tid, "description": desc, "amount_lkr": amount,
             "category_en": "MISC", "category_si": "විවිධ",
             "subcategory": "Miscellaneous", "confidence": 0.5}
 
@@ -51,13 +53,16 @@ async def categorize_transactions(transactions: list[dict]) -> list[dict]:
         raw = re.sub(r"^```[a-z]*\n?", "", raw.strip(), flags=re.MULTILINE)
         raw = re.sub(r"\n?```$", "", raw.strip())
         cats = json.loads(raw)
+        if not isinstance(cats, list):
+            raise ValueError(f"Expected JSON list from Groq, got {type(cats).__name__}")
         # Merge amounts/descriptions back in
         by_id = {(t.get("transaction_id") or t.get("id","")): t for t in transactions}
         result = []
         for c in cats:
-            orig = by_id.get(c["id"], {})
+            cid = c.get("id") or c.get("transaction_id", "")
+            orig = by_id.get(cid, {})
             result.append({
-                "id": c["id"],
+                "id": cid,
                 "description": orig.get("description", ""),
                 "amount_lkr": orig.get("amount_lkr", 0),
                 "category_en": c.get("category_en", "MISC"),

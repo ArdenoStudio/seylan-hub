@@ -26,7 +26,18 @@ export function subscribeToTransactions(
         filter: `account_id=eq.${accountId}`,
       },
       (payload) => {
-        onInsert(payload.new as Transaction);
+        const row = payload.new as Record<string, unknown>;
+        const tx: Transaction = {
+          transaction_id: (row.id as string) ?? (row.transaction_id as string),
+          account_id: row.account_id as string,
+          merchant: row.merchant as string,
+          amount_lkr: row.amount_lkr as number,
+          type: (row.type as "debit" | "credit") ?? "debit",
+          timestamp: (row.timestamp as string) ?? (row.created_at as string),
+          bucket_id: row.bucket_id as string | undefined,
+          bucket_label: row.bucket_label as string | undefined,
+        };
+        onInsert(tx);
       }
     )
     .subscribe((status) => {

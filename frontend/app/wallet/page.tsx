@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { useCurrentUser } from "@/hooks/useCurrentUser";
 import { useWalletRealtime } from "@/hooks/useWalletRealtime";
 import { BucketGrid } from "@/components/wallet/BucketGrid";
 import { AllocationEditor } from "@/components/wallet/AllocationEditor";
@@ -9,12 +8,12 @@ import { TransactionFeed } from "@/components/wallet/TransactionFeed";
 import { LastRemittanceBanner } from "@/components/wallet/LastRemittanceBanner";
 import { SendMoneyModal } from "@/components/wallet/SendMoneyModal";
 import { fireSpendToast } from "@/components/wallet/SpendNotificationToast";
+import { isApiMockMode } from "@/lib/api";
 import { InsightActionStrip } from "@/components/insights/InsightActionStrip";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Transaction } from "@/types";
-import { ErrorState } from "@/components/ErrorState";
 import { ArrowRightLeft, Bot, PieChart, ShieldCheck } from "lucide-react";
 
 const FAMILY_ACCOUNT_ID = "SEY-ACC-002";
@@ -22,28 +21,26 @@ const ASSISTANT_PROMPT =
   "Explain the latest family wallet activity and tell me whether any bucket needs attention before the next transfer.";
 
 export default function WalletPage() {
-  const { user, mounted } = useCurrentUser();
   const [modalOpen, setModalOpen] = useState(false);
+  const [remittanceOverride, setRemittanceOverride] = useState<{
+    amount_lkr: number;
+    date: string;
+    amount_gbp: number;
+    fx_rate: number;
+    provider: string;
+  } | null>(null);
 
   const handleSpend = useCallback((tx: Transaction, newBalance: number) => {
     fireSpendToast(tx, newBalance);
   }, []);
 
-  const { wallet, transactions, buckets, loading, error, refetch } =
+  const { wallet, transactions, buckets, loading, refetch } =
     useWalletRealtime({
       accountId: FAMILY_ACCOUNT_ID,
       onSpend: handleSpend,
     });
 
-  if (error && !wallet) {
-    return (
-      <div className="p-6">
-        <ErrorState message={error} onRetry={refetch} />
-      </div>
-    );
-  }
-
-  if (!mounted || loading) {
+  if (loading) {
     return (
       <div className="p-6 space-y-4">
         <Skeleton className="h-24 w-full" />
@@ -71,7 +68,7 @@ export default function WalletPage() {
         : 0;
     return bPct - aPct;
   })[0];
-  const latestSpend = transactions.find((tx) => tx.amount_lkr < 0);
+  const latestSpend = transactions.find((tx) => tx.type === "debit");
 
   return (
     <div data-module="wallet" className="space-y-5 p-4 sm:space-y-6 sm:p-6 lg:p-8">
@@ -79,13 +76,7 @@ export default function WalletPage() {
         eyebrow="Diaspora family wallet"
         title="Track money sent home with confidence"
         description="See the latest remittance, how the family is using each bucket, and adjust the next split before sending again."
-        meta={
-          user && (
-            <span className="inline-flex rounded-full border border-seylan-border bg-white/70 px-3 py-1 text-xs font-medium text-seylan-charcoal">
-              Viewing as {user.name}
-            </span>
-          )
-        }
+        
         action={
           <Button onClick={() => setModalOpen(true)} className="rounded-full">
             Send Money
@@ -95,7 +86,9 @@ export default function WalletPage() {
 
       {wallet && (
         <LastRemittanceBanner
-          wallet={wallet}
+          wallet={remittanceOverride
+            ? { ...wallet, last_remittance: { ...wallet.last_remittance, ...remittanceOverride } }
+            : wallet}
           onSendAgain={() => setModalOpen(true)}
         />
       )}
@@ -169,10 +162,23 @@ export default function WalletPage() {
       <TransactionFeed transactions={transactions} />
 
       <SendMoneyModal
-        senderId={user?.id ?? "SEY-USR-001"}
+        senderId="SEY-USR-001"
         recipientId={FAMILY_ACCOUNT_ID}
         allocations={allocations}
-        onSuccess={refetch}
+        onSuccess={(amountLkr?: number, amountGbp?: number) => {
+          if (amountLkr) {
+            setRemittanceOverride({
+              amount_lkr: amountLkr,
+              date: new Date().toISOString().slice(0, 10),
+              amount_gbp: amountGbp ?? Math.round(amountLkr / 408.3),
+              fx_rate: 408.3,
+              provider: "Seylan Hub",
+            });
+          }
+          // Mock mode applies totals via `seylan:mock-remittance`; refetch would reload static MOCK_WALLET.
+          // When the API is used, silent refresh updates buckets without skeleton flash.
+          if (!isApiMockMode) void refetch(true);
+        }}
         open={modalOpen}
         onOpenChange={setModalOpen}
       />

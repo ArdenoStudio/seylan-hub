@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from fastapi import APIRouter
@@ -13,7 +14,9 @@ router = APIRouter(prefix="/api", tags=["tts"])
 @router.post("/tts")
 async def tts(req: TtsRequest):
     try:
-        audio = elevenlabs_client.text_to_speech_b64(req.text, req.language)
+        audio = await asyncio.to_thread(
+            elevenlabs_client.text_to_speech_b64, req.text, req.language
+        )
         duration_ms = max(500, len(req.text) * 60)
         return TtsResponse(audio_base64=audio, content_type="audio/mpeg", duration_ms=duration_ms)
     except RuntimeError as exc:

@@ -19,9 +19,9 @@
       { "id": "savings",   "label": "Savings",     "allocated_pct": 20, "allocated_lkr": 49000, "balance_lkr": 49000, "spent_lkr": 0 }
     ],
     "recent_transactions": [
-      { "id": "txn_k001", "date": "2026-05-03T14:22:00Z", "merchant": "Keells Supermarket - Rajagiriya", "amount_lkr": 8500, "bucket_id": "household", "bucket_label": "Household" },
-      { "id": "txn_k002", "date": "2026-05-02T09:15:00Z", "merchant": "Lanka Hospitals Pharmacy",         "amount_lkr": 4200, "bucket_id": "household", "bucket_label": "Household" },
-      { "id": "txn_k003", "date": "2026-05-01T18:45:00Z", "merchant": "Dialog - Monthly Bill",            "amount_lkr": 3800, "bucket_id": "household", "bucket_label": "Household" }
+      { "id": "txn_k001", "date": "2026-05-03T14:22:00Z", "merchant": "Keells Supermarket - Rajagiriya", "amount_lkr": 8500, "type": "debit", "bucket_id": "household", "bucket_label": "Household" },
+      { "id": "txn_k002", "date": "2026-05-02T09:15:00Z", "merchant": "Lanka Hospitals Pharmacy",         "amount_lkr": 4200, "type": "debit", "bucket_id": "household", "bucket_label": "Household" },
+      { "id": "txn_k003", "date": "2026-05-01T18:45:00Z", "merchant": "Dialog - Monthly Bill",            "amount_lkr": 3800, "type": "debit", "bucket_id": "household", "bucket_label": "Household" }
     ]
   }
 }

@@ -27,6 +27,8 @@ async def stream_chat(system_prompt: str, messages: list[dict],
         stream=True,
     )
     async for chunk in stream:
+        if not chunk.choices:
+            continue
         delta = chunk.choices[0].delta.content
         if delta:
             yield delta
@@ -42,6 +44,8 @@ async def complete(system_prompt: str, messages: list[dict],
         temperature=temperature,
         stream=False,
     )
+    if not resp.choices:
+        return ""
     return resp.choices[0].message.content or ""
 
 
@@ -58,4 +62,6 @@ async def complete_with_tools(system_prompt: str, messages: list[dict],
         temperature=temperature,
         stream=False,
     )
+    if not resp.choices:
+        raise RuntimeError("Groq returned no choices")
     return resp.choices[0].message

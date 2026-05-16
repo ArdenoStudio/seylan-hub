@@ -39,7 +39,7 @@ export function AIAdvisorPanel({ userId }: AIAdvisorPanelProps) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user_id: userId }),
-      signal: AbortSignal.timeout(10000),
+      signal: AbortSignal.timeout(20000),
     })
       .then((res) => {
         if (!res.ok) throw new Error("Failed");
