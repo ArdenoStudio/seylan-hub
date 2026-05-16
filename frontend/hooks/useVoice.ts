@@ -35,7 +35,6 @@ export function useVoice(): UseVoiceReturn {
   const sessionFinalRef = useRef("");
   const sessionActiveRef = useRef(false);
   const langRef = useRef("en-US");
-  /** Explicit `number` — DOM timeouts are numeric; avoids Node/DOM ReturnType clashes in `next build`. */
   const restartTimerRef = useRef<number | null>(null);
 
   const SpeechRecognitionCtor =
