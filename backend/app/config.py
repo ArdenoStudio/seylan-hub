@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
+    # Seylan gateway
     seylan_gateway_default: str = "https://dev.apigateway1.seylan.lk:2260"
     seylan_gateway_qr: str = "https://dev.apigateway1.seylan.lk:2250"
     seylan_api_key: str = ""
@@ -11,6 +12,7 @@ class Settings(BaseSettings):
     seylan_checksum_key_lankaqr: str = ""
     seylan_justpay_code: str = "6289_M001_001"
 
+    # Merchant QR (bank-provisioned)
     seylan_merchant_institution_id: str = "1"
     seylan_merchant_channel_user_id: str = ""
     seylan_merchant_channel_pass: str = ""
@@ -19,17 +21,21 @@ class Settings(BaseSettings):
     seylan_merchant_mid: str = ""
     seylan_merchant_tid: str = ""
 
+    # Feature flags
     use_seylan_real: bool = False
     seylan_enable_transfers: bool = False
     seylan_enable_merchant_qr: bool = False
 
+    # AI
     groq_api_key: str = ""
     elevenlabs_api_key: str = ""
     elevenlabs_voice_id: str = "EXAVITQu4vr4xnSDxMaL"
 
+    # Supabase
     supabase_url: str = ""
     supabase_service_key: str = ""
 
+    # App
     cors_origins: str = "http://localhost:3000"
 
     @property
