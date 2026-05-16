@@ -22,7 +22,6 @@ def _tts_cached(text: str, language: str) -> bytes:
                 voice_id=settings.elevenlabs_voice_id,
                 text=text,
                 model_id=model_id,
-                output_format="mp3_44100_128",
             )
             audio = b"".join(audio_iter)
             log.info("TTS: generated %d bytes with %s", len(audio), model_id)

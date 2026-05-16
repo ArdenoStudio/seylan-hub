@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 
 from app.models.schemas import TtsRequest, TtsResponse
 from app.services import elevenlabs_client
+from app.config import settings
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["tts"])
@@ -24,6 +25,6 @@ async def tts(req: TtsRequest):
         return JSONResponse(status_code=503,
                             content={"error": "TTS service unavailable", "detail": str(exc)})
     except Exception as exc:
-        log.error("TTS error: %s", exc)
+        log.error("TTS error (voice_id=%s): %s", settings.elevenlabs_voice_id, exc, exc_info=True)
         return JSONResponse(status_code=503,
                             content={"error": "TTS service unavailable", "detail": str(exc)})
