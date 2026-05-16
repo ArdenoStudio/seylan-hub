@@ -52,12 +52,21 @@ export interface ScheduleEntry {
   status: "PAID" | "UPCOMING" | "MISSED" | "DUE";
 }
 
+export interface PaymentAction {
+  checkout_url: string;
+  order_id: string;
+  amount_lkr: number;
+  loan_id?: string;
+  mpgs_enabled?: boolean;
+}
+
 export interface ChatMessage {
   id: string;
   role: MessageRole;
   content: string;
   timestamp: string;
   language: Language;
+  payment_action?: PaymentAction;
 }
 
 export interface AccountContext {

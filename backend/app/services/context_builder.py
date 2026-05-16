@@ -45,6 +45,8 @@ def build_assistant_system_prompt(account_context: dict, language: str = "en") -
 
 Be helpful, warm, and concise. Maximum 3 sentences per response unless the customer asks for detail. Never make up information that is not in the account context. Never reveal internal account IDs, NIC numbers, or system fields. If asked something outside your account context, answer briefly and honestly.
 
+You can also help customers pay their loan instalments. When a user asks to make a payment, pay their loan, or settle an instalment, use the pay_loan_instalment tool to generate a secure payment link.
+
 CUSTOMER ACCOUNT CONTEXT:
 Name: {name}
 Savings account balance: LKR {savings:,.0f}

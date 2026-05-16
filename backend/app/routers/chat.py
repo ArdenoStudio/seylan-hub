@@ -9,7 +9,7 @@ from app.config import settings
 from app.models.schemas import ChatRequest
 from app.services import groq_client, supabase_client
 from app.services.context_builder import build_assistant_system_prompt
-from app.services.chat_tools import TOOL_DEFINITIONS, execute_tool
+from app.services.chat_tools import TOOL_DEFINITIONS, execute_tool, execute_tool_async
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["chat"])
@@ -52,11 +52,42 @@ async def chat(req: ChatRequest):
 
     async def event_stream():
         full_response = []
+        payment_action = None
         try:
+            # Check if message triggers a payment tool call (non-streaming pre-check)
+            try:
+                probe = await groq_client.complete_with_tools(
+                    system_prompt, messages,
+                    tools=[t for t in TOOL_DEFINITIONS if t["function"]["name"] == "pay_loan_instalment"],
+                    max_tokens=64, temperature=0.1,
+                )
+                if probe.tool_calls:
+                    tc = probe.tool_calls[0]
+                    fn_args = json.loads(tc.function.arguments)
+                    result_str = await execute_tool_async(tc.function.name, fn_args)
+                    result = json.loads(result_str)
+                    if "checkout_url" in result:
+                        payment_action = result
+                        # Inject tool result and get follow-up text
+                        messages.append({
+                            "role": "assistant", "content": None,
+                            "tool_calls": [{"id": tc.id, "type": "function",
+                                            "function": {"name": tc.function.name,
+                                                         "arguments": tc.function.arguments}}],
+                        })
+                        messages.append({"role": "tool", "tool_call_id": tc.id, "content": result_str})
+            except Exception as probe_exc:
+                log.debug("payment probe skipped: %s", probe_exc)
+
             async for token in groq_client.stream_chat(system_prompt, messages):
                 full_response.append(token)
                 payload = json.dumps({"token": token}, ensure_ascii=False)
                 yield f"data: {payload}\n\n"
+
+            if payment_action:
+                pa_payload = json.dumps({"payment_action": payment_action}, ensure_ascii=False)
+                yield f"data: {pa_payload}\n\n"
+
             yield 'data: {"done": true}\n\n'
         except Exception as exc:
             log.error("Groq streaming error: %s", exc)

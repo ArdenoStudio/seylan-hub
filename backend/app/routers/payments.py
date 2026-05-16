@@ -74,20 +74,27 @@ async def _fulfill(order_id: str, purpose: str, amount_lkr: float, metadata: dic
 
         elif purpose == "tax_jar_inbound":
             user_id: str = metadata.get("user_id", "SEY-BIZ-001")
+            tax_rate = float(metadata.get("tax_rate_pct", 10)) / 100
+            tax_amount = round(amount_lkr * tax_rate, 2)
+            # Business income transaction
             supabase_client.insert_transaction(
                 account_id=user_id,
-                merchant="Inbound Payment (MPGS)",
+                merchant="Customer Payment (MPGS)",
                 amount_lkr=amount_lkr,
                 source="mpgs",
                 txn_type="credit",
             )
-            tax_amount = round(amount_lkr * 0.10, 2)
+            # Tax jar savings split
             supabase_client.insert_transaction(
                 account_id=metadata.get("tax_account_id", "SEY-SAV-001"),
                 merchant="Tax Jar Auto-Split",
                 amount_lkr=tax_amount,
                 source="mpgs",
                 txn_type="credit",
+            )
+            log.info(
+                "MPGS tax_jar_inbound captured order_id=%s amount=%.2f tax_saved=%.2f",
+                order_id, amount_lkr, tax_amount,
             )
 
         elif purpose == "shop_sale":

@@ -67,6 +67,15 @@ export function useChat(userId: string) {
                   : m
               )
             );
+          },
+          (paymentAction) => {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === aiMsgId
+                  ? { ...m, payment_action: paymentAction as import("@/types").PaymentAction }
+                  : m
+              )
+            );
           }
         );
       } catch {

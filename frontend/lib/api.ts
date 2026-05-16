@@ -174,7 +174,8 @@ export async function postChat(
     history: { role: string; content: string }[];
   },
   onToken: (token: string) => void,
-  onError?: (message: string) => void
+  onError?: (message: string) => void,
+  onPaymentAction?: (action: Record<string, unknown>) => void
 ): Promise<void> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30000);
@@ -209,17 +210,18 @@ export async function postChat(
       for (const line of lines) {
         if (!line.startsWith("data: ")) continue;
         const data = line.slice(6);
-        try {
-          const parsed = JSON.parse(data);
-          if (parsed.error) {
-            onError?.(parsed.error);
-            return;
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.error) {
+              onError?.(parsed.error);
+              return;
+            }
+            if (parsed.done) return;
+            if (parsed.token) onToken(parsed.token);
+            if (parsed.payment_action) onPaymentAction?.(parsed.payment_action);
+          } catch {
+            // skip malformed lines
           }
-          if (parsed.done) return;
-          if (parsed.token) onToken(parsed.token);
-        } catch {
-          // skip malformed lines
-        }
       }
     }
   } finally {

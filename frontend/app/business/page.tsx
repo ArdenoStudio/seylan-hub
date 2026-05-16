@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { PlSummaryCard } from "@/components/business/PlSummaryCard";
 import { ExpenseBreakdown } from "@/components/business/ExpenseBreakdown";
 import { TaxJarPanel } from "@/components/business/TaxJarPanel";
@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getPlSummary, getBusinessAccount } from "@/lib/api";
 import { PlSummary, Transaction } from "@/types";
 import { Bot, PiggyBank, ReceiptText, TrendingUp } from "lucide-react";
+import { toast } from "sonner";
 
 const BUSINESS_USER_ID = "SEY-BIZ-001";
 const ASSISTANT_PROMPT =
@@ -21,6 +22,31 @@ export default function BusinessPage() {
   const [pl, setPl] = useState<PlSummary | null>(null);
   const [taxJarBalance, setTaxJarBalance] = useState(15070);
   const [plLoading, setPlLoading] = useState(true);
+  const paidToastFired = useRef(false);
+
+  // Handle redirect back from MPGS payment
+  useEffect(() => {
+    if (paidToastFired.current || typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("paid") === "1") {
+      paidToastFired.current = true;
+      const amount = parseFloat(params.get("amount") ?? "0");
+      const taxSaved = amount > 0 ? Math.round(amount * 0.1) : 0;
+      toast.success("Payment received", {
+        description:
+          taxSaved > 0
+            ? `LKR ${amount.toLocaleString()} received — LKR ${taxSaved.toLocaleString()} auto-saved to Tax Jar.`
+            : "Customer card payment confirmed.",
+      });
+      // Animate the tax jar counter up
+      if (taxSaved > 0) {
+        setTaxJarBalance((prev) => prev + taxSaved);
+      }
+      // Clean URL
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     let cancelled = false;

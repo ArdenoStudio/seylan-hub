@@ -11,6 +11,23 @@ TOOL_DEFINITIONS = [
     {
         "type": "function",
         "function": {
+            "name": "pay_loan_instalment",
+            "description": "Generate a payment link for the user to pay their next loan instalment via card. Use this when the user explicitly asks to pay their loan, make a payment, or settle an instalment.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "amount_lkr": {
+                        "type": "number",
+                        "description": "Amount in LKR. Default to the monthly installment if not specified.",
+                    },
+                },
+                "required": ["amount_lkr"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "check_balance",
             "description": "Check the balance of a specific account (savings, current, or loan outstanding).",
             "parameters": {
@@ -116,3 +133,70 @@ def _get_recent_transactions(user_id: str, count: int = 5) -> str:
     ctx = data.get(user_id, {})
     txns = ctx.get("recent_transactions", [])[:count]
     return json.dumps({"transactions": txns, "count": len(txns)})
+
+
+async def execute_tool_async(name: str, arguments: dict) -> str:
+    """Async version of execute_tool — handles tools that require async I/O."""
+    if name == "pay_loan_instalment":
+        return await _pay_loan_instalment(arguments)
+    return execute_tool(name, arguments)
+
+
+async def _pay_loan_instalment(arguments: dict) -> str:
+    from uuid import uuid4
+    from app.config import settings
+    from app.services import supabase_client, loan_state
+
+    user_id = "SEY-USR-001"
+    amount_lkr = float(arguments.get("amount_lkr", 22000))
+
+    # Resolve loan_id from in-memory state or fixture
+    loan_data = loan_state.get_loan_data(user_id)
+    if not loan_data:
+        raw = json.loads((_FX / "loans.json").read_text(encoding="utf-8"))
+        loan_data = raw.get(user_id, {})
+    loans = loan_data.get("loans", [])
+    loan_id = loans[0].get("loan_id", "LN-UNKNOWN") if loans else "LN-UNKNOWN"
+
+    order_id = "SH-LOAN-" + uuid4().hex[:10].upper()
+
+    if settings.mpgs_enable and settings.mpgs_merchant_id and settings.mpgs_api_password:
+        from app.seylan import mpgs
+        return_url = settings.frontend_base_url + "/payments/return?order_id=" + order_id
+        try:
+            session = await mpgs.create_checkout_session(
+                order_id=order_id,
+                amount_lkr=amount_lkr,
+                description="Loan instalment via chat -- " + loan_id,
+                return_url=return_url,
+                purpose="loan",
+            )
+            checkout_url = session["checkout_url"]
+        except Exception as exc:
+            log.error("MPGS session creation failed in chat tool: %s", exc)
+            return json.dumps({"error": "Could not create payment session. Please try from the Loans page."})
+    else:
+        # MPGS not enabled — return a demo-mode marker so the frontend can still render the button
+        checkout_url = settings.frontend_base_url + "/loans"
+
+    try:
+        supabase_client.save_payment({
+            "order_id": order_id,
+            "amount_lkr": amount_lkr,
+            "currency": "LKR",
+            "purpose": "loan",
+            "description": "Loan instalment -- " + loan_id + " (via chat)",
+            "status": "PENDING",
+            "metadata": {"loan_id": loan_id, "user_id": user_id, "via": "chat"},
+        })
+    except Exception as exc:
+        log.warning("save_payment failed in chat tool: %s", exc)
+
+    log.info("pay_loan_instalment: order_id=%s loan_id=%s amount=%.2f", order_id, loan_id, amount_lkr)
+    return json.dumps({
+        "checkout_url": checkout_url,
+        "order_id": order_id,
+        "amount_lkr": amount_lkr,
+        "loan_id": loan_id,
+        "mpgs_enabled": settings.mpgs_enable,
+    })

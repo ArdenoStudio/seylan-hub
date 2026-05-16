@@ -3,6 +3,7 @@
 import { ChatMessage } from "@/types";
 import { cn } from "@/lib/utils";
 import { AudioPlayer } from "./AudioPlayer";
+import { formatLKR } from "@/lib/utils";
 
 interface MessageBubbleProps {
   message: ChatMessage;
@@ -11,6 +12,7 @@ interface MessageBubbleProps {
 
 export function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
   const isUser = message.role === "user";
+  const pa = message.payment_action;
 
   return (
     <div className={cn("flex", isUser ? "justify-end" : "justify-start")}>
@@ -32,6 +34,21 @@ export function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
         </p>
         {isStreaming && (
           <span className="inline-block w-2 h-4 bg-current opacity-50 animate-pulse ml-0.5" />
+        )}
+        {pa && !isStreaming && (
+          <a
+            href={pa.checkout_url}
+            className={cn(
+              "mt-3 flex items-center justify-center gap-2 rounded-lg px-4 py-2.5",
+              "bg-seylan-red text-white text-sm font-semibold",
+              "hover:bg-seylan-red/90 transition-colors"
+            )}
+          >
+            <span>💳</span>
+            <span>
+              Pay {formatLKR(pa.amount_lkr)} →
+            </span>
+          </a>
         )}
         {!isUser && !isStreaming && message.content && (
           <AudioPlayer text={message.content} language={message.language} />

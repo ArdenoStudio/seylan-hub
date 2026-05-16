@@ -3,11 +3,19 @@
 import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { formatLKR } from "@/lib/utils";
-import { postTaxJarTrigger } from "@/lib/api";
+import { createPaymentSession } from "@/lib/api";
 import { toast } from "sonner";
 import { Transaction } from "@/types";
-import { Bell, Loader2 } from "lucide-react";
+import { CreditCard, Loader2 } from "lucide-react";
 
 interface TaxJarPanelProps {
   userId: string;
@@ -22,7 +30,9 @@ export function TaxJarPanel({
 }: TaxJarPanelProps) {
   const [balance, setBalance] = useState(initialBalance);
   const [displayBalance, setDisplayBalance] = useState(initialBalance);
-  const [triggering, setTriggering] = useState(false);
+  const [cardModalOpen, setCardModalOpen] = useState(false);
+  const [cardAmount, setCardAmount] = useState(8200);
+  const [submitting, setSubmitting] = useState(false);
   const animRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   useEffect(() => {
@@ -47,39 +57,20 @@ export function TaxJarPanel({
     return () => clearInterval(animRef.current);
   }, [balance, displayBalance]);
 
-  async function handleTrigger() {
-    setTriggering(true);
+  async function handleCardPayment() {
+    if (!cardAmount || cardAmount <= 0) return;
+    setSubmitting(true);
     try {
-      const result = (await postTaxJarTrigger({
-        user_id: userId,
-        incoming_amount_lkr: 8200,
-        description: "Cash Sale — Electrical Fittings",
-      })) as { new_balance: number };
-
-      const newBalance = result.new_balance ?? balance + 820;
-      setBalance(newBalance);
-
-      toast("LKR 8,200 received — LKR 820 auto-saved to Tax Jar", {
-        icon: <Bell className="h-4 w-4 text-seylan-red" />,
+      const session = await createPaymentSession({
+        amount_lkr: cardAmount,
+        purpose: "tax_jar_inbound",
+        description: "Customer payment — Silva Hardware",
+        metadata: { user_id: userId, tax_rate_pct: 10 },
       });
-
-      if (onNewTransaction) {
-        onNewTransaction({
-          transaction_id: crypto.randomUUID(),
-          account_id: userId,
-          amount_lkr: 8200,
-          merchant: "Cash Sale — Electrical Fittings",
-          category_en: "INCOME",
-          category_si: "ආදායම",
-          timestamp: new Date().toISOString(),
-          type: "credit",
-          description: "Cash Sale — Electrical Fittings",
-        });
-      }
+      window.location.href = session.checkout_url;
     } catch {
-      toast.error("Failed to trigger payment simulation.");
-    } finally {
-      setTriggering(false);
+      toast.error("Could not create payment session. Please try again.");
+      setSubmitting(false);
     }
   }
 
@@ -113,16 +104,68 @@ export function TaxJarPanel({
         </div>
 
         <Button
-          className="w-full rounded-full"
-          onClick={handleTrigger}
-          disabled={triggering}
+          className="w-full rounded-full bg-seylan-red hover:bg-seylan-red/90 text-white font-semibold"
+          onClick={() => setCardModalOpen(true)}
         >
-          {triggering ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          ) : null}
-          Simulate Incoming Payment LKR 8,200
+          <CreditCard className="h-4 w-4 mr-2" />
+          Accept Card Payment
         </Button>
       </CardContent>
     </Card>
+
+    <Dialog open={cardModalOpen} onOpenChange={(o) => { if (!o) setCardModalOpen(false); }}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Accept Card Payment</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 pt-2">
+          <div className="rounded-lg bg-seylan-mist/60 border border-seylan-border p-3 text-sm">
+            <p className="font-medium text-seylan-charcoal">Silva Hardware &amp; Electricals</p>
+            <p className="text-xs text-muted-foreground mt-0.5">10% auto-saved to Tax Jar on receipt</p>
+          </div>
+          <div>
+            <Label htmlFor="card-amount">Amount (LKR)</Label>
+            <Input
+              id="card-amount"
+              type="number"
+              min={1}
+              step={100}
+              value={Number.isFinite(cardAmount) ? cardAmount : ""}
+              onChange={(e) => {
+                const v = parseFloat(e.target.value);
+                setCardAmount(Number.isFinite(v) && v > 0 ? v : 0);
+              }}
+              className="mt-1"
+            />
+            {cardAmount > 0 && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Tax Jar will receive:{" "}
+                <span className="font-semibold text-seylan-charcoal">
+                  {formatLKR(Math.round(cardAmount * 0.1))}
+                </span>
+              </p>
+            )}
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Test card:{" "}
+            <span className="font-mono font-semibold text-seylan-charcoal">5123 4500 0000 0008</span>
+            , any future expiry, any CVV.
+          </p>
+          <div className="flex gap-3">
+            <Button variant="outline" className="flex-1" onClick={() => setCardModalOpen(false)} disabled={submitting}>
+              Cancel
+            </Button>
+            <Button
+              className="flex-1 bg-seylan-red hover:bg-seylan-red/90 text-white"
+              disabled={submitting || !cardAmount || cardAmount <= 0}
+              onClick={handleCardPayment}
+            >
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {submitting ? "Redirecting..." : `Charge ${formatLKR(cardAmount)}`}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
