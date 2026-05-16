@@ -6,10 +6,11 @@ GET  /api/payments/{order_id}    poll payment status
 POST /api/payments/webhook       MPGS result notification
 """
 import logging
+import secrets
 from typing import Any, Literal
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Body, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from app.config import settings
@@ -22,6 +23,23 @@ router = APIRouter(tags=["payments"])
 PurposeType = Literal["remittance", "loan", "tax_jar_inbound", "shop_sale"]
 
 _503_MSG = "Payment gateway not enabled. Set MPGS_ENABLE=true and configure credentials."
+
+# MPGS sends the portal "Notification Secret" in this header (see Mastercard gateway webhook docs).
+_WEBHOOK_SECRET_HEADER = "x-notification-secret"
+
+
+def _mpgs_webhook_secret_valid(request: Request) -> bool:
+    """If MPGS_WEBHOOK_SECRET is set, require a matching X-Notification-Secret header."""
+    expected = (settings.mpgs_webhook_secret or "").strip()
+    if not expected:
+        return True
+    received = (request.headers.get(_WEBHOOK_SECRET_HEADER) or "").strip()
+    if not received:
+        return False
+    try:
+        return secrets.compare_digest(received, expected)
+    except (TypeError, ValueError):
+        return False
 
 
 # ---------------------------------------------------------------------------
@@ -201,11 +219,29 @@ async def get_payment(order_id: str):
 
 
 @router.post("/api/payments/webhook", status_code=200)
-async def mpgs_webhook(payload: dict[str, Any]):
+async def mpgs_webhook(request: Request, payload: dict[str, Any] = Body(...)):
     """
     Receive MPGS payment result notification.
-    Always return 200 -- MPGS retries on non-2xx.
+
+    When MPGS_WEBHOOK_SECRET is configured, the gateway must send the same value in
+    X-Notification-Secret (case-insensitive header name per ASGI).
+
+    On handler errors we still return 200 so a transient bug does not cause MPGS to
+    retry indefinitely; authentication failures use 403.
     """
+    if not _mpgs_webhook_secret_valid(request):
+        log.warning("MPGS webhook rejected: missing or invalid X-Notification-Secret")
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    configured_mid = (settings.mpgs_merchant_id or "").strip()
+    if configured_mid and "merchant" in payload and payload.get("merchant") != configured_mid:
+        log.warning(
+            "MPGS webhook rejected: merchant mismatch got=%s expected=%s",
+            payload.get("merchant"),
+            configured_mid,
+        )
+        raise HTTPException(status_code=403, detail="Forbidden")
+
     try:
         order_id: str = (
             payload.get("orderId")

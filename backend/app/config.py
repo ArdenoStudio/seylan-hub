@@ -37,6 +37,8 @@ class Settings(BaseSettings):
     mpgs_operator_id: str = "CURSOR1op"
     mpgs_api_version: str = "79"
     mpgs_enable: bool = False
+    # MPGS Admin → Webhook Notifications → Notification Secret (sent as X-Notification-Secret)
+    mpgs_webhook_secret: str = ""
 
     # AI
     groq_api_key: str = ""
