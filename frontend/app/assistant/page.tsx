@@ -38,7 +38,7 @@ export default function AssistantPage() {
         onSuggestedSelect={send}
       />
 
-      <ChatInput onSend={send} disabled={isStreaming} />
+      <ChatInput onSend={send} disabled={isStreaming} language={language} />
     </div>
   );
 }

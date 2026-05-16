@@ -25,6 +25,7 @@ export const metadata: Metadata = {
   title: "Seylan Hub",
   description:
     "AI banking for Sri Lanka — diaspora wallets, voice assistant, loan health, and bookkeeping for SMEs",
+  manifest: "/manifest.json",
   openGraph: {
     title: "Seylan Hub",
     description:

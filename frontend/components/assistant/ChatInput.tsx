@@ -1,16 +1,19 @@
 "use client";
 
-import { useState, KeyboardEvent } from "react";
+import { useState, useCallback, KeyboardEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
+import { VoiceButton } from "./VoiceButton";
+import { Language } from "@/types";
 
 interface ChatInputProps {
   onSend: (content: string) => void;
   disabled: boolean;
+  language: Language;
 }
 
-export function ChatInput({ onSend, disabled }: ChatInputProps) {
+export function ChatInput({ onSend, disabled, language }: ChatInputProps) {
   const [value, setValue] = useState("");
 
   function handleSubmit() {
@@ -27,6 +30,13 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     }
   }
 
+  const handleVoiceTranscript = useCallback(
+    (text: string) => {
+      onSend(text);
+    },
+    [onSend]
+  );
+
   return (
     <div className="sticky bottom-0 border-t border-seylan-border bg-white p-4">
       <div className="flex gap-2 max-w-3xl mx-auto">
@@ -37,6 +47,11 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
           placeholder="Ask a question..."
           disabled={disabled}
           className="flex-1"
+        />
+        <VoiceButton
+          language={language}
+          onTranscript={handleVoiceTranscript}
+          disabled={disabled}
         />
         <Button
           size="icon"
