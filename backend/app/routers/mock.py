@@ -22,8 +22,13 @@ _REAL_ACCOUNTS = {
 }
 
 
+_fixture_cache: dict[str, dict] = {}
+
+
 def _load(name: str) -> dict:
-    return json.loads((_FX / name).read_text(encoding="utf-8"))
+    if name not in _fixture_cache:
+        _fixture_cache[name] = json.loads((_FX / name).read_text(encoding="utf-8"))
+    return _fixture_cache[name]
 
 
 def _apply_live_rows_to_wallet_buckets(wallet: dict, live_rows: list[dict]) -> None:
@@ -220,6 +225,33 @@ async def reset_demo():
         "transactions_cleared": result.get("transactions_cleared", 0),
         "sessions": result.get("sessions", "cleared"),
     }
+
+
+@router.post("/seed")
+async def admin_seed():
+    tables_reset = []
+    try:
+        cleared = supabase_client.clear_demo_transactions("SEY-ACC-002")
+        tables_reset.append(f"transactions ({cleared} rows)")
+    except Exception as exc:
+        log.warning("seed: transactions clear failed: %s", exc)
+
+    try:
+        supabase_client.reset_demo_state()
+        tables_reset.append("demo_state")
+    except Exception as exc:
+        log.warning("seed: demo_state reset failed: %s", exc)
+
+    from app.routers.loans import _advisor_cache
+    from app.routers.business import _insight_cache
+    from app.services.categorizer import _cache as cat_cache
+    _advisor_cache.clear()
+    _insight_cache.clear()
+    cat_cache.clear()
+    _fixture_cache.clear()
+    tables_reset.append("in-process caches (advisor, categorizer, insight, fixtures)")
+
+    return {"status": "seeded", "tables_reset": tables_reset}
 
 
 @router.post("/warm-up")

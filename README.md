@@ -8,13 +8,13 @@ Built in 24 hours for **Cursor Buildathon Colombo 2026** by Ardeno Studio.
 
 🌐 **Frontend:** [seylan-hub.vercel.app](https://seylan-hub.vercel.app) _(Vercel)_
 
-**Backend:** [seylan-hub-api.fly.dev](https://seylan-hub-api.fly.dev) *(Fly.io — Singapore)*
+**Backend:** [seylan-hub-api.fly.dev](https://seylan-hub-api.fly.dev) *(Fly.io — Singapore region)*
 
 ## Architecture
 
 | Layer | Tech | Owner |
 |-------|------|-------|
-| Frontend | Next.js 15, Tailwind, shadcn/ui | Ovindu |
+| Frontend | Next.js 16, Tailwind v4, shadcn/ui | Ovindu |
 | Backend | FastAPI, Supabase, Groq | Suven |
 | Realtime | Supabase Postgres Changes | Both |
 | AI | Groq llama-3.3-70b, ElevenLabs TTS | Suven |

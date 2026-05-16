@@ -53,6 +53,7 @@ export function AllocationEditor({ buckets, onSave }: AllocationEditorProps) {
       <CardContent className="p-4">
         <button
           onClick={() => setExpanded(!expanded)}
+          aria-expanded={expanded}
           className="w-full flex items-center justify-between text-sm font-medium text-seylan-charcoal"
         >
           <span>Allocation Rules</span>

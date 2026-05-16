@@ -3,6 +3,7 @@ import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter
+from pydantic import BaseModel
 
 from app.config import settings
 from app.models.schemas import WalletTransferRequest, WalletTransferResponse, BucketCredit, SaveAllocationRulesRequest
@@ -10,6 +11,23 @@ from app.services import supabase_client
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["wallet"])
+
+
+@router.get("/fx")
+async def get_fx_rate(from_currency: str = "GBP", to_currency: str = "LKR"):
+    rates = {
+        ("GBP", "LKR"): 408.30,
+        ("USD", "LKR"): 323.50,
+        ("EUR", "LKR"): 351.20,
+        ("AUD", "LKR"): 211.40,
+    }
+    rate = rates.get((from_currency.upper(), to_currency.upper()), 0)
+    return {
+        "from": from_currency.upper(),
+        "to": to_currency.upper(),
+        "rate": rate,
+        "source": "demo_fixture",
+    }
 
 
 @router.post("/wallet/transfer", response_model=WalletTransferResponse)
@@ -118,3 +136,26 @@ async def get_wallet_rules(sender_id: str, account_id: str = "SEY-ACC-002"):
             {"id": "savings",   "label": "Savings",     "pct": 20},
         ],
     }
+
+
+class SaveRulesRequest(BaseModel):
+    sender_id: str
+    account_id: str = "SEY-ACC-002"
+    buckets: list[dict]
+
+
+@router.post("/wallet/rules")
+async def save_wallet_rules(req: SaveRulesRequest):
+    total_pct = sum(b.get("pct", 0) for b in req.buckets)
+    if abs(total_pct - 100) > 0.01:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=422, detail=f"Allocation percentages must sum to 100 (got {total_pct})")
+    try:
+        supabase_client.save_allocation_rule(
+            sender_id=req.sender_id,
+            account_id=req.account_id,
+            buckets=req.buckets,
+        )
+    except Exception as exc:
+        log.warning("Failed to save allocation rules: %s", exc)
+    return {"status": "saved", "sender_id": req.sender_id, "buckets": req.buckets}

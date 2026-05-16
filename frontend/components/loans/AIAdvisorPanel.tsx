@@ -73,6 +73,8 @@ export function AIAdvisorPanel({ userId }: AIAdvisorPanelProps) {
           viewBox="0 0 200 40"
           className="w-full h-10 mb-3"
           preserveAspectRatio="none"
+          aria-label="Projected loan payoff curve showing declining balance over time"
+          role="img"
         >
           <polyline
             points="0,35 10,33 20,30 40,28 60,25 80,22 100,20 120,17 140,14 160,10 180,7 200,5"

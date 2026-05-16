@@ -6,7 +6,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { formatLKR } from "@/lib/utils";
 import { postWalletTransfer } from "@/lib/api";
 import { toast } from "sonner";
-import { Send } from "lucide-react";
 import { EXTERNAL_LINK_REL, SEYLAN_LINKS } from "@/lib/seylan-external-links";
 
 const FX_RATE = 408.3;
@@ -63,12 +61,6 @@ export function SendMoneyModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger className="fixed bottom-20 right-6 md:bottom-6 z-20">
-        <Button size="lg" className="rounded-full shadow-lg gap-2">
-          <Send className="h-4 w-4" />
-          Send Money
-        </Button>
-      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Send Money to Sri Lanka</DialogTitle>

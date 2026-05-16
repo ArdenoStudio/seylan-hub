@@ -41,29 +41,38 @@ export async function getAccountContext(userId: string) {
   return request(`/mock/account-context/${userId}`);
 }
 
+interface RawWalletResponse {
+  account_id: string;
+  account_holder: string;
+  linked_sender: string;
+  total_balance_lkr: number;
+  last_remittance?: Record<string, unknown>;
+  buckets?: Record<string, unknown>[];
+  recent_transactions?: Record<string, unknown>[];
+  [key: string]: unknown;
+}
+
 export async function getFamilyWallet(accountId: string) {
   if (USE_MOCK) return MOCK_WALLET;
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const raw = await request<any>(`/mock/family-wallet/${accountId}`);
-    // Normalise backend field names to our WalletState shape
+    const raw = await request<RawWalletResponse>(`/mock/family-wallet/${accountId}`);
     return {
       ...raw,
       last_remittance: raw.last_remittance ? {
         ...raw.last_remittance,
-        amount_gbp: raw.last_remittance.sender_amount_gbp ?? raw.last_remittance.amount_gbp,
-        fx_rate: raw.last_remittance.exchange_rate ?? raw.last_remittance.fx_rate,
+        amount_gbp: (raw.last_remittance as Record<string, unknown>).sender_amount_gbp ?? (raw.last_remittance as Record<string, unknown>).amount_gbp,
+        fx_rate: (raw.last_remittance as Record<string, unknown>).exchange_rate ?? (raw.last_remittance as Record<string, unknown>).fx_rate,
       } : undefined,
-      buckets: (raw.buckets ?? []).map((b: any) => ({
+      buckets: (raw.buckets ?? []).map((b) => ({
         ...b,
-        bucket_id: b.bucket_id ?? b.id,
-        allocation_pct: b.allocation_pct ?? b.allocated_pct,
+        bucket_id: (b as Record<string, unknown>).bucket_id ?? (b as Record<string, unknown>).id,
+        allocation_pct: (b as Record<string, unknown>).allocation_pct ?? (b as Record<string, unknown>).allocated_pct,
       })),
-      recent_transactions: (raw.recent_transactions ?? []).map((t: any) => ({
+      recent_transactions: (raw.recent_transactions ?? []).map((t) => ({
         ...t,
-        transaction_id: t.transaction_id ?? t.id,
-        timestamp: t.timestamp ?? t.date,
-        type: t.type ?? (t.amount_lkr < 0 ? "debit" : "credit"),
+        transaction_id: (t as Record<string, unknown>).transaction_id ?? (t as Record<string, unknown>).id,
+        timestamp: (t as Record<string, unknown>).timestamp ?? (t as Record<string, unknown>).date,
+        type: (t as Record<string, unknown>).type ?? ((t as Record<string, unknown>).amount_lkr as number) < 0 ? "debit" : "credit",
       })),
     };
   } catch {
@@ -74,11 +83,11 @@ export async function getFamilyWallet(accountId: string) {
 export async function getLoans(userId: string) {
   if (USE_MOCK) return getMockLoan(userId);
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data = await request<any>(`/mock/loans/${userId}`);
-    // Backend returns { loans: [...] }, unwrap to single Loan
-    if (data && Array.isArray(data.loans)) return data.loans[0] ?? getMockLoan(userId);
-    return Array.isArray(data) ? data[0] : data;
+    const data = await request<Record<string, unknown>>(`/mock/loans/${userId}`);
+    if (data && Array.isArray((data as Record<string, unknown>).loans)) {
+      return ((data as Record<string, unknown>).loans as unknown[])[0] ?? getMockLoan(userId);
+    }
+    return Array.isArray(data) ? (data as unknown[])[0] : data;
   } catch {
     return getMockLoan(userId);
   }
@@ -169,7 +178,8 @@ export async function postChat(
     language: string;
     history: { role: string; content: string }[];
   },
-  onToken: (token: string) => void
+  onToken: (token: string) => void,
+  onError?: (message: string) => void
 ): Promise<void> {
   if (USE_MOCK) {
     const response = getMockChatResponse(payload.user_id, payload.message);
@@ -216,6 +226,10 @@ export async function postChat(
         const data = line.slice(6);
         try {
           const parsed = JSON.parse(data);
+          if (parsed.error) {
+            onError?.(parsed.error);
+            return;
+          }
           if (parsed.done) return;
           if (parsed.token) onToken(parsed.token);
         } catch {
@@ -240,15 +254,34 @@ export function postTts(payload: { text: string; language: string }) {
   });
 }
 
-export async function postCategorize(payload: { transaction_ids: string[] }) {
+interface CategorizedItem {
+  id: string;
+  category_en: string;
+  category_si: string;
+  subcategory: string;
+  confidence: number;
+}
+
+export async function postCategorize(payload: { transaction_ids: string[] }): Promise<
+  Record<string, { category_en: string; category_si: string; subcategory: string }>
+> {
   if (USE_MOCK) {
     return {};
   }
-  return request("/api/categorize-transactions", {
+  const raw = await request<{ categorized: CategorizedItem[] }>("/api/categorize-transactions", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
+  const map: Record<string, { category_en: string; category_si: string; subcategory: string }> = {};
+  for (const item of raw.categorized ?? []) {
+    map[item.id] = {
+      category_en: item.category_en,
+      category_si: item.category_si,
+      subcategory: item.subcategory,
+    };
+  }
+  return map;
 }
 
 export async function prewarmDemoData() {
@@ -291,17 +324,25 @@ export async function postTaxJarTrigger(payload: {
   user_id: string;
   incoming_amount_lkr: number;
   description: string;
-}) {
+}): Promise<{ new_balance: number; tax_saved: number }> {
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, 600));
     const taxAmount = Math.round(payload.incoming_amount_lkr * 0.1);
     return { new_balance: 15070 + taxAmount, tax_saved: taxAmount };
   }
-  return request("/mock/tax-jar/trigger", {
+  const raw = await request<{
+    new_tax_jar_balance_lkr?: number;
+    new_balance?: number;
+    tax_transfer_amount_lkr?: number;
+  }>("/mock/tax-jar/trigger", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
+  return {
+    new_balance: raw.new_tax_jar_balance_lkr ?? raw.new_balance ?? 0,
+    tax_saved: raw.tax_transfer_amount_lkr ?? Math.round(payload.incoming_amount_lkr * 0.1),
+  };
 }
 
 export function postTriggerSpend(payload: {
