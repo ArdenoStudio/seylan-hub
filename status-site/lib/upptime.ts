@@ -41,17 +41,56 @@ export interface IncidentSummary {
   closedAt: string | null;
 }
 
+function parseHistoryYaml(yaml: string): Record<string, number> {
+  const daily: Record<string, number> = {};
+  // Split on YAML list entries
+  const entries = yaml.split(/\n(?=- )/);
+  for (const entry of entries) {
+    const typeMatch = entry.match(/\btype:\s*["']?(\w+)["']?/);
+    const dateMatch = entry.match(/\bdate:\s*["']?([0-9]{4}-[0-9]{2}-[0-9]{2})[T\s]/);
+    const durMatch = entry.match(/\bduration:\s*(\d+)/);
+    if (!typeMatch || !dateMatch) continue;
+    const type = typeMatch[1];
+    const day = dateMatch[1];
+    const dur = durMatch ? parseInt(durMatch[1], 10) : 0;
+    if (type === "down" && dur > 0) {
+      daily[day] = (daily[day] ?? 0) + dur;
+    } else if (daily[day] === undefined) {
+      daily[day] = 0;
+    }
+  }
+  return daily;
+}
+
+async function getDailyMinutesDown(slug: string): Promise<Record<string, number>> {
+  try {
+    const res = await fetch(`${RAW}/history/${slug}.yml`, {
+      next: { revalidate: 300 },
+    });
+    if (!res.ok) return {};
+    return parseHistoryYaml(await res.text());
+  } catch {
+    return {};
+  }
+}
+
 export async function getSummary(): Promise<SummaryFile | null> {
   try {
     const res = await fetch(`${RAW}/history/summary.json`, {
       next: { revalidate: 60 },
     });
     if (!res.ok) return null;
-    const sites = (await res.json()) as SiteSummary[];
-    return {
-      lastUpdate: new Date().toISOString(),
-      sites: Array.isArray(sites) ? sites : [],
-    };
+    const raw = (await res.json()) as SiteSummary[];
+    if (!Array.isArray(raw)) return null;
+
+    const sites = await Promise.all(
+      raw.map(async (site) => ({
+        ...site,
+        dailyMinutesDown: await getDailyMinutesDown(site.slug),
+      })),
+    );
+
+    return { lastUpdate: new Date().toISOString(), sites };
   } catch {
     return null;
   }
