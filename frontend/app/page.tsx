@@ -111,10 +111,19 @@ export default function OnboardingPage() {
             <Card
               key={card.user.id}
               ref={(el) => { cardRefs.current[idx] = el; }}
-              className="persona-card-spotlight group cursor-pointer card-glass shadow-brand border-0 transition-all hover:-translate-y-1 hover:shadow-brand-lg"
+              role="button"
+              tabIndex={0}
+              aria-label={`${card.title} — ${card.description}`}
+              className="persona-card-spotlight group cursor-pointer card-glass shadow-brand border-0 transition-all hover:-translate-y-1 hover:shadow-brand-lg focus-visible:outline-2 focus-visible:outline-seylan-red focus-visible:outline-offset-2"
               onClick={() =>
                 handleSelect(card.user.id, card.user.defaultRoute)
               }
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleSelect(card.user.id, card.user.defaultRoute);
+                }
+              }}
               onMouseMove={(e) => handleMouseMove(e, idx)}
             >
               <CardContent className="p-6">

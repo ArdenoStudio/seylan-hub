@@ -64,6 +64,7 @@ export function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition-all",
                   isActive
@@ -94,6 +95,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              aria-current={isActive ? "page" : undefined}
               className={cn(
                 "flex-1 flex flex-col items-center py-2 text-xs",
                 isActive

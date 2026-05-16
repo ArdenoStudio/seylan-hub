@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Transaction } from "@/types";
+import { ErrorState } from "@/components/ErrorState";
 import { ArrowRightLeft, Bot, PieChart, ShieldCheck } from "lucide-react";
 
 const FAMILY_ACCOUNT_ID = "SEY-ACC-002";
@@ -28,11 +29,19 @@ export default function WalletPage() {
     fireSpendToast(tx, newBalance);
   }, []);
 
-  const { wallet, transactions, buckets, loading, refetch } =
+  const { wallet, transactions, buckets, loading, error, refetch } =
     useWalletRealtime({
       accountId: FAMILY_ACCOUNT_ID,
       onSpend: handleSpend,
     });
+
+  if (error && !wallet) {
+    return (
+      <div className="p-6">
+        <ErrorState message={error} onRetry={refetch} />
+      </div>
+    );
+  }
 
   if (!mounted || loading) {
     return (

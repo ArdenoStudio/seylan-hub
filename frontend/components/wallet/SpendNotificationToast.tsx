@@ -1,6 +1,8 @@
 import { toast } from "sonner";
 import { Transaction } from "@/types";
 import { formatLKR } from "@/lib/utils";
+import { Bell } from "lucide-react";
+import { createElement } from "react";
 
 export function fireSpendToast(transaction: Transaction, newBucketBalance?: number) {
   const bucketPart = transaction.bucket_label ? ` · ${transaction.bucket_label}` : "";
@@ -10,6 +12,6 @@ export function fireSpendToast(transaction: Transaction, newBucketBalance?: numb
 
   toast(
     `Kumari just spent ${formatLKR(transaction.amount_lkr)} — ${transaction.merchant}${bucketPart}`,
-    { description, icon: "🔔" }
+    { description, icon: createElement(Bell, { className: "h-4 w-4 text-seylan-red" }) }
   );
 }
