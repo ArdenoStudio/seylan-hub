@@ -23,7 +23,7 @@ export default function AssistantPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-0px)] md:h-screen">
+    <div className="flex flex-col h-[calc(100vh-64px)] md:h-screen">
       <div className="flex items-center justify-between px-4 py-3 border-b border-seylan-border bg-white">
         <h1 className="text-lg font-bold text-seylan-charcoal">
           AI Assistant
