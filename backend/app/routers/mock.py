@@ -26,24 +26,6 @@ def _load(name: str) -> dict:
     return json.loads((_FX / name).read_text(encoding="utf-8"))
 
 
-def _map_seylan_txn(t: dict) -> dict:
-    amount_raw = t.get("Posting_amount", "0") or "0"
-    try:
-        amount = float(amount_raw)
-    except ValueError:
-        amount = 0.0
-    desc = t.get("Narrative_4") or t.get("Transaction_Code_Name", "Transaction")
-    if t.get("Users_own_reference"):
-        desc = f"{desc} — {t['Users_own_reference']}"
-    return {
-        "id": t.get("Event_key") or t.get("Narrative_4", uuid.uuid4().hex[:8]),
-        "date": t.get("Posting_date", ""),
-        "description": desc,
-        "amount_lkr": amount,
-        "type": "credit" if amount >= 0 else "debit",
-        "bucket_id": None,
-    }
-
 
 @router.get("/account-context/{user_id}")
 async def account_context(user_id: str):

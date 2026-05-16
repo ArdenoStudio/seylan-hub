@@ -9,20 +9,27 @@ def build_assistant_system_prompt(account_context: dict, language: str = "en") -
 
     txns = account_context.get("recent_transactions", [])
     txn_lines = "\n".join(
-        f"  - {t['date']}: {t['description']} — LKR {abs(t['amount_lkr']):,.0f} ({'debit' if t['amount_lkr'] < 0 else 'credit'})"
+        f"  - {t.get('date') or t.get('timestamp','')[:10]}: "
+        f"{t.get('description','Transaction')} — "
+        f"LKR {abs(t.get('amount_lkr', 0)):,.0f} "
+        f"({'debit' if t.get('type') == 'debit' or t.get('amount_lkr', 0) < 0 else 'credit'})"
         for t in txns[:5]
     )
 
     loans = account_context.get("loans", [])
     loan_lines = "\n".join(
-        f"  - {l['type']}: LKR {l['outstanding_lkr']:,.0f} outstanding, "
-        f"LKR {l['monthly_installment_lkr']:,.0f}/month, next payment {l['next_payment_date']}"
+        f"  - {l.get('type','Loan')}: "
+        f"LKR {l.get('outstanding_lkr', l.get('outstanding_amount_lkr', 0)):,.0f} outstanding, "
+        f"LKR {l.get('monthly_installment_lkr', l.get('monthly_payment_lkr', 0)):,.0f}/month, "
+        f"next payment {l.get('next_payment_date','unknown')}"
         for l in loans
     ) or "  None"
 
     fds = account_context.get("fixed_deposits", [])
     fd_lines = "\n".join(
-        f"  - LKR {f['amount_lkr']:,.0f} at {f['interest_rate_pct']}% p.a., matures {f['maturity_date']}"
+        f"  - LKR {f.get('amount_lkr', f.get('principal_lkr', 0)):,.0f} "
+        f"at {f.get('interest_rate_pct', 0)}% p.a., "
+        f"matures {f.get('maturity_date','unknown')}"
         for f in fds
     ) or "  None"
 
