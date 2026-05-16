@@ -26,18 +26,20 @@ export default async function StatusPage() {
         {/* Header */}
         <header className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2.5">
-            <div className="h-7 w-7 rounded-md bg-blue-600 grid place-items-center">
-              <span className="text-white text-sm font-bold">S</span>
-            </div>
+            <img
+              src="/seylan-bank-icon.png"
+              alt="Seylan Bank"
+              className="h-7 w-7 rounded-md"
+            />
             <span className="font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
               SeylanHub Status
             </span>
           </div>
           <a
-            href="https://seylan-hub.vercel.app"
+            href="https://seylanhub-www.vercel.app"
             className="text-sm text-neutral-500 hover:text-blue-600 transition-colors"
           >
-            seylan-hub.vercel.app →
+            seylanhub-www.vercel.app →
           </a>
         </header>
 
