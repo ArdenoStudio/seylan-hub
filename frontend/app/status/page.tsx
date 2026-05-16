@@ -2,6 +2,7 @@ import { getSummary, getRecentIncidents, overallStatus, REPO_URL } from "@/lib/u
 import { StatusBanner } from "./components/StatusBanner";
 import { ServiceCard } from "./components/ServiceCard";
 import { Incidents } from "./components/Incidents";
+import { AskAgent } from "./components/AskAgent";
 
 export const revalidate = 60;
 
@@ -69,6 +70,9 @@ export default async function StatusPage() {
 
         {/* Incidents */}
         <Incidents incidents={incidents} />
+
+        {/* AI Chat */}
+        <AskAgent />
 
         {/* Footer */}
         <footer className="mt-16 pt-8 border-t border-neutral-200 dark:border-neutral-800 text-xs text-neutral-500 flex flex-wrap items-center justify-between gap-3">
