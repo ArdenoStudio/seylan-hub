@@ -1,0 +1,39 @@
+{
+  "SEY-BIZ-001": {
+    "user_id": "SEY-BIZ-001",
+    "business_name": "Silva Hardware & Electricals",
+    "current_week": {
+      "week_label": "May 5 - May 10, 2026",
+      "revenue_lkr": 47200,
+      "expenses_lkr": 31160,
+      "net_lkr": 16040,
+      "margin_pct": 34.0,
+      "expense_breakdown": {
+        "SUPPLIER": 22500,
+        "UTILITIES": 2200,
+        "TRANSPORT": 3920,
+        "WAGES": 1000,
+        "MISC": 1540
+      }
+    },
+    "previous_week": {
+      "week_label": "Apr 28 - May 4, 2026",
+      "revenue_lkr": 37300,
+      "expenses_lkr": 26680,
+      "net_lkr": 10620,
+      "margin_pct": 28.5,
+      "expense_breakdown": {
+        "SUPPLIER": 17600,
+        "UTILITIES": 680,
+        "TRANSPORT": 4200,
+        "WAGES": 3000,
+        "MISC": 1200
+      }
+    },
+    "week_on_week": {
+      "revenue_change_pct": 26.5,
+      "margin_change_pct": 5.5,
+      "direction": "UP"
+    }
+  }
+}
