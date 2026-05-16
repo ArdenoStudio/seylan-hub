@@ -14,15 +14,20 @@ const requiredFiles = [
   "public/seylan-logo-white.svg",
   "components/layout/DemoModeBadge.tsx",
   "components/assistant/AudioPlayer.tsx",
+  "components/seylan/SeylanBankHandoffBanner.tsx",
+  "lib/seylan-external-links.ts",
 ];
 
 const requiredSnippets = [
-  ["app/page.tsx", "aria-label={`Continue as"],
+  ["app/page.tsx", "Start with Family Wallet"],
   ["hooks/useWalletRealtime.ts", "seylan:mock-transaction"],
-  ["app/wallet/page.tsx", "Polling fallback"],
+  ["app/wallet/page.tsx", "Track money sent home"],
+  ["components/layout/AppShell.tsx", "pathnameShowsSeylanHandoff"],
   ["components/assistant/MessageBubble.tsx", "<AudioPlayer"],
   ["app/demo/page.tsx", "Trigger wallet spend"],
   ["public/manifest.json", "/seylan-logo.svg"],
+  ["lib/seylan-external-links.ts", "seylanbank.lk"],
+  ["components/seylan/SeylanBankHandoffBanner.tsx", "Personal Internet Banking"],
 ];
 
 const missing = requiredFiles.filter((file) => !existsSync(join(root, file)));
