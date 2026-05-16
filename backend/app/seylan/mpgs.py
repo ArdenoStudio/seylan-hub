@@ -32,7 +32,11 @@ async def create_checkout_session(
     return_url: str,
     purpose: str,
 ) -> dict[str, Any]:
-    """Initiate a Hosted Checkout session (PUT /session)."""
+    """Initiate a Hosted Checkout session (POST /session).
+
+    Browser Hosted Checkout loads checkout.js from a path like /checkout/version/{N}/checkout.js.
+    Mastercard ships a stub for N >= 63 that does not run configure(); use the frontend loader with N < 63 (default 62).
+    """
     url = _base_url() + "/merchant/" + settings.mpgs_merchant_id + "/session"
     payload: dict[str, Any] = {
         "apiOperation": "INITIATE_CHECKOUT",

@@ -5,7 +5,8 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 const DEFAULT_MPGS_HOST = "test-seylan.mtf.gateway.mastercard.com";
-const DEFAULT_MPGS_API_VERSION = "79";
+/** Script path version: MUST stay below 63. Bundles for v63+ only log an error and skip configure(); REST API can still use a higher version (e.g. 79). */
+const DEFAULT_MPGS_CHECKOUT_JS_VERSION = "62";
 
 declare global {
   interface Window {
@@ -39,18 +40,18 @@ function HostedCheckoutLoader({
   sessionId,
   merchantId,
   mpgsHost,
-  apiVersion,
+  checkoutJsVersion,
 }: {
   sessionId: string;
   merchantId: string;
   mpgsHost: string;
-  apiVersion: string;
+  checkoutJsVersion: string;
 }) {
   const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
-    const scriptSrc = `https://${mpgsHost}/checkout/version/${apiVersion}/checkout.js`;
+    const scriptSrc = `https://${mpgsHost}/checkout/version/${checkoutJsVersion}/checkout.js`;
 
     function startHostedCheckout() {
       if (cancelled) return;
@@ -94,7 +95,7 @@ function HostedCheckoutLoader({
       cancelled = true;
       script.remove();
     };
-  }, [sessionId, merchantId, mpgsHost, apiVersion]);
+  }, [sessionId, merchantId, mpgsHost, checkoutJsVersion]);
 
   if (loadError) {
     return (
@@ -130,8 +131,9 @@ function CheckoutContent() {
 
   const mpgsHost =
     (process.env.NEXT_PUBLIC_MPGS_HOST ?? "").trim() || DEFAULT_MPGS_HOST;
-  const apiVersion =
-    (process.env.NEXT_PUBLIC_MPGS_API_VERSION ?? "").trim() || DEFAULT_MPGS_API_VERSION;
+  const checkoutJsVersion =
+    (process.env.NEXT_PUBLIC_MPGS_CHECKOUT_JS_VERSION ?? "").trim() ||
+    DEFAULT_MPGS_CHECKOUT_JS_VERSION;
 
   if (!sessionId || !merchantId) {
     return <MissingCheckoutParams />;
@@ -142,7 +144,7 @@ function CheckoutContent() {
       sessionId={sessionId}
       merchantId={merchantId}
       mpgsHost={mpgsHost}
-      apiVersion={apiVersion}
+      checkoutJsVersion={checkoutJsVersion}
     />
   );
 }
