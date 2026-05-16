@@ -150,14 +150,15 @@ export function SendMoneyModal({
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
       <DialogContent
-        className="max-w-sm overflow-hidden border-0 p-0 shadow-2xl [background:linear-gradient(160deg,#2d0d12_0%,#1a0608_60%,#0f0305_100%)] [box-shadow:0_32px_80px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.06)]"
+        className="max-w-sm overflow-hidden border-0 p-0 shadow-2xl [background:linear-gradient(160deg,#0d1421_0%,#0a1628_60%,#060e1a_100%)] [box-shadow:0_32px_80px_rgba(0,0,0,0.85),inset_0_1px_0_rgba(255,255,255,0.07)]"
         showCloseButton={false}
       >
         {/* Top accent bar */}
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#E0AF49]/60 to-transparent" />
 
         {/* Ambient glow */}
-        <div className="pointer-events-none absolute -top-20 left-1/2 h-48 w-80 -translate-x-1/2 rounded-full bg-[#E31821]/10 blur-3xl" />
+        <div className="pointer-events-none absolute -top-20 left-1/2 h-48 w-80 -translate-x-1/2 rounded-full bg-[#1d4ed8]/15 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-10 right-0 h-40 w-60 rounded-full bg-[#E0AF49]/8 blur-3xl" />
 
         <div className="relative z-10 flex flex-col gap-0">
           {/* Header */}
@@ -195,7 +196,7 @@ export function SendMoneyModal({
                   {paymentMode === mode && (
                     <motion.div
                       layoutId="mode-pill"
-                      className="absolute inset-0 rounded-lg bg-[#721C24] shadow-[0_2px_12px_rgba(114,28,36,0.5)]"
+                      className="absolute inset-0 rounded-lg bg-[#1d4ed8] shadow-[0_2px_12px_rgba(29,78,216,0.45)]"
                       transition={{ type: "spring", stiffness: 400, damping: 30 }}
                     />
                   )}
