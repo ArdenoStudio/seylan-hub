@@ -99,9 +99,11 @@ export function LoanPaymentModal({ loan, isOpen, onClose }: LoanPaymentModalProp
 
           {/* Test card reminder */}
           <p className="text-[11px] leading-relaxed text-muted-foreground">
-            Processed by Mastercard&apos;s secure gateway. Test card:{" "}
+            Mastercard test gateway. Approved test card:{" "}
             <span className="font-mono font-semibold text-seylan-charcoal">5123 4500 0000 0008</span>
-            , any future expiry, any 3-digit CVV.
+            , expiry <span className="font-mono font-semibold text-seylan-charcoal">01/39</span>,
+            CVV <span className="font-mono font-semibold text-seylan-charcoal">100</span>.
+            Real cards are not accepted on this test gateway.
           </p>
 
           <div className="flex gap-3">

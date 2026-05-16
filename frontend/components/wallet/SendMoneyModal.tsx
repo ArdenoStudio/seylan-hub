@@ -161,7 +161,7 @@ export function SendMoneyModal({
               }`}
               onClick={() => setPaymentMode("card")}
             >
-              💳 Pay with Card (Real)
+              Pay with Card (MPGS Test)
             </button>
             <button
               type="button"
@@ -172,7 +172,7 @@ export function SendMoneyModal({
               }`}
               onClick={() => setPaymentMode("demo")}
             >
-              🎭 Demo Mode
+              Demo Mode
             </button>
           </div>
 
@@ -242,12 +242,13 @@ export function SendMoneyModal({
           </div>
           {paymentMode === "card" ? (
             <p className="text-[11px] leading-relaxed text-muted-foreground">
-              Card payments are processed by Mastercard&apos;s secure gateway.
-              This is test mode — use test card{" "}
+              Card payments use Mastercard&apos;s test gateway. For an approved test payment, use{" "}
               <span className="font-mono font-semibold text-seylan-charcoal">
                 5123 4500 0000 0008
               </span>
-              , any future expiry, any 3-digit CVV.
+              , expiry <span className="font-mono font-semibold text-seylan-charcoal">01/39</span>,
+              CVV <span className="font-mono font-semibold text-seylan-charcoal">100</span>.
+              Real cards are not accepted on this test gateway.
             </p>
           ) : (
             <p className="text-[11px] leading-relaxed text-muted-foreground">

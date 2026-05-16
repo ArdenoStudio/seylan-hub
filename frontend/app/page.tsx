@@ -150,7 +150,7 @@ export default function LandingPage() {
           {/* CTAs */}
           <FadeDiv className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <CTAPrimaryButton href="/wallet" size="lg">
-              Open SeylanHub
+              Open Seylan Hub
             </CTAPrimaryButton>
             <a
               href="#modules"
@@ -337,7 +337,7 @@ export default function LandingPage() {
               Ready to see your money clearly?
             </h2>
             <p className="mx-auto max-w-md text-base text-white/70 leading-7">
-              Open SeylanHub in seconds. Realistic mock data — no Seylan Bank
+              Open Seylan Hub in seconds. Realistic mock data — no Seylan Bank
               credentials required.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
@@ -345,7 +345,7 @@ export default function LandingPage() {
                 href="/wallet"
                 className="inline-flex items-center gap-2 rounded-lg bg-white px-7 py-3.5 text-sm font-bold text-seylan-plum shadow-sm hover:-translate-y-0.5 hover:shadow-md transition-all duration-150 group"
               >
-                Open SeylanHub
+                Open Seylan Hub
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
               <a

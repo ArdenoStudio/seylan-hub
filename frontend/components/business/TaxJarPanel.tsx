@@ -146,9 +146,11 @@ export function TaxJarPanel({
             )}
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Test card:{" "}
+            Approved MPGS test card:{" "}
             <span className="font-mono font-semibold text-seylan-charcoal">5123 4500 0000 0008</span>
-            , any future expiry, any CVV.
+            , expiry <span className="font-mono font-semibold text-seylan-charcoal">01/39</span>,
+            CVV <span className="font-mono font-semibold text-seylan-charcoal">100</span>.
+            Real cards are not accepted on this test gateway.
           </p>
           <div className="flex gap-3">
             <Button variant="outline" className="flex-1" onClick={() => setCardModalOpen(false)} disabled={submitting}>
