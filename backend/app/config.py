@@ -42,6 +42,7 @@ class Settings(BaseSettings):
     mpgs_enable: bool = False
 
     # AI
+    anthropic_api_key: str = ""
     groq_api_key: str = ""
     elevenlabs_api_key: str = ""
     elevenlabs_voice_id: str = "EXAVITQu4vr4xnSDxMaL"

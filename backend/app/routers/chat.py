@@ -7,7 +7,7 @@ from fastapi.responses import StreamingResponse
 
 from app.config import settings
 from app.models.schemas import ChatRequest
-from app.services import groq_client, supabase_client
+from app.services import groq_client, supabase_client, claude_client
 from app.services.context_builder import build_assistant_system_prompt
 from app.services.chat_tools import TOOL_DEFINITIONS, execute_tool, execute_tool_async
 
@@ -79,10 +79,14 @@ async def chat(req: ChatRequest):
             except Exception as probe_exc:
                 log.debug("payment probe skipped: %s", probe_exc)
 
-            async for token in groq_client.stream_chat(system_prompt, messages):
-                full_response.append(token)
-                payload = json.dumps({"token": token}, ensure_ascii=False)
-                yield f"data: {payload}\n\n"
+            async for event_type, content in claude_client.stream_chat(system_prompt, messages):
+                if event_type == "thinking":
+                    payload = json.dumps({"thinking": content}, ensure_ascii=False)
+                    yield f"data: {payload}\n\n"
+                else:
+                    full_response.append(content)
+                    payload = json.dumps({"token": content}, ensure_ascii=False)
+                    yield f"data: {payload}\n\n"
 
             if payment_action:
                 pa_payload = json.dumps({"payment_action": payment_action}, ensure_ascii=False)

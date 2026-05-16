@@ -76,6 +76,15 @@ export function useChat(userId: string) {
                   : m
               )
             );
+          },
+          (chunk) => {
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === aiMsgId
+                  ? { ...m, thinking: (m.thinking ?? "") + chunk }
+                  : m
+              )
+            );
           }
         );
       } catch {

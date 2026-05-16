@@ -79,6 +79,21 @@ async def complete(system_prompt: str, messages: list[dict],
     return "I'm temporarily unavailable due to high demand. Please try again in a moment."
 
 
+async def stream_chat_model(
+    model: str, system_prompt: str, messages: list[dict],
+    max_tokens: int = 2048, temperature: float = 0.6,
+) -> AsyncIterator[str]:
+    """Stream from an explicitly specified Groq model."""
+    msgs = [{"role": "system", "content": system_prompt}] + messages
+    stream = await _get_client().chat.completions.create(
+        model=model, messages=msgs, max_tokens=max_tokens,
+        temperature=temperature, stream=True,
+    )
+    async for chunk in stream:
+        if chunk.choices and chunk.choices[0].delta.content:
+            yield chunk.choices[0].delta.content
+
+
 async def complete_with_tools(system_prompt: str, messages: list[dict],
                                tools: list[dict], max_tokens: int = 512,
                                temperature: float = 0.3):

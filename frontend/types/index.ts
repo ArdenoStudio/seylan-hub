@@ -64,6 +64,7 @@ export interface ChatMessage {
   id: string;
   role: MessageRole;
   content: string;
+  thinking?: string;
   timestamp: string;
   language: Language;
   payment_action?: PaymentAction;

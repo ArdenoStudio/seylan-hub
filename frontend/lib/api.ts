@@ -199,7 +199,8 @@ export async function postChat(
   },
   onToken: (token: string) => void,
   onError?: (message: string) => void,
-  onPaymentAction?: (action: Record<string, unknown>) => void
+  onPaymentAction?: (action: Record<string, unknown>) => void,
+  onThinking?: (chunk: string) => void
 ): Promise<void> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30000);
@@ -241,6 +242,7 @@ export async function postChat(
               return;
             }
             if (parsed.done) return;
+            if (parsed.thinking) onThinking?.(parsed.thinking);
             if (parsed.token) onToken(parsed.token);
             if (parsed.payment_action) onPaymentAction?.(parsed.payment_action);
           } catch {
