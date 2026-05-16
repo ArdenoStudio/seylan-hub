@@ -1,10 +1,17 @@
 "use client";
 
 import { useCurrentUser } from "@/hooks/useCurrentUser";
+import { useChat } from "@/hooks/useChat";
+import { ChatThread } from "@/components/assistant/ChatThread";
+import { ChatInput } from "@/components/assistant/ChatInput";
+import { LanguageToggle } from "@/components/assistant/LanguageToggle";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AssistantPage() {
   const { user, mounted } = useCurrentUser();
+  const { messages, isStreaming, language, setLanguage, send } = useChat(
+    user?.id ?? "SEY-USR-001"
+  );
 
   if (!mounted) {
     return (
@@ -16,13 +23,22 @@ export default function AssistantPage() {
   }
 
   return (
-    <div className="p-6">
-      <h1 className="text-xl font-bold text-seylan-charcoal mb-4">
-        AI Assistant
-      </h1>
-      <p className="text-muted-foreground">
-        Viewing as {user?.name ?? "Guest"} — Chat assistant module coming up.
-      </p>
+    <div className="flex flex-col h-[calc(100vh-0px)] md:h-screen">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-seylan-border bg-white">
+        <h1 className="text-lg font-bold text-seylan-charcoal">
+          AI Assistant
+        </h1>
+        <LanguageToggle language={language} onChange={setLanguage} />
+      </div>
+
+      <ChatThread
+        messages={messages}
+        isStreaming={isStreaming}
+        language={language}
+        onSuggestedSelect={send}
+      />
+
+      <ChatInput onSend={send} disabled={isStreaming} />
     </div>
   );
 }
