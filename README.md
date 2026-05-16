@@ -8,6 +8,8 @@ Built in 24 hours for **Cursor Buildathon Colombo 2026** by Ardeno Studio.
 
 🌐 **Frontend:** [seylan-hub.vercel.app](https://seylan-hub.vercel.app) _(Vercel)_
 
+**Backend:** [seylan-hub-api.fly.dev](https://seylan-hub-api.fly.dev) *(Fly.io — Singapore)*
+
 ## Architecture
 
 | Layer | Tech | Owner |
@@ -16,7 +18,7 @@ Built in 24 hours for **Cursor Buildathon Colombo 2026** by Ardeno Studio.
 | Backend | FastAPI, Supabase, Groq | Suven |
 | Realtime | Supabase Postgres Changes | Both |
 | AI | Groq llama-3.3-70b, ElevenLabs TTS | Suven |
-| Deploy | Vercel (frontend), Railway (backend) | Both |
+| Deploy | Vercel (frontend), Fly.io (backend — sin) | Both |
 
 ## Modules
 
@@ -39,7 +41,7 @@ npm run dev
 # Backend (separate repo/directory)
 cd backend
 pip install -r requirements.txt
-uvicorn main:app --port 8000
+uvicorn app.main:app --port 8000
 ```
 
 ## Environment Variables
