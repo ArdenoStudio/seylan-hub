@@ -1,6 +1,5 @@
+import { last90Days, dayStatus, type SiteSummary, type DayStatus } from "@/lib/upptime";
 import { cn } from "@/lib/utils";
-
-type DayStatus = "ok" | "partial" | "down" | "nodata";
 
 const TILE: Record<DayStatus, string> = {
   ok: "bg-emerald-500/80 hover:bg-emerald-400",
@@ -16,43 +15,20 @@ const LABEL: Record<DayStatus, string> = {
   nodata: "no data",
 };
 
-function last90Days(): string[] {
-  const days: string[] = [];
-  const today = new Date();
-  for (let i = 89; i >= 0; i--) {
-    const d = new Date(today);
-    d.setUTCDate(today.getUTCDate() - i);
-    days.push(d.toISOString().slice(0, 10));
-  }
-  return days;
-}
-
-export function UptimeBar({
-  name,
-  currentStatus,
-}: {
-  name: string;
-  currentStatus: "up" | "degraded" | "down";
-}) {
+export function UptimeBar({ site }: { site: SiteSummary }) {
   const days = last90Days();
-
-  // We only have live data — show nodata for all days except today
-  function dayStatus(index: number): DayStatus {
-    if (index < 89) return "nodata"; // no historical data yet
-    // today = current live status
-    if (currentStatus === "up") return "ok";
-    if (currentStatus === "degraded") return "partial";
-    return "down";
-  }
+  const downMap = site.dailyMinutesDown ?? {};
 
   return (
-    <div className="space-y-1.5" aria-label={`90-day uptime for ${name}`}>
+    <div className="space-y-1.5" aria-label={`90-day uptime for ${site.name}`}>
       <div className="flex gap-[2px] h-8" role="img">
-        {days.map((day, i) => {
-          const s = dayStatus(i);
-          const tooltip = s === "nodata"
-            ? `${day} — no data`
-            : `${day} — ${LABEL[s]}`;
+        {days.map((day) => {
+          const minutes = downMap[day];
+          const s = dayStatus(minutes);
+          const tooltip =
+            s === "nodata"
+              ? `${day} — no data`
+              : `${day} — ${LABEL[s]}${minutes ? ` (${minutes} min down)` : ""}`;
           return (
             <span
               key={day}

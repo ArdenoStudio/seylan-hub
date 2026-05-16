@@ -1,60 +1,19 @@
-"use client";
+import { getSummary, getRecentIncidents, overallStatus, REPO_URL } from "@/lib/upptime";
+import { StatusBanner } from "./components/StatusBanner";
+import { ServiceCard } from "./components/ServiceCard";
+import { Incidents } from "./components/Incidents";
 
-import { useEffect, useRef, useState } from "react";
-import { StatusBanner, type SiteStatus } from "./components/StatusBanner";
-import { ServiceCard, type Service } from "./components/ServiceCard";
+export const revalidate = 60;
 
-interface StatusData {
-  overall: "operational" | "degraded" | "outage";
-  services: Service[];
-  checkedAt: string;
-}
-
-const REFRESH_INTERVAL = 30;
-
-function overallToSiteStatus(overall: StatusData["overall"]): SiteStatus {
-  if (overall === "operational") return "up";
-  if (overall === "degraded") return "degraded";
-  return "down";
-}
-
-export default function StatusPage() {
-  const [data, setData] = useState<StatusData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [countdown, setCountdown] = useState(REFRESH_INTERVAL);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  async function fetchStatus() {
-    try {
-      const res = await fetch("/api/status", { cache: "no-store" });
-      const json = await res.json();
-      setData(json);
-    } catch {
-      // keep stale data
-    } finally {
-      setLoading(false);
-      setCountdown(REFRESH_INTERVAL);
-    }
-  }
-
-  useEffect(() => {
-    fetchStatus();
-    timerRef.current = setInterval(() => {
-      setCountdown((c) => {
-        if (c <= 1) { fetchStatus(); return REFRESH_INTERVAL; }
-        return c - 1;
-      });
-    }, 1000);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, []);
-
-  const status = data ? overallToSiteStatus(data.overall) : "up";
-  const affectedNames = data?.services
-    .filter((s) => s.status === "down" || s.status === "degraded")
-    .map((s) => s.label) ?? [];
-
-  const lastUpdate = data
-    ? new Date(data.checkedAt).toLocaleString(undefined, {
+export default async function StatusPage() {
+  const [summary, incidents] = await Promise.all([
+    getSummary(),
+    getRecentIncidents(5),
+  ]);
+  const sites = summary?.sites ?? [];
+  const status = overallStatus(sites);
+  const lastUpdate = summary
+    ? new Date(summary.lastUpdate).toLocaleString(undefined, {
         dateStyle: "medium",
         timeStyle: "short",
       })
@@ -81,11 +40,7 @@ export default function StatusPage() {
         </header>
 
         {/* Status banner */}
-        {loading ? (
-          <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 h-24 animate-pulse" />
-        ) : (
-          <StatusBanner status={status} affectedNames={affectedNames} />
-        )}
+        <StatusBanner status={status} sites={sites} />
 
         {/* Services */}
         <section className="mt-10">
@@ -98,34 +53,34 @@ export default function StatusPage() {
             )}
           </div>
 
-          {loading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="rounded-xl border border-neutral-200 dark:border-neutral-800 h-44 animate-pulse bg-neutral-100 dark:bg-neutral-900"
-                />
-              ))}
+          {sites.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-neutral-300 dark:border-neutral-700 p-8 text-center text-sm text-neutral-500">
+              No monitoring data yet. Once the Upptime workflow runs for the first time,
+              services will appear here.
             </div>
           ) : (
             <div className="stagger space-y-3">
-              {data?.services.map((svc) => (
-                <ServiceCard key={svc.key} service={svc} />
+              {sites.map((site) => (
+                <ServiceCard key={site.slug} site={site} />
               ))}
             </div>
           )}
         </section>
 
+        {/* Incidents */}
+        <Incidents incidents={incidents} />
+
         {/* Footer */}
         <footer className="mt-16 pt-8 border-t border-neutral-200 dark:border-neutral-800 text-xs text-neutral-500 flex flex-wrap items-center justify-between gap-3">
-          <span>Powered by Ardeno Studio · Checked every 5 minutes</span>
-          <div className="flex items-center gap-1 tabular-nums">
-            <span
-              className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"
-              aria-hidden="true"
-            />
-            Auto-refresh in {String(countdown).padStart(2, "0")}s
-          </div>
+          <span>Powered by Upptime · Checked every 5 minutes</span>
+          <a
+            href={REPO_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="hover:text-blue-600 transition-colors"
+          >
+            Raw data on GitHub
+          </a>
         </footer>
       </div>
     </main>
