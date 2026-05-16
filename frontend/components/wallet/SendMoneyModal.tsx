@@ -12,10 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { formatLKR } from "@/lib/utils";
 import { getSandboxTransferAccounts, postWalletTransfer } from "@/lib/api";
+import { GBP_LKR_RATE, gbpToLkr } from "@/lib/remittance-fx";
 import { toast } from "sonner";
 import { EXTERNAL_LINK_REL, SEYLAN_LINKS } from "@/lib/seylan-external-links";
-
-const FX_RATE = 408.3;
 
 interface SendMoneyModalProps {
   senderId: string;
@@ -45,7 +44,7 @@ export function SendMoneyModal({
   } | null>(null);
   const [sandboxRoutingLoaded, setSandboxRoutingLoaded] = useState(false);
 
-  const amountLkr = Math.round(amountGbp * FX_RATE);
+  const amountLkr = gbpToLkr(amountGbp);
 
   function handleDialogOpenChange(next: boolean) {
     if (!next) {
@@ -149,14 +148,18 @@ export function SendMoneyModal({
             <Input
               id="amount"
               type="number"
-              value={amountGbp}
-              onChange={(e) => setAmountGbp(Number(e.target.value))}
-              min={1}
+              step="0.01"
+              min={0.01}
+              value={Number.isFinite(amountGbp) ? amountGbp : 0}
+              onChange={(e) => {
+                const v = parseFloat(e.target.value);
+                setAmountGbp(Number.isFinite(v) && v >= 0 ? v : 0);
+              }}
             />
           </div>
           <div className="p-3 bg-seylan-mist rounded-lg">
             <div className="text-sm text-muted-foreground">
-              LKR conversion at {FX_RATE}
+              LKR conversion at {GBP_LKR_RATE} (integer LKR = GBP × rate, rounded)
             </div>
             <div className="text-xl font-bold text-seylan-charcoal">
               {formatLKR(amountLkr)}
@@ -193,7 +196,7 @@ export function SendMoneyModal({
           </p>
           <Button
             className="w-full"
-            disabled={sending || amountGbp <= 0}
+            disabled={sending || !Number.isFinite(amountGbp) || amountGbp <= 0}
             onClick={handleSubmit}
           >
             {sending ? "Sending..." : `Send ${formatLKR(amountLkr)}`}

@@ -106,7 +106,27 @@ async def test_wallet_transfer_valid(client):
     assert data["status"] == "COMPLETED"
     assert len(data["buckets_credited"]) == 3
     total = sum(b["amount_lkr"] for b in data["buckets_credited"])
-    assert abs(total - 10000) < 1
+    assert abs(total - 10000) < 0.001
+
+
+@pytest.mark.asyncio
+async def test_wallet_transfer_bucket_parts_sum_to_total(client):
+    """Regression: awkward LKR totals must fully credit across buckets (no penny drift)."""
+    resp = await client.post("/api/wallet/transfer", json={
+        "sender_account_id": "SEY-USR-001",
+        "recipient_account_id": "SEY-ACC-002",
+        "amount_lkr": 817,
+        "corridor": "GBPLKR",
+        "allocation_rules": [
+            {"bucket_id": "school", "pct": 40},
+            {"bucket_id": "household", "pct": 40},
+            {"bucket_id": "savings", "pct": 20},
+        ],
+    })
+    assert resp.status_code == 200
+    data = resp.json()
+    total = sum(b["amount_lkr"] for b in data["buckets_credited"])
+    assert abs(total - 817) < 0.001
 
 
 @pytest.mark.asyncio

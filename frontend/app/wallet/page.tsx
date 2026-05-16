@@ -15,6 +15,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Transaction } from "@/types";
 import { saveAllocationRules, ApiError } from "@/lib/api";
 import { toast } from "sonner";
+import { GBP_LKR_RATE } from "@/lib/remittance-fx";
 import { ArrowRightLeft, Bot, PieChart, ShieldCheck } from "lucide-react";
 
 const FAMILY_ACCOUNT_ID = "SEY-ACC-002";
@@ -188,12 +189,12 @@ export default function WalletPage() {
         recipientAccountHolder={wallet?.account_holder ?? ""}
         allocations={allocations}
         onSuccess={(amountLkr?: number, amountGbp?: number) => {
-          if (amountLkr) {
+          if (amountLkr != null && amountGbp != null) {
             setRemittanceOverride({
               amount_lkr: amountLkr,
               date: new Date().toISOString().slice(0, 10),
-              amount_gbp: amountGbp ?? Math.round(amountLkr / 408.3),
-              fx_rate: 408.3,
+              amount_gbp: amountGbp,
+              fx_rate: GBP_LKR_RATE,
               provider: "Seylan Hub",
             });
           }

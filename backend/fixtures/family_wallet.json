@@ -7,7 +7,7 @@
     "last_remittance": {
       "id": "REM-2026-00312",
       "date": "2026-05-01",
-      "amount_lkr": 245000,
+      "amount_lkr": 244980,
       "corridor": "GBPLKR",
       "exchange_rate": 408.30,
       "sender_amount_gbp": 600,

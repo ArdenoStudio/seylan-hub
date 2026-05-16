@@ -92,18 +92,38 @@ export async function postWalletTransfer(payload: {
       ([bucket_id, pct]) => ({ bucket_id, pct })
     ),
   };
-  return request("/api/wallet/transfer", {
+  const body = JSON.stringify(normalised);
+  const url =
+    typeof window !== "undefined"
+      ? "/api/wallet/transfer"
+      : `${API_BASE}/api/wallet/transfer`;
+  const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(normalised),
+    body,
+    signal: AbortSignal.timeout(30000),
   });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "Unknown error");
+    throw new ApiError(res.status, text);
+  }
+  return res.json();
 }
 
 export async function getSandboxTransferAccounts() {
-  return request<{
+  const url =
+    typeof window !== "undefined"
+      ? "/api/wallet/sandbox-transfer-accounts"
+      : `${API_BASE}/api/wallet/sandbox-transfer-accounts`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "Unknown error");
+    throw new ApiError(res.status, text);
+  }
+  return res.json() as Promise<{
     source_account: string;
     destination_account: string;
-  }>("/api/wallet/sandbox-transfer-accounts");
+  }>;
 }
 
 export async function saveAllocationRules(

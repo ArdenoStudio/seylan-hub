@@ -6,11 +6,33 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from app.config import settings
-from app.models.schemas import WalletTransferRequest, WalletTransferResponse, BucketCredit, SaveAllocationRulesRequest
+from app.models.schemas import (
+    AllocationRule,
+    BucketCredit,
+    SaveAllocationRulesRequest,
+    WalletTransferRequest,
+    WalletTransferResponse,
+)
 from app.services import supabase_client
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["wallet"])
+
+
+def _split_transfer_amount_lkr(amount_lkr: float, rules: list[AllocationRule]) -> list[tuple[str, float]]:
+    """Per-bucket LKR amounts that sum to *amount_lkr* (last bucket absorbs rounding remainder)."""
+    rules_list = list(rules)
+    n = len(rules_list)
+    out: list[tuple[str, float]] = []
+    allocated = 0.0
+    for i, r in enumerate(rules_list):
+        if i == n - 1:
+            part = round(amount_lkr - allocated, 2)
+        else:
+            part = round(amount_lkr * float(r.pct) / 100.0, 2)
+            allocated += part
+        out.append((r.bucket_id, part))
+    return out
 
 
 @router.get("/wallet/sandbox-transfer-accounts")
@@ -46,10 +68,8 @@ async def wallet_transfer(req: WalletTransferRequest):
         from fastapi import HTTPException
         raise HTTPException(status_code=422, detail=f"Allocation percentages must sum to 100 (got {total_pct})")
 
-    buckets_credited = [
-        BucketCredit(bucket_id=r.bucket_id, amount_lkr=round(req.amount_lkr * r.pct / 100, 2))
-        for r in req.allocation_rules
-    ]
+    splits = _split_transfer_amount_lkr(float(req.amount_lkr), req.allocation_rules)
+    buckets_credited = [BucketCredit(bucket_id=bid, amount_lkr=part) for bid, part in splits]
     transfer_id = f"TRF-{uuid.uuid4().hex[:8].upper()}"
 
     # Persist allocation rules
@@ -80,16 +100,15 @@ async def wallet_transfer(req: WalletTransferRequest):
 
     # Record per-bucket credits so Supabase realtime and bucket balances stay consistent
     try:
-        for r in req.allocation_rules:
-            part = round(req.amount_lkr * r.pct / 100, 2)
+        for bucket_id, part in splits:
             if part <= 0:
                 continue
             supabase_client.insert_transaction(
                 account_id=req.recipient_account_id,
                 merchant=f"Remittance from {req.sender_account_id}",
                 amount_lkr=part,
-                bucket_id=r.bucket_id,
-                bucket_label=r.bucket_id.replace("bucket_", "").replace("_", " ").title(),
+                bucket_id=bucket_id,
+                bucket_label=bucket_id.replace("bucket_", "").replace("_", " ").title(),
                 source="transfer",
                 txn_type="credit",
             )
