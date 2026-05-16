@@ -14,6 +14,9 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, Bot, CalendarCheck, Gauge, WalletCards } from "lucide-react";
 
+const ASSISTANT_PROMPT =
+  "Show me repayment scenarios for my current loan: paying today, paying three days late, and making a partial payment.";
+
 export default function LoansPage() {
   const { user, mounted } = useCurrentUser();
   const [loan, setLoan] = useState<Loan | null>(null);
@@ -120,17 +123,21 @@ export default function LoansPage() {
           },
         ]}
         actions={[
-          { label: "Ask scenario", icon: Bot, href: "/assistant" },
+          {
+            label: "Ask scenario",
+            icon: Bot,
+            href: `/assistant?prompt=${encodeURIComponent(ASSISTANT_PROMPT)}`,
+          },
           { label: "View timeline", icon: CalendarCheck, href: "#repayment-timeline" },
           { label: "Risk check", icon: AlertTriangle, href: "#loan-advisor" },
         ]}
       />
 
       <RepaymentProgressBar loan={loan} />
-      <section id="loan-advisor">
+      <section id="loan-advisor" className="scroll-mt-6">
         <AIAdvisorPanel userId={userId} />
       </section>
-      <section id="repayment-timeline">
+      <section id="repayment-timeline" className="scroll-mt-6">
         <RepaymentTimeline schedule={loan.schedule} />
       </section>
     </div>

@@ -17,6 +17,8 @@ import { Transaction } from "@/types";
 import { ArrowRightLeft, Bot, PieChart, ShieldCheck } from "lucide-react";
 
 const FAMILY_ACCOUNT_ID = "SEY-ACC-002";
+const ASSISTANT_PROMPT =
+  "Explain the latest family wallet activity and tell me whether any bucket needs attention before the next transfer.";
 
 export default function WalletPage() {
   const { user, mounted } = useCurrentUser();
@@ -132,14 +134,18 @@ export default function WalletPage() {
             icon: ArrowRightLeft,
             onClick: () => setModalOpen(true),
           },
-          { label: "Ask Assistant", icon: Bot, href: "/assistant" },
+          {
+            label: "Ask Assistant",
+            icon: Bot,
+            href: `/assistant?prompt=${encodeURIComponent(ASSISTANT_PROMPT)}`,
+          },
           { label: "Tune split", icon: PieChart, href: "#allocation-editor" },
         ]}
       />
 
       <BucketGrid buckets={buckets} />
 
-      <section id="allocation-editor">
+      <section id="allocation-editor" className="scroll-mt-6">
         <AllocationEditor
           buckets={buckets}
           onSave={(newAllocations) => {
