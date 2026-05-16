@@ -259,11 +259,32 @@ async def business_account(user_id: str):
 
 @router.get("/pl-summary/{user_id}")
 async def pl_summary(user_id: str):
-    data = _load("pl_summary.json")
-    if user_id not in data:
+    biz_data = _load("business_account.json")
+    if user_id not in biz_data:
         return JSONResponse(status_code=404, content={"error": f"Unknown user {user_id}"})
     log.info("mock_call pl-summary user_id=%s", user_id)
-    return data[user_id]
+
+    txns = biz_data[user_id].get("transactions", [])
+    if settings.use_seylan_real and user_id in _BIZ_ACCOUNT_MAP:
+        try:
+            from app.seylan import account as seylan_acct
+            raw = await seylan_acct.get_recent_transactions(_BIZ_ACCOUNT_MAP[user_id], n=50)
+            if raw:
+                txns = [_normalise_seylan_txn(t, user_id) for t in raw]
+        except Exception as exc:
+            log.warning("Seylan txn fetch failed for pl-summary %s: %s — using fixture txns", user_id, exc)
+
+    try:
+        from app.services.pl_calculator import compute_pl
+        result = await compute_pl(user_id, txns)
+        if result:
+            return result
+    except Exception as exc:
+        log.warning("pl_calculator failed for %s: %s — falling back to fixture", user_id, exc)
+
+    # Last resort: return the static fixture
+    data = _load("pl_summary.json")
+    return data.get(user_id, {})
 
 
 @router.post("/trigger-spend")

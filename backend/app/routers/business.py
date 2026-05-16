@@ -56,9 +56,16 @@ async def business_insight(user_id: str = "SEY-BIZ-001"):
     if user_id in _insight_cache:
         return {"insight_text": _insight_cache[user_id], "language": "en"}
 
-    pl_data = json.loads((_FX / "pl_summary.json").read_text(encoding="utf-8"))
-    entry = pl_data.get(user_id, {})
-    current = entry.get("current_week", {})
+    biz_data = json.loads((_FX / "business_account.json").read_text(encoding="utf-8"))
+    txns = biz_data.get(user_id, {}).get("transactions", [])
+    try:
+        from app.services.pl_calculator import compute_pl
+        entry = await compute_pl(user_id, txns)
+    except Exception as exc:
+        log.warning("pl_calculator failed in business_insight: %s — using fixture", exc)
+        pl_data = json.loads((_FX / "pl_summary.json").read_text(encoding="utf-8"))
+        entry = pl_data.get(user_id, {})
+    current = entry.get("current_week", entry)
     previous = entry.get("previous_week", {})
 
     try:
