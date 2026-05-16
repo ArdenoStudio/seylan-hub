@@ -79,7 +79,31 @@ async def family_wallet(account_id: str):
     if account_id not in data:
         return JSONResponse(status_code=404, content={"error": f"Unknown account {account_id}"})
     log.info("mock_call family-wallet account_id=%s", account_id)
-    return data[account_id]
+    wallet = dict(data[account_id])
+
+    # Merge live Supabase transactions on top of fixture
+    try:
+        live_rows = supabase_client.get_recent_transactions(account_id, limit=20)
+        if live_rows:
+            fixture_txns = {t["id"]: t for t in wallet.get("recent_transactions", [])}
+            for row in live_rows:
+                row_id = row.get("id", row.get("transaction_id", ""))
+                fixture_txns[row_id] = {
+                    "id": row_id,
+                    "date": row.get("timestamp") or row.get("created_at"),
+                    "merchant": row.get("merchant", ""),
+                    "amount_lkr": row.get("amount_lkr", 0),
+                    "type": row.get("type", "debit"),
+                    "bucket_id": row.get("bucket_id"),
+                    "bucket_label": row.get("bucket_label"),
+                }
+            merged = sorted(fixture_txns.values(),
+                            key=lambda t: t.get("date") or "", reverse=True)
+            wallet["recent_transactions"] = merged[:10]
+    except Exception as exc:
+        log.warning("Could not merge Supabase transactions: %s", exc)
+
+    return wallet
 
 
 @router.get("/loans/{user_id}")

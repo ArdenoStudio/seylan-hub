@@ -75,6 +75,15 @@ def get_tax_jar_rule(user_id: str) -> dict | None:
     return result.data[0] if result.data else None
 
 
+def get_recent_transactions(account_id: str, limit: int = 20) -> list[dict]:
+    result = (get_client().table("transactions")
+              .select("*")
+              .eq("account_id", account_id)
+              .order("timestamp", desc=True)
+              .limit(limit).execute())
+    return result.data if result.data else []
+
+
 def clear_demo_transactions(account_id: str) -> int:
     result = (get_client().table("transactions")
               .delete().eq("account_id", account_id).eq("source", "mock").execute())
@@ -90,7 +99,7 @@ def reset_demo_full() -> dict:
     """Full demo reset: transactions, allocation rules, tax jar rule, sessions, demo_state."""
     c = get_client()
     # Clear all mock-sourced transactions for both demo accounts
-    txn_result = c.table("transactions").delete().eq("source", "mock").execute()
+    txn_result = c.table("transactions").delete().in_("source", ["mock", "transfer"]).execute()
     cleared = len(txn_result.data) if txn_result.data else 0
 
     # Reset allocation rules for the diaspora wallet
