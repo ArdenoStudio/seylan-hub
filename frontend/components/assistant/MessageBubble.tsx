@@ -16,10 +16,10 @@ export function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
     <div className={cn("flex", isUser ? "justify-end" : "justify-start")}>
       <div
         className={cn(
-          "max-w-[80%] px-4 py-3 text-sm",
+          "max-w-[82%] px-4 py-3 text-sm leading-6 shadow-sm",
           isUser
-            ? "bg-seylan-red text-white rounded-tl-[18px] rounded-bl-[18px] rounded-br-[18px] rounded-tr-[4px]"
-            : "bg-seylan-mist text-seylan-charcoal rounded-tr-[18px] rounded-br-[18px] rounded-bl-[18px] rounded-tl-[4px]"
+            ? "bg-seylan-red text-white rounded-tl-[20px] rounded-bl-[20px] rounded-br-[20px] rounded-tr-md"
+            : "border border-seylan-border bg-white text-seylan-charcoal rounded-tr-[20px] rounded-br-[20px] rounded-bl-[20px] rounded-tl-md"
         )}
       >
         <p

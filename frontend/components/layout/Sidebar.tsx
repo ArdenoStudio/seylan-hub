@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Wallet, Bot, CreditCard, Store, FlaskConical } from "lucide-react";
+import { Wallet, Bot, CreditCard, Store, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UserSwitcher } from "./UserSwitcher";
 import { useCurrentUser } from "@/hooks/useCurrentUser";
@@ -13,7 +13,6 @@ const NAV_ITEMS = [
   { href: "/assistant", label: "Assistant", icon: Bot },
   { href: "/loans", label: "Loans", icon: CreditCard },
   { href: "/business", label: "Business", icon: Store },
-  { href: "/demo", label: "Demo", icon: FlaskConical },
 ];
 
 export function Sidebar() {
@@ -23,35 +22,42 @@ export function Sidebar() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-60 flex-col bg-seylan-charcoal text-white fixed inset-y-0 left-0 z-30">
-        <div className="p-4 border-b border-sidebar-border">
-          <div className="flex items-center gap-3 rounded-xl bg-white px-3 py-2 shadow-sm">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col bg-[linear-gradient(180deg,#721c24_0%,#4f1219_100%)] text-white shadow-2xl shadow-seylan-plum/20 md:flex">
+        <div className="border-b border-white/10 p-4">
+          <div className="flex items-center gap-3 rounded-2xl bg-white px-3 py-2 shadow-sm">
             <Image
-              src="/seylan-logo.svg"
+              src="/seylan-bank-logo.png"
               alt="Seylan Bank"
               width={172}
               height={80}
               className="h-9 w-auto"
               priority
             />
-            <span className="text-sm font-bold tracking-wide text-seylan-red">
+            <span className="rounded-full bg-seylan-red/10 px-2 py-1 text-sm font-bold tracking-wide text-seylan-red">
               Hub
             </span>
           </div>
         </div>
 
         {user && (
-          <div className="px-3 py-3 border-b border-sidebar-border">
-            <div className="text-xs text-gray-400 mb-1">{user.personaCode}</div>
-            <div className="text-sm font-medium">{user.name}</div>
-            <div className="text-xs text-gray-400">{user.location}</div>
+          <div className="border-b border-white/10 px-3 py-4">
+            <div className="rounded-2xl border border-white/10 bg-white/10 p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="rounded-full bg-seylan-gold px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-seylan-charcoal">
+                  {user.personaCode}
+                </span>
+                <Sparkles className="h-4 w-4 text-seylan-gold" />
+              </div>
+              <div className="text-sm font-semibold">{user.name}</div>
+              <div className="text-xs text-white/60">{user.location}</div>
+            </div>
             <div className="mt-2">
               <UserSwitcher />
             </div>
           </div>
         )}
 
-        <nav className="flex-1 px-2 py-4 space-y-1">
+        <nav className="flex-1 space-y-1 px-3 py-4">
           {NAV_ITEMS.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -59,14 +65,21 @@ export function Sidebar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                  "group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition-all",
                   isActive
-                    ? "border-l-[3px] border-seylan-gold text-seylan-gold bg-sidebar-accent"
-                    : "text-gray-300 hover:bg-sidebar-accent hover:text-white"
+                    ? "bg-white text-seylan-plum shadow-lg shadow-black/10"
+                    : "text-white/70 hover:bg-white/10 hover:text-white"
                 )}
               >
-                <item.icon className="h-4 w-4" />
-                {item.label}
+                <span
+                  className={cn(
+                    "flex h-8 w-8 items-center justify-center rounded-xl transition-colors",
+                    isActive ? "bg-seylan-red text-white" : "bg-white/10"
+                  )}
+                >
+                  <item.icon className="h-4 w-4" />
+                </span>
+                <span className="font-medium">{item.label}</span>
               </Link>
             );
           })}
@@ -74,7 +87,7 @@ export function Sidebar() {
       </aside>
 
       {/* Mobile bottom tab bar */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white border-t border-seylan-border flex">
+      <nav className="fixed inset-x-3 bottom-3 z-30 flex rounded-3xl border border-seylan-border bg-white/95 p-1 shadow-2xl shadow-seylan-plum/15 backdrop-blur md:hidden">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href;
           return (
@@ -83,7 +96,9 @@ export function Sidebar() {
               href={item.href}
               className={cn(
                 "flex-1 flex flex-col items-center py-2 text-xs",
-                isActive ? "text-seylan-red" : "text-gray-500"
+                isActive
+                  ? "rounded-2xl bg-seylan-red text-white"
+                  : "text-gray-500"
               )}
             >
               <item.icon className="h-5 w-5 mb-0.5" />

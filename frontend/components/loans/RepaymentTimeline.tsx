@@ -22,11 +22,25 @@ export function RepaymentTimeline({ schedule }: RepaymentTimelineProps) {
   const filtered =
     tab === "all"
       ? schedule
-      : schedule.filter((e) => e.status.toLowerCase() === tab);
+      : schedule.filter((e) => {
+          const s = e.status.toUpperCase();
+          if (tab === "upcoming") return s === "UPCOMING" || s === "DUE";
+          if (tab === "paid") return s === "PAID";
+          if (tab === "missed") return s === "MISSED";
+          return false;
+        });
 
   return (
-    <Card className="border-seylan-border">
+    <Card className="border-seylan-border bg-white/95 shadow-sm">
       <CardContent className="p-5">
+        <div className="mb-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-seylan-red">
+            Repayment history
+          </p>
+          <h3 className="font-heading text-lg font-semibold text-seylan-charcoal">
+            Payment timeline
+          </h3>
+        </div>
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList className="mb-4">
             <TabsTrigger value="all">All</TabsTrigger>

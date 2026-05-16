@@ -1,6 +1,7 @@
 "use client";
 
 import { Language } from "@/types";
+import { cn } from "@/lib/utils";
 
 interface SuggestedQuestionsProps {
   language: Language;
@@ -27,16 +28,15 @@ export function SuggestedQuestions({
     language === "si" ? [...EN_QUESTIONS, ...SI_QUESTIONS] : EN_QUESTIONS;
 
   return (
-    <div className="flex flex-wrap gap-2 justify-center px-4">
+    <div className="flex max-w-3xl flex-wrap justify-center gap-2 px-4">
       {questions.map((q) => {
         const isSinhala = /[\u0D80-\u0DFF]/.test(q);
         return (
           <button
-            type="button"
             key={q}
             onClick={() => onSelect(q)}
             className={cn(
-              "px-3 py-2 text-sm rounded-full border border-seylan-border hover:border-seylan-red/50 hover:bg-seylan-red/5 transition-colors text-seylan-charcoal focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-seylan-red/30",
+              "rounded-full border border-seylan-border bg-white/80 px-3 py-2 text-sm text-seylan-charcoal shadow-sm transition-colors hover:border-seylan-red/50 hover:bg-seylan-red/5",
               isSinhala && "sinhala"
             )}
           >
@@ -46,8 +46,4 @@ export function SuggestedQuestions({
       })}
     </div>
   );
-}
-
-function cn(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(" ");
 }

@@ -22,9 +22,9 @@ export function AppShell({ children }: AppShellProps) {
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-transparent">
       <Sidebar />
-      <main className="flex-1 md:ml-60 pb-16 md:pb-0 overflow-auto">
+      <main className="flex-1 pb-20 md:ml-64 md:pb-0">
         {children}
       </main>
       <DemoModeBadge />

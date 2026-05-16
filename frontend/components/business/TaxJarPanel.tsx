@@ -84,13 +84,23 @@ export function TaxJarPanel({
   }
 
   return (
-    <Card className="border-seylan-border">
+    <Card className="border-seylan-border bg-[linear-gradient(135deg,#fffdf8_0%,#fff0d5_100%)] shadow-lg shadow-seylan-gold/10">
       <CardContent className="p-5">
-        <h3 className="text-sm font-medium text-seylan-charcoal mb-3">
-          Tax Jar
-        </h3>
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-seylan-red">
+              Auto-save rule
+            </p>
+            <h3 className="font-heading text-xl font-semibold text-seylan-charcoal">
+              Tax Jar
+            </h3>
+          </div>
+          <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">
+            ACTIVE
+          </span>
+        </div>
 
-        <div className="text-3xl font-bold text-seylan-charcoal mb-1">
+        <div className="text-4xl font-semibold text-seylan-charcoal mb-1">
           {formatLKR(displayBalance)}
         </div>
 
@@ -98,12 +108,12 @@ export function TaxJarPanel({
           Rule: 10% of every incoming payment
         </div>
 
-        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700 mb-4">
-          ACTIVE
-        </span>
+        <div className="mb-4 h-2 overflow-hidden rounded-full bg-white">
+          <div className="h-full w-3/5 rounded-full bg-seylan-gold" />
+        </div>
 
         <Button
-          className="w-full"
+          className="w-full rounded-full"
           onClick={handleTrigger}
           disabled={triggering}
         >

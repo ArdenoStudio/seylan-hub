@@ -16,6 +16,14 @@ export const MOCK_PL_SUMMARY: PlSummary = {
     TRANSPORT: 1800,
     MISC: 652,
   },
+  previous_expense_breakdown: {
+    SUPPLIER: 18500,
+    WAGES: 8000,
+    UTILITIES: 2800,
+    RENT: 3000,
+    TRANSPORT: 2200,
+    MISC: 900,
+  },
 };
 
 export const MOCK_BUSINESS_TRANSACTIONS: Transaction[] = [

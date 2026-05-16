@@ -1,7 +1,6 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { GraduationCap, Home, PiggyBank } from "lucide-react";
 import { Bucket } from "@/types";
 import { formatLKR } from "@/lib/utils";
@@ -13,9 +12,21 @@ const ICON_MAP = {
 };
 
 const COLOUR_MAP = {
-  school: "bg-blue-500",
-  household: "bg-emerald-500",
-  savings: "bg-violet-500",
+  school: {
+    surface: "bg-blue-50",
+    icon: "text-blue-600",
+    bar: "bg-blue-500",
+  },
+  household: {
+    surface: "bg-emerald-50",
+    icon: "text-emerald-600",
+    bar: "bg-emerald-500",
+  },
+  savings: {
+    surface: "bg-violet-50",
+    icon: "text-violet-600",
+    bar: "bg-violet-500",
+  },
 };
 
 interface BucketCardProps {
@@ -25,7 +36,7 @@ interface BucketCardProps {
 
 export function BucketCard({ bucket, onClick }: BucketCardProps) {
   const Icon = ICON_MAP[bucket.icon];
-  const progressColour = COLOUR_MAP[bucket.icon];
+  const colours = COLOUR_MAP[bucket.icon];
   const spentPct =
     bucket.balance_lkr + bucket.spent_lkr > 0
       ? (bucket.spent_lkr / (bucket.balance_lkr + bucket.spent_lkr)) * 100
@@ -33,27 +44,37 @@ export function BucketCard({ bucket, onClick }: BucketCardProps) {
 
   return (
     <Card
-      className="cursor-pointer hover:shadow-md transition-shadow border-seylan-border"
+      className="cursor-pointer border-seylan-border bg-white/95 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-xl hover:shadow-seylan-plum/10"
       onClick={onClick}
     >
       <CardContent className="p-5">
         <div className="flex items-center gap-3 mb-3">
-          <div className={`p-2 rounded-lg ${progressColour}/10`}>
-            <Icon className={`h-5 w-5 text-${bucket.icon === "school" ? "blue" : bucket.icon === "household" ? "emerald" : "violet"}-500`} />
+          <div className={`rounded-2xl p-2.5 ${colours.surface}`}>
+            <Icon className={`h-5 w-5 ${colours.icon}`} />
           </div>
-          <span className="text-sm font-medium text-muted-foreground">
-            {bucket.label}
-          </span>
+          <div>
+            <span className="text-sm font-semibold text-seylan-charcoal">
+              {bucket.label}
+            </span>
+            <p className="text-xs text-muted-foreground">
+              {bucket.allocation_pct}% of each remittance
+            </p>
+          </div>
         </div>
 
-        <div className="text-2xl font-bold text-seylan-charcoal mb-3">
+        <div className="text-3xl font-semibold text-seylan-charcoal mb-3">
           {formatLKR(bucket.balance_lkr)}
         </div>
 
         <div className="space-y-2">
-          <Progress value={spentPct} className="h-2" />
+          <div className="h-2 overflow-hidden rounded-full bg-seylan-mist">
+            <div
+              className={`h-full rounded-full ${colours.bar}`}
+              style={{ width: `${Math.min(spentPct, 100)}%` }}
+            />
+          </div>
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>{bucket.allocation_pct}% allocation</span>
+            <span>{Math.round(spentPct)}% used</span>
             <span>Spent {formatLKR(bucket.spent_lkr)}</span>
           </div>
         </div>

@@ -15,8 +15,6 @@ interface ChatInputProps {
 
 export function ChatInput({ onSend, disabled, language }: ChatInputProps) {
   const [value, setValue] = useState("");
-  const placeholder =
-    language === "si" ? "ඔබේ ප්‍රශ්නය අසන්න..." : "Ask a question...";
 
   function handleSubmit() {
     const trimmed = value.trim();
@@ -40,16 +38,19 @@ export function ChatInput({ onSend, disabled, language }: ChatInputProps) {
   );
 
   return (
-    <div className="sticky bottom-0 border-t border-seylan-border bg-white p-4">
-      <div className="flex gap-2 max-w-3xl mx-auto">
+    <div className="sticky bottom-0 border-t border-seylan-border bg-white/90 p-4 backdrop-blur">
+      <div className="mx-auto flex max-w-3xl gap-2 rounded-full border border-seylan-border bg-white p-2 shadow-lg shadow-seylan-plum/5">
         <Input
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder}
+          placeholder={
+            language === "si"
+              ? "වියදම්, ණය, හෝ බදු ගැන අසන්න..."
+              : "Ask about spending, loans, or tax..."
+          }
           disabled={disabled}
-          className={`flex-1 ${language === "si" ? "sinhala" : ""}`}
-          aria-label="Assistant question"
+          className="flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
         />
         <VoiceButton
           language={language}
@@ -60,6 +61,8 @@ export function ChatInput({ onSend, disabled, language }: ChatInputProps) {
           size="icon"
           onClick={handleSubmit}
           disabled={disabled || !value.trim()}
+          aria-label="Send message"
+          className="rounded-full"
         >
           <Send className="h-4 w-4" />
         </Button>
