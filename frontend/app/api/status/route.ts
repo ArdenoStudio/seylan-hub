@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 
 const BACKEND = process.env.BACKEND_URL ?? "http://localhost:8000";
 const TIMEOUT = 5000;
+/** Demo user IDs that exist in backend fixtures and Supabase seeds */
+const DEMO_SENDER_ID = "SEY-USR-001";
+const DEMO_ACCOUNT_ID = "SEY-ACC-002";
 
 interface ServiceResult {
   key: string;
@@ -52,19 +55,19 @@ export async function GET() {
       "wallet",
       "Wallet Service",
       "Family wallet & transfer engine",
-      `${BACKEND}/api/wallet/rules/demo_user`
+      `${BACKEND}/api/wallet/rules/${DEMO_SENDER_ID}?account_id=${DEMO_ACCOUNT_ID}`
     ),
     probe(
       "loans",
       "Loans Service",
       "Loan health scoring & advisor",
-      `${BACKEND}/api/loans/demo_user/health`
+      `${BACKEND}/api/loans/${DEMO_SENDER_ID}/health`
     ),
     probe(
-      "mock",
-      "Demo Data",
-      "Fixtures & mock account context",
-      `${BACKEND}/mock/account-context/demo_user`
+      "account_context",
+      "Account context",
+      "Fixture account-context for demo user",
+      `${BACKEND}/mock/account-context/${DEMO_SENDER_ID}`
     ),
   ]);
 

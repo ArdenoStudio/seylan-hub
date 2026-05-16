@@ -8,32 +8,44 @@ import { CategorisedTransactionFeed } from "@/components/business/CategorisedTra
 import { InsightActionStrip } from "@/components/insights/InsightActionStrip";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getPlSummary } from "@/lib/api";
+import { getPlSummary, getBusinessAccount } from "@/lib/api";
 import { PlSummary, Transaction } from "@/types";
 import { Bot, PiggyBank, ReceiptText, TrendingUp } from "lucide-react";
 
 const BUSINESS_USER_ID = "SEY-BIZ-001";
-const INITIAL_TAX_JAR_BALANCE = 15070;
 const ASSISTANT_PROMPT =
   "Act as my SME bookkeeper. Review this week's revenue, expenses, tax jar readiness, and transactions that need category review.";
 
 export default function BusinessPage() {
   const [extraTransactions, setExtraTransactions] = useState<Transaction[]>([]);
   const [pl, setPl] = useState<PlSummary | null>(null);
+  const [taxJarBalance, setTaxJarBalance] = useState(15070);
   const [plLoading, setPlLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    getPlSummary(BUSINESS_USER_ID)
-      .then((data) => {
-        if (!cancelled) setPl(data as PlSummary);
-      })
-      .catch(() => {
-        if (!cancelled) setPl(null);
-      })
-      .finally(() => {
-        if (!cancelled) setPlLoading(false);
-      });
+    Promise.allSettled([
+      getPlSummary(BUSINESS_USER_ID),
+      getBusinessAccount(BUSINESS_USER_ID),
+    ]).then((results) => {
+      if (cancelled) return;
+      const [plRes, bizRes] = results;
+      if (plRes.status === "fulfilled") {
+        setPl(plRes.value as PlSummary);
+      } else {
+        setPl(null);
+      }
+      if (bizRes.status === "fulfilled") {
+        const raw = bizRes.value as { tax_jar_balance?: number };
+        setTaxJarBalance(
+          typeof raw.tax_jar_balance === "number" ? raw.tax_jar_balance : 15070
+        );
+      } else {
+        setTaxJarBalance(15070);
+      }
+    }).finally(() => {
+      if (!cancelled) setPlLoading(false);
+    });
     return () => {
       cancelled = true;
     };
@@ -65,7 +77,7 @@ export default function BusinessPage() {
   const projectedTaxNeed = revenue > 0 ? Math.round(revenue * 0.45) : 0;
   const taxCoveragePct =
     projectedTaxNeed > 0
-      ? Math.min(100, Math.round((INITIAL_TAX_JAR_BALANCE / projectedTaxNeed) * 100))
+      ? Math.min(100, Math.round((taxJarBalance / projectedTaxNeed) * 100))
       : 0;
   const reviewCount = misc > 0 ? extraTransactions.length + 1 : extraTransactions.length;
 
@@ -127,7 +139,7 @@ export default function BusinessPage() {
         <div id="tax-jar" className="scroll-mt-6">
           <TaxJarPanel
             userId={BUSINESS_USER_ID}
-            initialBalance={INITIAL_TAX_JAR_BALANCE}
+            initialBalance={taxJarBalance}
             onNewTransaction={handleNewTransaction}
           />
         </div>

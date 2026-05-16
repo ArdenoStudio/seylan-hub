@@ -13,9 +13,12 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Transaction } from "@/types";
+import { saveAllocationRules, ApiError } from "@/lib/api";
+import { toast } from "sonner";
 import { ArrowRightLeft, Bot, PieChart, ShieldCheck } from "lucide-react";
 
 const FAMILY_ACCOUNT_ID = "SEY-ACC-002";
+const WALLET_SENDER_ID = "SEY-USR-001";
 const ASSISTANT_PROMPT =
   "Explain the latest family wallet activity and tell me whether any bucket needs attention before the next transfer.";
 
@@ -148,12 +151,26 @@ export default function WalletPage() {
 
       <section id="allocation-editor" className="scroll-mt-6">
         <AllocationEditor
+          key={buckets.map((b) => `${b.bucket_id}:${b.allocation_pct}`).join("|")}
           buckets={buckets}
-          onSave={(newAllocations) => {
-            localStorage.setItem(
-              "seylan_allocation_rules",
-              JSON.stringify(newAllocations)
-            );
+          onSave={async (newAllocations) => {
+            try {
+              await saveAllocationRules(
+                WALLET_SENDER_ID,
+                newAllocations,
+                FAMILY_ACCOUNT_ID
+              );
+              toast.success("Allocation rules saved for your next transfer.");
+              await refetch(true);
+            } catch (e) {
+              const msg =
+                e instanceof ApiError
+                  ? `${e.status}: ${e.message}`
+                  : e instanceof Error
+                    ? e.message
+                    : "Could not save allocation rules.";
+              toast.error(msg);
+            }
           }}
         />
       </section>
@@ -161,7 +178,7 @@ export default function WalletPage() {
       <TransactionFeed transactions={transactions} />
 
       <SendMoneyModal
-        senderId="SEY-USR-001"
+        senderId={WALLET_SENDER_ID}
         recipientId={FAMILY_ACCOUNT_ID}
         allocations={allocations}
         onSuccess={(amountLkr?: number, amountGbp?: number) => {

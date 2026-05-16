@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { API_BASE } from "@/lib/api";
 import { Bot } from "lucide-react";
 
 interface AIAdvisorPanelProps {
@@ -15,9 +16,7 @@ export function AIAdvisorPanel({ userId }: AIAdvisorPanelProps) {
 
   useEffect(() => {
     let cancelled = false;
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
-
-    fetch(`${apiBase}/api/loans/advisor`, {
+    fetch(`${API_BASE}/api/loans/advisor`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user_id: userId }),

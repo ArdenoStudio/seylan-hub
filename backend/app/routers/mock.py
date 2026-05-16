@@ -134,6 +134,25 @@ async def family_wallet(account_id: str):
     except Exception as exc:
         log.warning("Could not merge Supabase transactions: %s", exc)
 
+    # Apply saved allocation rule percentages (sender → this family account)
+    try:
+        rule = supabase_client.get_allocation_rules("SEY-USR-001", account_id)
+        if rule and rule.get("buckets"):
+            total_bal = float(wallet.get("total_balance_lkr", 0))
+            for br in rule["buckets"]:
+                bid = br.get("id")
+                pct = float(br.get("pct", 0))
+                if not bid:
+                    continue
+                for b in wallet.get("buckets", []):
+                    rbid = b.get("id") or b.get("bucket_id")
+                    if rbid == bid:
+                        b["allocated_pct"] = pct
+                        b["allocated_lkr"] = round(total_bal * pct / 100.0, 2)
+                        break
+    except Exception as exc:
+        log.warning("merge allocation_rules into wallet failed: %s", exc)
+
     return wallet
 
 
