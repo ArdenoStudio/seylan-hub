@@ -50,7 +50,9 @@ class Settings(BaseSettings):
     supabase_service_key: str = ""
 
     # App
-    cors_origins: str = "http://localhost:3000,https://seylan-hub.vercel.app"
+    cors_origins: str = (
+        "http://localhost:3000,https://seylan-hub.vercel.app,https://seylan-hub1.vercel.app"
+    )
     frontend_base_url: str = "https://seylan-hub.vercel.app"
 
     @property

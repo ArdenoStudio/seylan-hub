@@ -1,5 +1,6 @@
 import logging
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -63,10 +64,15 @@ async def create_checkout_session(
     data = resp.json()
     session_id: str = data.get("session", {}).get("id", "")
     success_indicator: str = data.get("successIndicator", "")
+    # Seylan / many MPGS hosts do not serve checkout.html (404). Hosted Checkout
+    # is started from our app via checkout.js + Checkout.showPaymentPage().
+    base = settings.frontend_base_url.rstrip("/")
     checkout_url = (
-        "https://" + settings.mpgs_host
-        + "/checkout/version/" + settings.mpgs_api_version
-        + "/checkout.html?session=" + session_id
+        base
+        + "/payments/checkout?session="
+        + quote(session_id, safe="")
+        + "&merchant="
+        + quote(settings.mpgs_merchant_id, safe="")
     )
 
     log.info("MPGS session created session_id=%s", session_id)
