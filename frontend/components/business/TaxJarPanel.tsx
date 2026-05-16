@@ -26,11 +26,6 @@ export function TaxJarPanel({
   const animRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   useEffect(() => {
-    setBalance(initialBalance);
-    setDisplayBalance(initialBalance);
-  }, [initialBalance]);
-
-  useEffect(() => {
     if (displayBalance === balance) return;
     const diff = balance - displayBalance;
     const steps = 30;

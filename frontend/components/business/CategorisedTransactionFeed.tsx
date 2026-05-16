@@ -58,8 +58,54 @@ export function CategorisedTransactionFeed({
   }, [userId]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    let cancelled = false;
+
+    async function loadInitial() {
+      try {
+        const data = (await getBusinessAccount(userId)) as {
+          transactions: Transaction[];
+        };
+        if (cancelled) return;
+
+        const txs = data.transactions ?? [];
+
+        try {
+          const ids = txs.map((t) => t.transaction_id);
+          const categories = (await postCategorize({
+            transaction_ids: ids,
+          })) as Record<
+            string,
+            { category_en: string; category_si: string; subcategory: string }
+          >;
+          if (cancelled) return;
+          const merged = txs.map((t) => ({
+            ...t,
+            ...categories[t.transaction_id],
+          }));
+          setTransactions(merged);
+        } catch {
+          if (!cancelled) setTransactions(txs);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setTransactions([]);
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Failed to load transactions"
+          );
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadInitial();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   const allTxs = [...extraTransactions, ...transactions];
 

@@ -38,8 +38,30 @@ export function ExpenseBreakdown({ userId }: ExpenseBreakdownProps) {
   }, [userId]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    let cancelled = false;
+
+    getPlSummary(userId)
+      .then((res) => {
+        if (cancelled) return;
+        const data = res as PlData;
+        setBreakdown(data.expense_breakdown);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setBreakdown(null);
+          setError(
+            err instanceof Error ? err.message : "Failed to load expenses"
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   if (loading) return <Skeleton className="h-48 w-full" />;
   if (error && !breakdown) return <ErrorState message={error} onRetry={load} />;

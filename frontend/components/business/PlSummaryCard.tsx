@@ -30,8 +30,26 @@ export function PlSummaryCard({ userId }: PlSummaryCardProps) {
   }, [userId]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    let cancelled = false;
+
+    getPlSummary(userId)
+      .then((res) => {
+        if (!cancelled) setData(res as PlSummary);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setData(null);
+          setError(err instanceof Error ? err.message : "Failed to load P&L");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   if (loading) return <Skeleton className="h-48 w-full" />;
   if (error && !data) return <ErrorState message={error} onRetry={load} />;

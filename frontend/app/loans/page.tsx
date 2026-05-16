@@ -23,8 +23,6 @@ export default function LoansPage() {
   useEffect(() => {
     if (!mounted) return;
     let cancelled = false;
-    setLoading(true);
-    setError(null);
     getLoans(userId)
       .then((data) => {
         if (cancelled) return;
