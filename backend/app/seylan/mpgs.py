@@ -46,7 +46,7 @@ async def create_checkout_session(
     log.info("MPGS create_checkout_session order_id=%s amount=%.2f", order_id, amount_lkr)
 
     async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-        resp = await client.put(url, json=payload, auth=_auth())
+        resp = await client.post(url, json=payload, auth=_auth())
 
     if not resp.is_success:
         log.error("MPGS session error %s: %s", resp.status_code, resp.text)
