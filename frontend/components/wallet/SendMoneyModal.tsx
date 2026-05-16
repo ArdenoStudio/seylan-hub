@@ -20,6 +20,7 @@ import { GBP_LKR_RATE, gbpToLkr } from "@/lib/remittance-fx";
 import { toast } from "sonner";
 import { EXTERNAL_LINK_REL, SEYLAN_LINKS } from "@/lib/seylan-external-links";
 import { ArrowRight, CreditCard, Zap, Send, ChevronRight } from "lucide-react";
+import { VerificationCard } from "@/components/ui/verification-card";
 
 interface SendMoneyModalProps {
   senderId: string;
@@ -207,29 +208,22 @@ export function SendMoneyModal({
             </div>
 
             {/* Recipient card */}
-            <div className="relative overflow-hidden rounded-xl border border-white/8 bg-white/4 p-3.5">
-              <div className="absolute inset-0 bg-gradient-to-br from-[#E0AF49]/5 via-transparent to-transparent" />
-              <p className="relative mb-2 text-[10px] font-semibold uppercase tracking-widest text-[#E0AF49]/60">
-                Recipient
-              </p>
-              <p className="relative text-sm font-semibold text-white">
-                {recipientAccountHolder.trim() || "Seylan Hub Wallet"}
-              </p>
-              <p className="relative mt-0.5 font-mono text-[11px] text-white/40">{recipientId}</p>
+            <VerificationCard
+              backgroundImage="https://images.unsplash.com/photo-1566837945700-30057527ade0?w=640&q=80"
+              label="Seylan Hub · Recipient"
+              idNumber={recipientId}
+              name={recipientAccountHolder.trim() || "Hub Wallet"}
+              validThru="GBP→LKR"
+            />
 
-              {sandboxRoutingLoaded && sandboxRouting && (
-                <div className="relative mt-3 border-t border-white/8 pt-3">
-                  <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-white/30">
-                    Sandbox route
-                  </p>
-                  <div className="flex items-center gap-2 font-mono text-[11px] text-white/40">
-                    <span className="truncate">{sandboxRouting.source_account}</span>
-                    <ArrowRight className="h-3 w-3 shrink-0 text-[#E0AF49]/50" />
-                    <span className="truncate">{sandboxRouting.destination_account}</span>
-                  </div>
-                </div>
-              )}
-            </div>
+            {/* Sandbox routing (shown below card when available) */}
+            {sandboxRoutingLoaded && sandboxRouting && (
+              <div className="flex items-center gap-2 rounded-lg border border-white/8 bg-white/4 px-3 py-2 font-mono text-[11px] text-white/40">
+                <span className="truncate">{sandboxRouting.source_account}</span>
+                <ArrowRight className="h-3 w-3 shrink-0 text-[#E0AF49]/50" />
+                <span className="truncate">{sandboxRouting.destination_account}</span>
+              </div>
+            )}
 
             {/* Amount input */}
             <div className="relative">
