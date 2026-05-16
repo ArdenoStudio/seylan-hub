@@ -138,7 +138,7 @@ export function RepaymentTimeline({ schedule }: RepaymentTimelineProps) {
           </TabsList>
 
           <TabsContent value={tab}>
-            <div className="max-h-[280px] overflow-y-auto space-y-2">
+            <div className="max-h-[280px] overflow-y-auto space-y-2 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.12)_transparent]">
               {filtered.map((entry) => {
                 const statusKey = canonicalScheduleStatus(entry.status);
                 return (

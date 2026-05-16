@@ -164,7 +164,7 @@ export function CategorisedTransactionFeed({
             <TabsTrigger value="expenses">Expenses</TabsTrigger>
           </TabsList>
           <TabsContent value={tab}>
-            <div className="max-h-[480px] overflow-y-auto">
+            <div className="max-h-[480px] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10 hover:scrollbar-thumb-white/20 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.12)_transparent]">
               {Object.entries(groupedByDay).map(([day, txs]) => {
                 const dayNet = txs.reduce(
                   (sum, t) =>
