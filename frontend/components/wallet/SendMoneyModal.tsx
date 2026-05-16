@@ -8,12 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { formatLKR } from "@/lib/utils";
 import {
@@ -29,8 +23,7 @@ import {
 } from "@/lib/remittance-fx";
 import { toast } from "sonner";
 import { EXTERNAL_LINK_REL, SEYLAN_LINKS } from "@/lib/seylan-external-links";
-import { ArrowRight, CreditCard, Zap, Send, ChevronRight, ChevronDown, RefreshCw } from "lucide-react";
-// ChevronDown kept for currency picker trigger
+import { ArrowRight, CreditCard, Zap, Send, ChevronRight, RefreshCw } from "lucide-react";
 import { VerificationCard } from "@/components/ui/verification-card";
 import { CurrencyExchangeCard } from "@/components/wallet/CurrencyExchangeCard";
 
@@ -240,32 +233,12 @@ export function SendMoneyModal({
               </div>
             )}
 
-            {/* Amount + currency picker */}
+            {/* Amount input */}
             <div className="relative">
-              {/* Currency picker button */}
-              <DropdownMenu>
-                <DropdownMenuTrigger
-                  className="absolute inset-y-0 left-0 flex items-center gap-1 pl-3 pr-2 text-sm font-semibold text-gray-700 hover:text-gray-900 focus:outline-none"
-                >
-                  <span>{currency.flag}</span>
-                  <span>{currency.code}</span>
-                  <ChevronDown className="h-3 w-3 text-gray-400" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="start">
-                  {REMITTANCE_CURRENCIES.map((c) => (
-                    <DropdownMenuItem
-                      key={c.code}
-                      onClick={() => setCurrency(c)}
-                      className={`flex items-center gap-3 ${currency.code === c.code ? "font-semibold text-[#E31821]" : ""}`}
-                    >
-                      <span className="text-base">{c.flag}</span>
-                      <span className="font-mono text-xs font-bold">{c.code}</span>
-                      <span className="text-xs text-gray-500">{c.name}</span>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
+              <div className="pointer-events-none absolute inset-y-0 left-3 flex items-center gap-1.5">
+                <span className="text-sm">{currency.flag}</span>
+                <span className="text-xs font-semibold text-gray-500">{currency.code}</span>
+              </div>
               <Input
                 id="amount"
                 type="number"
@@ -276,7 +249,7 @@ export function SendMoneyModal({
                   const v = parseFloat(e.target.value);
                   setAmount(Number.isFinite(v) && v >= 0 ? v : 0);
                 }}
-                className="border-gray-200 bg-white pl-24 text-sm font-semibold text-gray-900 placeholder:text-gray-300 focus-visible:border-[#E31821]/40 focus-visible:ring-[#E31821]/10"
+                className="border-gray-200 bg-white pl-16 text-sm font-semibold text-gray-900 placeholder:text-gray-300 focus-visible:border-[#E31821]/40 focus-visible:ring-[#E31821]/10"
               />
               <div className="pointer-events-none absolute inset-y-0 right-3.5 flex items-center">
                 <span className="text-xs font-medium text-gray-400">{currency.symbol}</span>
