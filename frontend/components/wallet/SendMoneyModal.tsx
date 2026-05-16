@@ -8,6 +8,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { formatLKR } from "@/lib/utils";
 import {
@@ -15,10 +21,15 @@ import {
   getSandboxTransferAccounts,
   postWalletTransfer,
 } from "@/lib/api";
-import { GBP_LKR_RATE, gbpToLkr } from "@/lib/remittance-fx";
+import {
+  GBP_LKR_RATE,
+  toLkr,
+  REMITTANCE_CURRENCIES,
+  type RemittanceCurrency,
+} from "@/lib/remittance-fx";
 import { toast } from "sonner";
 import { EXTERNAL_LINK_REL, SEYLAN_LINKS } from "@/lib/seylan-external-links";
-import { ArrowRight, CreditCard, Zap, Send, ChevronRight } from "lucide-react";
+import { ArrowRight, CreditCard, Zap, Send, ChevronRight, ChevronDown } from "lucide-react";
 import { VerificationCard } from "@/components/ui/verification-card";
 
 interface SendMoneyModalProps {
@@ -45,6 +56,8 @@ function getBucketColor(id: string): string {
   return "#8B5CF6";
 }
 
+const DEFAULT_CURRENCY = REMITTANCE_CURRENCIES[0]; // GBP
+
 export function SendMoneyModal({
   senderId,
   recipientId,
@@ -55,7 +68,8 @@ export function SendMoneyModal({
   onOpenChange,
 }: SendMoneyModalProps) {
   const [paymentMode, setPaymentMode] = useState<"card" | "demo">("card");
-  const [amountGbp, setAmountGbp] = useState(600);
+  const [amount, setAmount] = useState(600);
+  const [currency, setCurrency] = useState<RemittanceCurrency>(DEFAULT_CURRENCY);
   const [sending, setSending] = useState(false);
   const [sandboxRouting, setSandboxRouting] = useState<{
     source_account: string;
@@ -63,7 +77,9 @@ export function SendMoneyModal({
   } | null>(null);
   const [sandboxRoutingLoaded, setSandboxRoutingLoaded] = useState(false);
 
-  const amountLkr = gbpToLkr(amountGbp);
+  const amountLkr = toLkr(amount, currency);
+  // For API compatibility: always pass GBP equivalent
+  const amountGbpEquiv = Math.round((amountLkr / GBP_LKR_RATE) * 100) / 100;
 
   function handleDialogOpenChange(next: boolean) {
     if (!next) {
@@ -109,8 +125,8 @@ export function SendMoneyModal({
           metadata: {
             account_id: "SEY-ACC-002",
             buckets: bucketAllocations,
-            sender_amount_gbp: amountGbp,
-            fx_rate: GBP_LKR_RATE,
+            sender_amount_gbp: amountGbpEquiv,
+            fx_rate: currency.lkrRate,
           },
         });
         // eslint-disable-next-line react-hooks/immutability -- external MPGS redirect
@@ -121,14 +137,14 @@ export function SendMoneyModal({
         sender_account_id: senderId,
         recipient_account_id: recipientId,
         amount_lkr: amountLkr,
-        corridor: "GBP->LKR",
+        corridor: `${currency.code}->LKR`,
         allocation_rules: allocations,
       });
       toast.success(`Sent ${formatLKR(amountLkr)}`, {
         description: buildSuccessToastDescription(),
       });
       handleDialogOpenChange(false);
-      onSuccess(amountLkr, amountGbp);
+      onSuccess(amountLkr, amountGbpEquiv);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       const isUnconfigured = msg.includes("[503]") || msg.includes("not enabled");
@@ -144,7 +160,7 @@ export function SendMoneyModal({
     }
   }
 
-  const isValid = Number.isFinite(amountGbp) && amountGbp > 0;
+  const isValid = Number.isFinite(amount) && amount > 0;
 
   return (
     <Dialog open={open} onOpenChange={handleDialogOpenChange}>
@@ -152,7 +168,7 @@ export function SendMoneyModal({
         className="max-w-sm overflow-hidden border border-gray-100 p-0 shadow-2xl [background:#ffffff] [box-shadow:0_24px_64px_rgba(0,0,0,0.18),0_4px_16px_rgba(0,0,0,0.08)]"
         showCloseButton={false}
       >
-        {/* Top red accent bar */}
+        {/* Top accent bar */}
         <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-[#E31821] via-[#E0AF49] to-[#E31821]" />
 
         <div className="relative flex flex-col gap-0">
@@ -209,7 +225,7 @@ export function SendMoneyModal({
               label="Seylan Hub · Recipient"
               idNumber={recipientId}
               name={recipientAccountHolder.trim() || "Hub Wallet"}
-              validThru="GBP→LKR"
+              validThru={`${currency.code}→LKR`}
             />
 
             {/* Sandbox routing */}
@@ -221,25 +237,46 @@ export function SendMoneyModal({
               </div>
             )}
 
-            {/* Amount input */}
+            {/* Amount + currency picker */}
             <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center">
-                <span className="text-sm font-bold text-gray-400">£</span>
-              </div>
+              {/* Currency picker button */}
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  className="absolute inset-y-0 left-0 flex items-center gap-1 pl-3 pr-2 text-sm font-semibold text-gray-700 hover:text-gray-900 focus:outline-none"
+                >
+                  <span>{currency.flag}</span>
+                  <span>{currency.code}</span>
+                  <ChevronDown className="h-3 w-3 text-gray-400" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="start">
+                  {REMITTANCE_CURRENCIES.map((c) => (
+                    <DropdownMenuItem
+                      key={c.code}
+                      onClick={() => setCurrency(c)}
+                      className={`flex items-center gap-3 ${currency.code === c.code ? "font-semibold text-[#E31821]" : ""}`}
+                    >
+                      <span className="text-base">{c.flag}</span>
+                      <span className="font-mono text-xs font-bold">{c.code}</span>
+                      <span className="text-xs text-gray-500">{c.name}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               <Input
                 id="amount"
                 type="number"
                 step="0.01"
                 min={0.01}
-                value={Number.isFinite(amountGbp) ? amountGbp : 0}
+                value={Number.isFinite(amount) ? amount : 0}
                 onChange={(e) => {
                   const v = parseFloat(e.target.value);
-                  setAmountGbp(Number.isFinite(v) && v >= 0 ? v : 0);
+                  setAmount(Number.isFinite(v) && v >= 0 ? v : 0);
                 }}
-                className="border-gray-200 bg-white pl-8 text-sm font-semibold text-gray-900 placeholder:text-gray-300 focus-visible:border-[#E31821]/40 focus-visible:ring-[#E31821]/10"
+                className="border-gray-200 bg-white pl-24 text-sm font-semibold text-gray-900 placeholder:text-gray-300 focus-visible:border-[#E31821]/40 focus-visible:ring-[#E31821]/10"
               />
               <div className="pointer-events-none absolute inset-y-0 right-3.5 flex items-center">
-                <span className="text-xs font-medium text-gray-400">GBP</span>
+                <span className="text-xs font-medium text-gray-400">{currency.symbol}</span>
               </div>
             </div>
 
@@ -248,7 +285,7 @@ export function SendMoneyModal({
               <div className="flex items-end justify-between">
                 <div>
                   <p className="mb-0.5 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
-                    You send
+                    Recipient gets
                   </p>
                   <p className="font-heading text-2xl font-bold tracking-tight text-[#E31821]">
                     {formatLKR(amountLkr)}
@@ -257,7 +294,7 @@ export function SendMoneyModal({
                 <div className="text-right">
                   <p className="text-[10px] text-gray-400">Rate</p>
                   <p className="font-mono text-xs font-semibold text-gray-500">
-                    {GBP_LKR_RATE}
+                    1 {currency.code} = {currency.lkrRate} LKR
                   </p>
                 </div>
               </div>
