@@ -53,17 +53,21 @@ async def wallet_transfer(req: WalletTransferRequest):
         except Exception as exc:
             log.error("Seylan transfer failed: %s — returning mock COMPLETED", exc)
 
-    # Record the transfer as a credit transaction so it appears in the feed
+    # Record per-bucket credits so Supabase realtime and bucket balances stay consistent
     try:
-        supabase_client.insert_transaction(
-            account_id=req.recipient_account_id,
-            merchant=f"Remittance from {req.sender_account_id}",
-            amount_lkr=req.amount_lkr,
-            bucket_id=None,
-            bucket_label=None,
-            source="transfer",
-            txn_type="credit",
-        )
+        for r in req.allocation_rules:
+            part = round(req.amount_lkr * r.pct / 100, 2)
+            if part <= 0:
+                continue
+            supabase_client.insert_transaction(
+                account_id=req.recipient_account_id,
+                merchant=f"Remittance from {req.sender_account_id}",
+                amount_lkr=part,
+                bucket_id=r.bucket_id,
+                bucket_label=r.bucket_id.replace("bucket_", "").replace("_", " ").title(),
+                source="transfer",
+                txn_type="credit",
+            )
     except Exception as exc:
         log.warning("Failed to record transfer transaction: %s", exc)
 
