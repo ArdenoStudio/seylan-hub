@@ -26,15 +26,15 @@ _BIZ_ACCOUNT_MAP = {"SEY-BIZ-001": "064000012548001"}
 async def categorize(req: CategorizeRequest):
     all_txns: list[dict] = []
 
-    if settings.use_seylan_real and req.user_id in _BIZ_ACCOUNT_MAP:
-        try:
-            from app.seylan import account as seylan_acct
-            from app.routers.mock import _normalise_seylan_txn
-            raw = await seylan_acct.get_recent_transactions(_BIZ_ACCOUNT_MAP[req.user_id], n=50)
-            all_txns = [_normalise_seylan_txn(t, req.user_id) for t in raw]
-            log.info("categorize using real Seylan data: %d txns", len(all_txns))
-        except Exception as exc:
-            log.warning("Seylan fetch failed for categorize %s: %s — falling back to fixture", req.user_id, exc)
+    # Prefer Supabase (seeded fixture rows + any live activity)
+    try:
+        from app.routers.mock import _normalize_db_txn
+        db_rows = supabase_client.get_recent_transactions(req.user_id, limit=200, ascending=True)
+        if db_rows:
+            all_txns = [_normalize_db_txn(r, req.user_id) for r in db_rows]
+            log.info("categorize loaded %d txns from Supabase for %s", len(all_txns), req.user_id)
+    except Exception as exc:
+        log.warning("Supabase fetch failed for categorize %s: %s — falling back to fixture", req.user_id, exc)
 
     if not all_txns:
         data = json.loads((_FX / "business_account.json").read_text(encoding="utf-8"))

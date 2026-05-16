@@ -218,6 +218,19 @@ _BIZ_ACCOUNT_MAP = {
 }
 
 
+def _normalize_db_txn(row: dict, user_id: str) -> dict:
+    """Map a Supabase transactions row → business_account fixture schema."""
+    return {
+        "transaction_id": row.get("id", ""),
+        "account_id": user_id,
+        "timestamp": row.get("timestamp", ""),
+        "merchant": row.get("merchant", ""),
+        "description": row.get("merchant", ""),
+        "amount_lkr": float(row.get("amount_lkr") or 0),
+        "type": row.get("type", "debit"),
+    }
+
+
 def _normalise_seylan_txn(t: dict, user_id: str) -> dict:
     """Map app.seylan.account._map_transactions format → business_account fixture schema."""
     date_str = t.get("date", "")
@@ -237,24 +250,28 @@ async def business_account(user_id: str):
     data = _load("business_account.json")
     if user_id not in data:
         return JSONResponse(status_code=404, content={"error": f"Unknown user {user_id}"})
-    log.info("mock_call business-account user_id=%s real=%s", user_id, settings.use_seylan_real)
+    log.info("mock_call business-account user_id=%s", user_id)
+    result = dict(data[user_id])
 
+    # Transactions: prefer Supabase (seeded fixture rows + any live activity)
+    try:
+        db_rows = supabase_client.get_recent_transactions(user_id, limit=200, ascending=True)
+        if db_rows:
+            result["transactions"] = [_normalize_db_txn(r, user_id) for r in db_rows]
+            log.info("business-account loaded %d txns from Supabase", len(db_rows))
+    except Exception as exc:
+        log.warning("Supabase txn fetch failed for %s: %s — using fixture", user_id, exc)
+
+    # Balance: real Seylan API when enabled
     if settings.use_seylan_real and user_id in _BIZ_ACCOUNT_MAP:
-        account_number = _BIZ_ACCOUNT_MAP[user_id]
         try:
             from app.seylan import account as seylan_acct
-            bal = await seylan_acct.get_balance(account_number)
-            raw_txns = await seylan_acct.get_recent_transactions(account_number, n=50)
-            fixture = dict(data[user_id])
-            fixture["current_balance"] = bal["balance_lkr"]
-            fixture["transactions"] = [_normalise_seylan_txn(t, user_id) for t in raw_txns]
-            log.info("business-account enriched with real data: balance=%.2f txns=%d",
-                     bal["balance_lkr"], len(raw_txns))
-            return fixture
+            bal = await seylan_acct.get_balance(_BIZ_ACCOUNT_MAP[user_id])
+            result["current_balance"] = bal["balance_lkr"]
         except Exception as exc:
-            log.warning("Seylan enrichment failed for %s: %s — falling back to fixture", user_id, exc)
+            log.warning("Seylan balance failed for %s: %s", user_id, exc)
 
-    return data[user_id]
+    return result
 
 
 @router.get("/pl-summary/{user_id}")
@@ -264,9 +281,18 @@ async def pl_summary(user_id: str):
         return JSONResponse(status_code=404, content={"error": f"Unknown user {user_id}"})
     log.info("mock_call pl-summary user_id=%s", user_id)
 
-    # Always derive P&L from the fixture transaction history — richer data than the
-    # live sandbox which only has seed credits.
-    txns = biz_data[user_id].get("transactions", [])
+    # Prefer Supabase transactions (includes seeded fixture rows + live activity)
+    txns = []
+    try:
+        db_rows = supabase_client.get_recent_transactions(user_id, limit=200, ascending=True)
+        if db_rows:
+            txns = [_normalize_db_txn(r, user_id) for r in db_rows]
+            log.info("pl-summary loaded %d txns from Supabase for %s", len(txns), user_id)
+    except Exception as exc:
+        log.warning("Supabase txn fetch failed for pl-summary %s: %s", user_id, exc)
+
+    if not txns:
+        txns = biz_data[user_id].get("transactions", [])
     try:
         from app.services.pl_calculator import compute_pl
         result = await compute_pl(user_id, txns)
@@ -342,6 +368,43 @@ async def reset_demo():
     }
 
 
+@router.post("/seed-business")
+async def seed_business_transactions():
+    """
+    Idempotently seed all business_account.json fixture transactions into Supabase.
+    Skips if rows with source='fixture' already exist for SEY-BIZ-001.
+    """
+    user_id = "SEY-BIZ-001"
+    try:
+        existing = supabase_client.count_transactions(user_id, source="fixture")
+        if existing > 0:
+            log.info("seed-business: %d fixture rows already present, skipping", existing)
+            return {"status": "skipped", "reason": "already_seeded", "existing_rows": existing}
+
+        biz_data = _load("business_account.json")
+        fixture_txns = biz_data.get(user_id, {}).get("transactions", [])
+
+        rows = [
+            {
+                "account_id": user_id,
+                "merchant": t["merchant"],
+                "amount_lkr": float(t["amount_lkr"]),
+                "bucket_id": t.get("bucket_id"),
+                "bucket_label": t.get("bucket_label"),
+                "source": "fixture",
+                "type": t.get("type", "debit"),
+                "timestamp": t.get("timestamp") or t.get("date", ""),
+            }
+            for t in fixture_txns
+        ]
+        inserted = supabase_client.batch_insert_transactions(rows)
+        log.info("seed-business: inserted %d rows for %s", inserted, user_id)
+        return {"status": "seeded", "rows_inserted": inserted}
+    except Exception as exc:
+        log.error("seed-business failed: %s", exc)
+        return {"status": "error", "detail": str(exc)}
+
+
 @router.post("/seed")
 async def admin_seed():
     tables_reset = []
@@ -365,6 +428,13 @@ async def admin_seed():
     cat_cache.clear()
     _fixture_cache.clear()
     tables_reset.append("in-process caches (advisor, categorizer, insight, fixtures)")
+
+    # Ensure business fixture transactions are in Supabase
+    try:
+        biz_seed = await seed_business_transactions()
+        tables_reset.append(f"business_transactions ({biz_seed.get('status')})")
+    except Exception as exc:
+        log.warning("seed: business seed failed: %s", exc)
 
     return {"status": "seeded", "tables_reset": tables_reset}
 

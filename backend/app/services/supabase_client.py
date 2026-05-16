@@ -80,6 +80,7 @@ def get_recent_transactions(
     limit: int = 20,
     *,
     ascending: bool = False,
+    source: str | None = None,
 ) -> list[dict]:
     """Return transactions for an account. Default is newest-first; use ascending=True to replay chronologically."""
     q = (
@@ -89,8 +90,31 @@ def get_recent_transactions(
         .order("timestamp", desc=not ascending)
         .order("id", desc=not ascending)
     )
+    if source is not None:
+        q = q.eq("source", source)
     result = q.limit(limit).execute()
     return result.data if result.data else []
+
+
+def count_transactions(account_id: str, source: str | None = None) -> int:
+    """Return the number of transaction rows for an account (optionally filtered by source)."""
+    q = (
+        get_client().table("transactions")
+        .select("id", count="exact")
+        .eq("account_id", account_id)
+    )
+    if source is not None:
+        q = q.eq("source", source)
+    result = q.execute()
+    return result.count or 0
+
+
+def batch_insert_transactions(rows: list[dict]) -> int:
+    """Insert multiple transaction rows in one request. Returns number of rows inserted."""
+    if not rows:
+        return 0
+    result = get_client().table("transactions").insert(rows).execute()
+    return len(result.data) if result.data else 0
 
 
 def clear_demo_transactions(account_id: str) -> int:
