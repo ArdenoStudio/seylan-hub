@@ -85,10 +85,17 @@ export async function postWalletTransfer(payload: {
     await new Promise((r) => setTimeout(r, 800));
     return { success: true, amount_lkr: payload.amount_lkr };
   }
+  // Backend expects list[{bucket_id, pct}], not Record<string, number>
+  const normalised = {
+    ...payload,
+    allocation_rules: Object.entries(payload.allocation_rules).map(
+      ([bucket_id, pct]) => ({ bucket_id, pct })
+    ),
+  };
   return request("/api/wallet/transfer", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(normalised),
   });
 }
 
@@ -201,7 +208,7 @@ export async function postDemoReset() {
     return { success: true, mode: "mock" };
   }
 
-  return request("/admin/seed", {
+  return request("/mock/reset-demo", {
     method: "POST",
   });
 }
