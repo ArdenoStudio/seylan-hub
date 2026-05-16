@@ -15,7 +15,7 @@ export function AppShell({ children }: AppShellProps) {
   /** MPGS injects iframes/modals on document.body — avoid sidebar stacking and fixed layout clashes. */
   const isPaymentGatewaySurface =
     pathname.startsWith("/payments/checkout") || pathname.startsWith("/payments/return");
-  const showSeylanHandoff = ["/wallet", "/loans", "/business"].some(
+  const showSeylanHandoff = ["/profile", "/wallet", "/loans", "/business"].some(
     (p) => pathname.startsWith(p),
   );
 

@@ -273,6 +273,42 @@ export async function postCategorize(payload: { transaction_ids: string[] }): Pr
   return map;
 }
 
+export async function getProfileData(userId: string) {
+  return request<{
+    user_id: string;
+    name: string;
+    account_holder: string;
+    accounts: string[];
+    balance_lkr: number;
+    language_preference: string;
+    savings_balance: number;
+    current_balance: number;
+    recent_transactions: {
+      id: string;
+      date: string;
+      description: string;
+      amount_lkr: number;
+      type: "credit" | "debit";
+    }[];
+    loans: {
+      id: string;
+      type: string;
+      disbursed_amount_lkr: number;
+      outstanding_lkr: number;
+      monthly_installment_lkr: number;
+      next_payment_date: string;
+      next_payment_amount_lkr: number;
+    }[];
+    fixed_deposits: {
+      id: string;
+      amount_lkr: number;
+      maturity_date: string;
+      interest_rate_pct: number;
+      term_months: number;
+    }[];
+  }>(`/mock/account-context/${userId}`);
+}
+
 export async function prewarmDemoData() {
   await Promise.all([
     getFamilyWallet("SEY-ACC-002"),

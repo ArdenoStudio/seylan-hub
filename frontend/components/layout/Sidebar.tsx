@@ -3,10 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Wallet, CreditCard, Store, Sparkles, Activity, ExternalLink } from "lucide-react";
+import { Wallet, CreditCard, Store, Sparkles, Activity, ExternalLink, UserCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
+  { href: "/profile",   label: "Profile",   icon: UserCircle },
   { href: "/wallet",    label: "Wallet",    icon: Wallet    },
   { href: "/assistant", label: "Seylan AI", icon: Sparkles  },
   { href: "/loans",     label: "Loans",     icon: CreditCard },
@@ -39,10 +40,10 @@ export function Sidebar() {
         </div>
 
         <div className="border-b border-white/10 px-3 py-4">
-          <div className="rounded-2xl border border-white/10 bg-white/10 p-3">
+          <Link href="/profile" className="block rounded-2xl border border-white/10 bg-white/10 p-3 transition-colors hover:bg-white/15">
             <div className="text-sm font-semibold">Nimal Fernando</div>
             <div className="text-xs text-white/60">VOXVERSE STUDIO · 0640-0001254-001</div>
-          </div>
+          </Link>
         </div>
 
         <nav className="flex-1 space-y-1 px-3 py-4">
