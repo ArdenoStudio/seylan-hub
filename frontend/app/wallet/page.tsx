@@ -150,21 +150,18 @@ export default function WalletPage() {
       <section id="allocation-editor" className="scroll-mt-6">
         <AllocationEditor
           buckets={buckets}
-          onSave={async (newAllocations) => {
+          onSave={(newAllocations) => {
             localStorage.setItem(
               "seylan_allocation_rules",
               JSON.stringify(newAllocations)
             );
-            try {
-              await saveAllocationRules(
-                user?.id ?? "SEY-USR-001",
-                newAllocations,
-                FAMILY_ACCOUNT_ID
-              );
-              toast.success("Allocation rules saved");
-            } catch {
-              toast.error("Failed to save rules — try again");
-            }
+            toast.success("Allocation rules saved");
+            // Best-effort backend persist — silently ignore if unreachable
+            saveAllocationRules(
+              user?.id ?? "SEY-USR-001",
+              newAllocations,
+              FAMILY_ACCOUNT_ID
+            ).catch(() => {});
           }}
         />
       </section>
