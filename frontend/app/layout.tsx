@@ -9,6 +9,7 @@ const calSans = Cal_Sans({
   variable: "--font-cal-sans",
   subsets: ["latin"],
   weight: "400",
+  adjustFontFallback: false,
 });
 
 const geistMono = Geist_Mono({
