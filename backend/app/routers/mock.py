@@ -22,8 +22,13 @@ _REAL_ACCOUNTS = {
 }
 
 
+_fixture_cache: dict[str, dict] = {}
+
+
 def _load(name: str) -> dict:
-    return json.loads((_FX / name).read_text(encoding="utf-8"))
+    if name not in _fixture_cache:
+        _fixture_cache[name] = json.loads((_FX / name).read_text(encoding="utf-8"))
+    return _fixture_cache[name]
 
 
 def _map_seylan_txn(t: dict) -> dict:
@@ -192,6 +197,7 @@ async def admin_seed():
     _advisor_cache.clear()
     _insight_cache.clear()
     cat_cache.clear()
-    tables_reset.append("in-process caches (advisor, categorizer, insight)")
+    _fixture_cache.clear()
+    tables_reset.append("in-process caches (advisor, categorizer, insight, fixtures)")
 
     return {"status": "seeded", "tables_reset": tables_reset}
