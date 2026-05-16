@@ -126,7 +126,7 @@ async def wallet_transfer(req: WalletTransferRequest):
 
 
 @router.post("/wallet/rules/{sender_id}")
-async def save_wallet_rules(sender_id: str, req: SaveAllocationRulesRequest):
+async def save_wallet_rules_by_sender(sender_id: str, req: SaveAllocationRulesRequest):
     total_pct = sum(r.pct for r in req.allocation_rules)
     if abs(total_pct - 100) > 0.01:
         from fastapi import HTTPException
@@ -139,7 +139,7 @@ async def save_wallet_rules(sender_id: str, req: SaveAllocationRulesRequest):
         )
         return {"status": "saved", "data": result}
     except Exception as exc:
-        log.error("save_wallet_rules failed: %s", exc)
+        log.error("save_wallet_rules_by_sender failed: %s", exc)
         from fastapi import HTTPException
         raise HTTPException(status_code=500, detail="Failed to save allocation rules")
 
@@ -171,7 +171,7 @@ class SaveRulesRequest(BaseModel):
 
 
 @router.post("/wallet/rules")
-async def save_wallet_rules(req: SaveRulesRequest):
+async def save_wallet_rules_legacy_body(req: SaveRulesRequest):
     total_pct = sum(b.get("pct", 0) for b in req.buckets)
     if abs(total_pct - 100) > 0.01:
         from fastapi import HTTPException

@@ -84,7 +84,10 @@ def _apply_live_rows_to_wallet_buckets(wallet: dict, live_rows: list[dict]) -> N
         }
     ordered = sorted(
         live_rows,
-        key=lambda r: str(r.get("timestamp") or r.get("created_at") or ""),
+        key=lambda r: (
+            str(r.get("timestamp") or r.get("created_at") or ""),
+            str(r.get("id") or r.get("transaction_id") or ""),
+        ),
     )
     orphan_credit = 0.0
     for row in ordered:
@@ -197,8 +200,6 @@ async def family_wallet(account_id: str):
                         break
     except Exception as exc:
         log.warning("merge allocation_rules into wallet failed: %s", exc)
-
-    _derive_last_remittance_from_transactions(wallet)
 
     return wallet
 
