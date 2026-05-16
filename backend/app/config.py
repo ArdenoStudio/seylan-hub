@@ -32,9 +32,11 @@ class Settings(BaseSettings):
 
     # MPGS (Mastercard Payment Gateway Services) — Hosted Checkout v79
     mpgs_host: str = "test-seylan.mtf.gateway.mastercard.com"
-    mpgs_merchant_id: str = ""  # CURSOR1
+    mpgs_merchant_id: str = ""  # e.g. CURSOR1
     mpgs_api_password: str = ""
-    mpgs_operator_id: str = "CURSOR1op"
+    # Leave empty when using merchant-level Integration Authentication passwords.
+    # Operator-scoped usernames (merchant.<mid>.operator.<op>) require matching credentials.
+    mpgs_operator_id: str = ""
     mpgs_api_version: str = "79"
     mpgs_enable: bool = False
 

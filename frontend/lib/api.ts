@@ -1,4 +1,9 @@
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
+/** Backend URL: env override, else Fly API in production builds, else local dev. */
+export const API_BASE =
+  process.env.NEXT_PUBLIC_API_BASE ??
+  (process.env.NODE_ENV === "production"
+    ? "https://seylan-hub-api.fly.dev"
+    : "http://localhost:8000");
 
 export class ApiError extends Error {
   status: number;
