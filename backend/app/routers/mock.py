@@ -156,16 +156,61 @@ async def tax_jar_trigger(req: TaxJarTriggerRequest):
 
 @router.post("/reset-demo")
 async def reset_demo():
-    cleared = 0
+    result: dict = {}
     try:
-        cleared = supabase_client.clear_demo_transactions("SEY-ACC-002")
-        supabase_client.reset_demo_state()
+        result = supabase_client.reset_demo_full()
+        log.info("reset-demo complete: %s", result)
     except Exception as exc:
         log.warning("reset-demo supabase error: %s", exc)
+        result = {"error": str(exc)}
     return {
-        "status": "RESET_COMPLETE",
-        "household_balance_lkr": 71500,
-        "tax_jar_balance_lkr": 15070,
-        "demo_transactions_cleared": cleared,
-        "sessions_cleared": True,
+        "reset": True,
+        "tax_jar": 15070,
+        "buckets": "reset",
+        "transactions_cleared": result.get("transactions_cleared", 0),
+        "sessions": result.get("sessions", "cleared"),
     }
+
+
+@router.post("/warm-up")
+async def warm_up():
+    import asyncio
+    import time
+    results: dict[str, str] = {}
+
+    # 1 — Groq
+    t0 = time.monotonic()
+    try:
+        from app.services import groq_client as _groq
+        await _groq.complete(
+            system_prompt="You are a ping test. Reply with one word.",
+            messages=[{"role": "user", "content": "ping"}],
+            max_tokens=3,
+            temperature=0.0,
+        )
+        results["groq"] = f"ok ({int((time.monotonic()-t0)*1000)}ms)"
+    except Exception as exc:
+        results["groq"] = f"error: {exc}"
+        log.warning("warm-up groq failed: %s", exc)
+
+    # 2 — ElevenLabs
+    t0 = time.monotonic()
+    try:
+        from app.services import elevenlabs_client as _tts
+        await asyncio.to_thread(_tts.text_to_speech, "ready", "en")
+        results["elevenlabs"] = f"ok ({int((time.monotonic()-t0)*1000)}ms)"
+    except Exception as exc:
+        results["elevenlabs"] = f"error: {exc}"
+        log.warning("warm-up elevenlabs failed: %s", exc)
+
+    # 3 — Supabase
+    t0 = time.monotonic()
+    try:
+        await asyncio.to_thread(supabase_client.ping)
+        results["supabase"] = f"ok ({int((time.monotonic()-t0)*1000)}ms)"
+    except Exception as exc:
+        results["supabase"] = f"error: {exc}"
+        log.warning("warm-up supabase failed: %s", exc)
+
+    log.info("warm-up complete: %s", results)
+    return results
