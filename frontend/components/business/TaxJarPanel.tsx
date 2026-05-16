@@ -26,9 +26,7 @@ interface TaxJarPanelProps {
 export function TaxJarPanel({
   userId,
   initialBalance,
-  onNewTransaction,
 }: TaxJarPanelProps) {
-  const [balance, setBalance] = useState(initialBalance);
   const [displayBalance, setDisplayBalance] = useState(initialBalance);
   const [cardModalOpen, setCardModalOpen] = useState(false);
   const [cardAmount, setCardAmount] = useState(8200);
@@ -36,8 +34,8 @@ export function TaxJarPanel({
   const animRef = useRef<ReturnType<typeof setInterval>>(undefined);
 
   useEffect(() => {
-    if (displayBalance === balance) return;
-    const diff = balance - displayBalance;
+    if (displayBalance === initialBalance) return;
+    const diff = initialBalance - displayBalance;
     const steps = 30;
     const increment = diff / steps;
     let current = displayBalance;
@@ -47,7 +45,7 @@ export function TaxJarPanel({
       step++;
       current += increment;
       if (step >= steps) {
-        setDisplayBalance(balance);
+        setDisplayBalance(initialBalance);
         clearInterval(animRef.current);
       } else {
         setDisplayBalance(Math.round(current));
@@ -55,7 +53,7 @@ export function TaxJarPanel({
     }, 800 / steps);
 
     return () => clearInterval(animRef.current);
-  }, [balance, displayBalance]);
+  }, [initialBalance, displayBalance]);
 
   async function handleCardPayment() {
     if (!cardAmount || cardAmount <= 0) return;

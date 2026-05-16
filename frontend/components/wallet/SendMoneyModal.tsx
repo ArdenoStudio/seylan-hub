@@ -109,6 +109,8 @@ export function SendMoneyModal({
             fx_rate: GBP_LKR_RATE,
           },
         });
+        // Hosted Checkout is a full navigation to another origin; assignment is intentional.
+        // eslint-disable-next-line react-hooks/immutability -- external MPGS redirect
         window.location.href = session.checkout_url;
         return;
       }

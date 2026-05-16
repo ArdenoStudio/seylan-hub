@@ -38,14 +38,17 @@ export default function BusinessPage() {
             ? `LKR ${amount.toLocaleString()} received — LKR ${taxSaved.toLocaleString()} auto-saved to Tax Jar.`
             : "Customer card payment confirmed.",
       });
-      // Animate the tax jar counter up
+      let bumpTimer: ReturnType<typeof setTimeout> | undefined;
       if (taxSaved > 0) {
-        setTaxJarBalance((prev) => prev + taxSaved);
+        bumpTimer = setTimeout(() => {
+          setTaxJarBalance((prev) => prev + taxSaved);
+        }, 0);
       }
-      // Clean URL
       window.history.replaceState({}, "", window.location.pathname);
+      return () => {
+        if (bumpTimer) clearTimeout(bumpTimer);
+      };
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
