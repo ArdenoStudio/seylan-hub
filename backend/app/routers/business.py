@@ -5,6 +5,7 @@ from pathlib import Path
 
 from fastapi import APIRouter
 
+from app.config import settings
 from app.models.schemas import (
     CategorizeRequest, CategorizeResponse,
     TaxJarRuleRequest, TaxJarRuleResponse,
@@ -18,16 +19,32 @@ router = APIRouter(prefix="/api", tags=["business"])
 _FX = Path(__file__).parent.parent.parent / "fixtures"
 
 
+_BIZ_ACCOUNT_MAP = {"SEY-BIZ-001": "064000012548001"}
+
+
 @router.post("/categorize-transactions", response_model=CategorizeResponse)
 async def categorize(req: CategorizeRequest):
-    data = json.loads((_FX / "business_account.json").read_text(encoding="utf-8"))
-    all_txns = data.get(req.user_id, {}).get("transactions", [])
+    all_txns: list[dict] = []
+
+    if settings.use_seylan_real and req.user_id in _BIZ_ACCOUNT_MAP:
+        try:
+            from app.seylan import account as seylan_acct
+            from app.routers.mock import _normalise_seylan_txn
+            raw = await seylan_acct.get_recent_transactions(_BIZ_ACCOUNT_MAP[req.user_id], n=50)
+            all_txns = [_normalise_seylan_txn(t, req.user_id) for t in raw]
+            log.info("categorize using real Seylan data: %d txns", len(all_txns))
+        except Exception as exc:
+            log.warning("Seylan fetch failed for categorize %s: %s — falling back to fixture", req.user_id, exc)
+
+    if not all_txns:
+        data = json.loads((_FX / "business_account.json").read_text(encoding="utf-8"))
+        all_txns = data.get(req.user_id, {}).get("transactions", [])
+
     if req.transaction_ids:
-        txns = [t for t in all_txns if (t.get("transaction_id") or t.get("id")) in req.transaction_ids]
-    else:
-        txns = all_txns
-    log.info("categorize user=%s count=%d", req.user_id, len(txns))
-    result = await categorize_transactions(txns)
+        all_txns = [t for t in all_txns if (t.get("transaction_id") or t.get("id")) in req.transaction_ids]
+
+    log.info("categorize user=%s count=%d", req.user_id, len(all_txns))
+    result = await categorize_transactions(all_txns)
     return CategorizeResponse(categorized=result)
 
 

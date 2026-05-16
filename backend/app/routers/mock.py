@@ -213,12 +213,47 @@ async def loans(user_id: str):
     return data[user_id]
 
 
+_BIZ_ACCOUNT_MAP = {
+    "SEY-BIZ-001": "064000012548001",
+}
+
+
+def _normalise_seylan_txn(t: dict, user_id: str) -> dict:
+    """Map app.seylan.account._map_transactions format → business_account fixture schema."""
+    date_str = t.get("date", "")
+    return {
+        "transaction_id": t.get("id") or f"seylan_{uuid.uuid4().hex[:6]}",
+        "account_id": user_id,
+        "timestamp": f"{date_str}T00:00:00Z" if date_str else "",
+        "merchant": t.get("description", "Transaction"),
+        "description": t.get("description", "Transaction"),
+        "amount_lkr": abs(float(t.get("amount_lkr") or 0)),
+        "type": t.get("type", "debit"),
+    }
+
+
 @router.get("/business-account/{user_id}")
 async def business_account(user_id: str):
     data = _load("business_account.json")
     if user_id not in data:
         return JSONResponse(status_code=404, content={"error": f"Unknown user {user_id}"})
-    log.info("mock_call business-account user_id=%s", user_id)
+    log.info("mock_call business-account user_id=%s real=%s", user_id, settings.use_seylan_real)
+
+    if settings.use_seylan_real and user_id in _BIZ_ACCOUNT_MAP:
+        account_number = _BIZ_ACCOUNT_MAP[user_id]
+        try:
+            from app.seylan import account as seylan_acct
+            bal = await seylan_acct.get_balance(account_number)
+            raw_txns = await seylan_acct.get_recent_transactions(account_number, n=50)
+            fixture = dict(data[user_id])
+            fixture["current_balance"] = bal["balance_lkr"]
+            fixture["transactions"] = [_normalise_seylan_txn(t, user_id) for t in raw_txns]
+            log.info("business-account enriched with real data: balance=%.2f txns=%d",
+                     bal["balance_lkr"], len(raw_txns))
+            return fixture
+        except Exception as exc:
+            log.warning("Seylan enrichment failed for %s: %s — falling back to fixture", user_id, exc)
+
     return data[user_id]
 
 

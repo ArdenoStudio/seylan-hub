@@ -4,10 +4,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-    # Seylan gateway
-    seylan_gateway_default: str = "https://dev.apigateway1.seylan.lk:2260"
+    # Seylan gateway (sandbox proxy — override via env for production)
+    seylan_gateway_default: str = "http://34.21.206.87:3000"
     seylan_gateway_qr: str = "https://dev.apigateway1.seylan.lk:2250"
-    seylan_api_key: str = ""
+    seylan_api_key: str = "5be33036-59e9-4224-969f-41a1657bd1b7"
     seylan_checksum_key_merchant: str = ""
     seylan_checksum_key_lankaqr: str = ""
     seylan_justpay_code: str = "6289_M001_001"
