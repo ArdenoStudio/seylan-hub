@@ -26,6 +26,49 @@ def _load(name: str) -> dict:
     return json.loads((_FX / name).read_text(encoding="utf-8"))
 
 
+def _apply_live_rows_to_wallet_buckets(wallet: dict, live_rows: list[dict]) -> None:
+    """Adjust fixture bucket balances by Supabase-only activity (fixture txns already baked in)."""
+    buckets = wallet.get("buckets") or []
+    by_id: dict[str, dict[str, float]] = {}
+    for b in buckets:
+        bid = b.get("id") or b.get("bucket_id")
+        if not bid:
+            continue
+        by_id[bid] = {
+            "balance_lkr": float(b.get("balance_lkr", 0)),
+            "spent_lkr": float(b.get("spent_lkr", 0)),
+        }
+    ordered = sorted(
+        live_rows,
+        key=lambda r: str(r.get("timestamp") or r.get("created_at") or ""),
+    )
+    orphan_credit = 0.0
+    for row in ordered:
+        bid = row.get("bucket_id")
+        amt = float(row.get("amount_lkr") or 0)
+        typ = str(row.get("type") or "debit").lower()
+        if typ == "credit" and not bid:
+            orphan_credit += amt
+            continue
+        if not bid or bid not in by_id:
+            continue
+        st = by_id[bid]
+        if typ == "credit":
+            st["balance_lkr"] += amt
+        else:
+            st["balance_lkr"] -= amt
+            st["spent_lkr"] += amt
+    for b in buckets:
+        bid = b.get("id") or b.get("bucket_id")
+        if bid in by_id:
+            b["balance_lkr"] = round(by_id[bid]["balance_lkr"], 2)
+            b["spent_lkr"] = round(by_id[bid]["spent_lkr"], 2)
+    pool = sum(
+        float(b.get("balance_lkr", 0)) + float(b.get("spent_lkr", 0))
+        for b in buckets
+    )
+    wallet["total_balance_lkr"] = round(pool + orphan_credit, 2)
+
 
 @router.get("/account-context/{user_id}")
 async def account_context(user_id: str):
@@ -82,6 +125,7 @@ async def family_wallet(account_id: str):
             merged = sorted(fixture_txns.values(),
                             key=lambda t: t.get("date") or "", reverse=True)
             wallet["recent_transactions"] = merged[:10]
+            _apply_live_rows_to_wallet_buckets(wallet, live_rows)
     except Exception as exc:
         log.warning("Could not merge Supabase transactions: %s", exc)
 

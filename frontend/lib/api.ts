@@ -10,6 +10,9 @@ import { Transaction } from "@/types";
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "http://localhost:8000";
 const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK !== "false";
 
+/** When true, wallet/transfer calls stay client-side; refetch after transfer would wipe local state. */
+export const isApiMockMode = USE_MOCK;
+
 export class ApiError extends Error {
   status: number;
   constructor(status: number, message: string) {
@@ -108,6 +111,18 @@ export async function postWalletTransfer(payload: {
 }) {
   if (USE_MOCK) {
     await new Promise((r) => setTimeout(r, 800));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("seylan:mock-remittance", {
+          detail: {
+            account_id: payload.recipient_account_id,
+            amount_lkr: payload.amount_lkr,
+            sender_id: payload.sender_account_id,
+            allocations: payload.allocation_rules,
+          },
+        })
+      );
+    }
     return { success: true, amount_lkr: payload.amount_lkr };
   }
   // Backend expects list[{bucket_id, pct}], not Record<string, number>
