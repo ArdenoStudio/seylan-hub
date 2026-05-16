@@ -16,15 +16,19 @@ export interface RemittanceCurrency {
 
 /** Demo FX rates to LKR. Update alongside backend /api/fx when rates change. */
 export const REMITTANCE_CURRENCIES: RemittanceCurrency[] = [
-  { code: "GBP", name: "British Pound",    flag: "🇬🇧", lkrRate: 408.3,  symbol: "£" },
-  { code: "USD", name: "US Dollar",         flag: "🇺🇸", lkrRate: 320.5,  symbol: "$" },
-  { code: "EUR", name: "Euro",              flag: "🇪🇺", lkrRate: 348.2,  symbol: "€" },
-  { code: "AUD", name: "Australian Dollar", flag: "🇦🇺", lkrRate: 208.4,  symbol: "A$" },
-  { code: "CAD", name: "Canadian Dollar",   flag: "🇨🇦", lkrRate: 234.7,  symbol: "C$" },
-  { code: "AED", name: "UAE Dirham",        flag: "🇦🇪", lkrRate:  87.3,  symbol: "د.إ" },
-  { code: "SGD", name: "Singapore Dollar",  flag: "🇸🇬", lkrRate: 238.1,  symbol: "S$" },
-  { code: "JPY", name: "Japanese Yen",      flag: "🇯🇵", lkrRate:   2.14, symbol: "¥" },
+  { code: "GBP", name: "British Pound",    flag: "https://flagcdn.com/gb.svg", lkrRate: 408.3,  symbol: "£"   },
+  { code: "USD", name: "US Dollar",        flag: "https://flagcdn.com/us.svg", lkrRate: 320.5,  symbol: "$"   },
+  { code: "EUR", name: "Euro",             flag: "https://flagcdn.com/eu.svg", lkrRate: 348.2,  symbol: "€"   },
+  { code: "AUD", name: "Australian Dollar",flag: "https://flagcdn.com/au.svg", lkrRate: 208.4,  symbol: "A$"  },
+  { code: "CAD", name: "Canadian Dollar",  flag: "https://flagcdn.com/ca.svg", lkrRate: 234.7,  symbol: "C$"  },
+  { code: "AED", name: "UAE Dirham",       flag: "https://flagcdn.com/ae.svg", lkrRate:  87.3,  symbol: "د.إ" },
+  { code: "SGD", name: "Singapore Dollar", flag: "https://flagcdn.com/sg.svg", lkrRate: 238.1,  symbol: "S$"  },
+  { code: "JPY", name: "Japanese Yen",     flag: "https://flagcdn.com/jp.svg", lkrRate:   2.14, symbol: "¥"   },
 ];
+
+export const LKR_CURRENCY: RemittanceCurrency = {
+  code: "LKR", name: "Sri Lankan Rupee", flag: "https://flagcdn.com/lk.svg", lkrRate: 1, symbol: "Rs",
+};
 
 export function toLkr(amount: number, currency: RemittanceCurrency): number {
   return Math.round(amount * currency.lkrRate);

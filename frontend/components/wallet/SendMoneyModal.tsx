@@ -21,6 +21,7 @@ import {
   REMITTANCE_CURRENCIES,
   type RemittanceCurrency,
 } from "@/lib/remittance-fx";
+// LKR_CURRENCY exported for CurrencyExchangeCard use
 import { toast } from "sonner";
 import { EXTERNAL_LINK_REL, SEYLAN_LINKS } from "@/lib/seylan-external-links";
 import { ArrowRight, CreditCard, Zap, Send, ChevronRight, RefreshCw } from "lucide-react";
