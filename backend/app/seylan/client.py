@@ -17,7 +17,7 @@ def _base_url(group: ServiceGroup) -> str:
 
 
 def _headers() -> dict:
-    return {"api_key": settings.seylan_api_key, "Accept": "application/json"}
+    return {"x-api-key": settings.seylan_api_key, "Accept": "application/json"}
 
 
 def assert_success(response: dict, wrapper_key: str) -> dict:
