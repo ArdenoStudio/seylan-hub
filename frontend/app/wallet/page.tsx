@@ -21,6 +21,13 @@ const ASSISTANT_PROMPT =
 
 export default function WalletPage() {
   const [modalOpen, setModalOpen] = useState(false);
+  const [remittanceOverride, setRemittanceOverride] = useState<{
+    amount_lkr: number;
+    date: string;
+    amount_gbp: number;
+    fx_rate: number;
+    provider: string;
+  } | null>(null);
 
   const handleSpend = useCallback((tx: Transaction, newBalance: number) => {
     fireSpendToast(tx, newBalance);
@@ -78,7 +85,9 @@ export default function WalletPage() {
 
       {wallet && (
         <LastRemittanceBanner
-          wallet={wallet}
+          wallet={remittanceOverride
+            ? { ...wallet, last_remittance: { ...wallet.last_remittance, ...remittanceOverride } }
+            : wallet}
           onSendAgain={() => setModalOpen(true)}
         />
       )}
@@ -155,7 +164,18 @@ export default function WalletPage() {
         senderId="SEY-USR-001"
         recipientId={FAMILY_ACCOUNT_ID}
         allocations={allocations}
-        onSuccess={refetch}
+        onSuccess={(amountLkr?: number, amountGbp?: number) => {
+          if (amountLkr) {
+            setRemittanceOverride({
+              amount_lkr: amountLkr,
+              date: new Date().toISOString().slice(0, 10),
+              amount_gbp: amountGbp ?? Math.round(amountLkr / 408.3),
+              fx_rate: 408.3,
+              provider: "Seylan Hub",
+            });
+          }
+          refetch();
+        }}
         open={modalOpen}
         onOpenChange={setModalOpen}
       />
