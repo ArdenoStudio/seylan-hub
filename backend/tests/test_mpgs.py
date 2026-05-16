@@ -13,3 +13,8 @@ def test_checkout_url_includes_rest_version(monkeypatch):
         "https://example.test/payments/checkout"
         "?session=SESSION%2F123&merchant=CURSOR1&version=79"
     )
+
+
+def test_format_amount_uses_two_decimals():
+    assert mpgs._format_amount(150) == "150.00"
+    assert mpgs._format_amount(150.5) == "150.50"

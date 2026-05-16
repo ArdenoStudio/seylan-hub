@@ -38,6 +38,10 @@ def _checkout_url(session_id: str) -> str:
     )
 
 
+def _format_amount(amount_lkr: float) -> str:
+    return f"{amount_lkr:.2f}"
+
+
 async def create_checkout_session(
     order_id: str,
     amount_lkr: float,
@@ -47,8 +51,7 @@ async def create_checkout_session(
 ) -> dict[str, Any]:
     """Initiate a Hosted Checkout session (POST /session).
 
-    Browser Hosted Checkout loads checkout.js from a path like /checkout/version/{N}/checkout.js.
-    The script version must match the REST API version that initiated the session.
+    Browser Hosted Checkout loads the static checkout.min.js bundle documented by MPGS.
     """
     url = _base_url() + "/merchant/" + settings.mpgs_merchant_id + "/session"
     payload: dict[str, Any] = {
@@ -61,7 +64,7 @@ async def create_checkout_session(
         },
         "order": {
             "id": order_id,
-            "amount": amount_lkr,
+            "amount": _format_amount(amount_lkr),
             "currency": "LKR",
             "description": description,
         },
