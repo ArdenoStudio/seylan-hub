@@ -10,10 +10,12 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 interface AllocationEditorProps {
   buckets: Bucket[];
   onSave: (allocations: Record<string, number>) => void;
+  /** Start expanded (e.g. user opened #allocation-editor / Tune split) */
+  defaultExpanded?: boolean;
 }
 
-export function AllocationEditor({ buckets, onSave }: AllocationEditorProps) {
-  const [expanded, setExpanded] = useState(false);
+export function AllocationEditor({ buckets, onSave, defaultExpanded = false }: AllocationEditorProps) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const [allocations, setAllocations] = useState<Record<string, number>>(
     Object.fromEntries(buckets.map((b) => [b.bucket_id, b.allocation_pct]))
   );

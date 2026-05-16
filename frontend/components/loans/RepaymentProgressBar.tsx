@@ -12,8 +12,7 @@ interface RepaymentProgressBarProps {
 export function RepaymentProgressBar({ loan }: RepaymentProgressBarProps) {
   const pct = Math.round((loan.payments_made / loan.total_payments) * 100);
   const remaining = loan.total_payments - loan.payments_made;
-  const paidLkr = loan.payments_made * loan.monthly_payment_lkr;
-  const remainingLkr = remaining * loan.monthly_payment_lkr;
+  const principalRepaid = Math.max(0, loan.disbursed_lkr - loan.outstanding_lkr);
 
   return (
     <Card className="card-glass shadow-brand border-0">
@@ -30,9 +29,14 @@ export function RepaymentProgressBar({ loan }: RepaymentProgressBarProps) {
         <div className="text-center text-sm font-semibold text-seylan-charcoal">
           {pct}% complete
         </div>
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>{formatLKR(paidLkr)} paid</span>
-          <span>{formatLKR(remainingLkr)} remaining</span>
+        <div className="flex flex-col gap-1 text-xs text-muted-foreground sm:flex-row sm:justify-between">
+          <span>
+            {formatLKR(principalRepaid)} repaid of {formatLKR(loan.disbursed_lkr)} disbursed (principal
+            portion)
+          </span>
+          <span className="font-medium text-seylan-charcoal">
+            {formatLKR(loan.outstanding_lkr)} outstanding (includes interest)
+          </span>
         </div>
       </CardContent>
     </Card>

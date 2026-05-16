@@ -36,6 +36,15 @@ interface RawWalletResponse {
   [key: string]: unknown;
 }
 
+function normaliseWalletTxnType(rec: Record<string, unknown>): "credit" | "debit" {
+  const raw = String(rec.type ?? "").toLowerCase();
+  if (raw === "credit" || raw === "debit") return raw;
+  if (String(rec.source ?? "") === "transfer") return "credit";
+  const amt = Number(rec.amount_lkr ?? 0);
+  if (amt > 0 && String(rec.merchant ?? "").toLowerCase().includes("remittance")) return "credit";
+  return "debit";
+}
+
 export async function getFamilyWallet(accountId: string) {
   const raw = await request<RawWalletResponse>(`/mock/family-wallet/${accountId}`);
   return {
@@ -54,7 +63,7 @@ export async function getFamilyWallet(accountId: string) {
       ...t,
       transaction_id: (t as Record<string, unknown>).transaction_id ?? (t as Record<string, unknown>).id,
       timestamp: (t as Record<string, unknown>).timestamp ?? (t as Record<string, unknown>).date,
-      type: (t as Record<string, unknown>).type ?? ((t as Record<string, unknown>).amount_lkr as number) < 0 ? "debit" : "credit",
+      type: normaliseWalletTxnType(t as Record<string, unknown>),
     })),
   };
 }
@@ -131,17 +140,26 @@ export async function saveAllocationRules(
   allocations: Record<string, number>,
   accountId = "SEY-ACC-002"
 ) {
-  return request(`/api/wallet/rules/${senderId}`, {
+  const body = JSON.stringify({
+    account_id: accountId,
+    allocation_rules: Object.entries(allocations).map(([bucket_id, pct]) => ({
+      bucket_id,
+      pct,
+    })),
+  });
+  const path = `/api/wallet/rules/${encodeURIComponent(senderId)}`;
+  const url = typeof window !== "undefined" ? path : `${API_BASE}${path}`;
+  const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      account_id: accountId,
-      allocation_rules: Object.entries(allocations).map(([bucket_id, pct]) => ({
-        bucket_id,
-        pct,
-      })),
-    }),
+    body,
+    signal: AbortSignal.timeout(15000),
   });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "Unknown error");
+    throw new ApiError(res.status, text);
+  }
+  return res.json();
 }
 
 export async function postChat(

@@ -31,6 +31,45 @@ def _load(name: str) -> dict:
     return _fixture_cache[name]
 
 
+def _coerce_txn_type(row: dict) -> str:
+    t = str(row.get("type") or "").strip().lower()
+    if t in ("credit", "debit"):
+        return t
+    if str(row.get("source", "")) == "transfer":
+        return "credit"
+    amt = float(row.get("amount_lkr") or 0)
+    if amt > 0 and "remittance" in str(row.get("merchant", "")).lower():
+        return "credit"
+    return "debit"
+
+
+def _derive_last_remittance_from_transactions(wallet: dict, txns: list | None = None) -> None:
+    """Override last_remittance from the newest remittance credit batch in activity."""
+    src = txns if txns is not None else wallet.get("recent_transactions") or []
+    by_second: dict[str, float] = {}
+    for t in src:
+        if "Remittance from" not in str(t.get("merchant", "")):
+            continue
+        if str(t.get("type", "")).lower() != "credit":
+            continue
+        dt = str(t.get("date") or t.get("timestamp") or "")
+        key = dt[:19] if len(dt) >= 19 else dt
+        by_second[key] = by_second.get(key, 0.0) + float(t.get("amount_lkr") or 0)
+    if not by_second:
+        return
+    best_key = max(by_second.keys())
+    amt = round(by_second[best_key], 2)
+    lr = dict(wallet.get("last_remittance") or {})
+    lr["amount_lkr"] = amt
+    lr["date"] = best_key[:10] if len(best_key) >= 10 else lr.get("date", "")
+    lr["exchange_rate"] = 408.30
+    lr["sender_amount_gbp"] = round(amt / 408.30, 2)
+    lr["corridor"] = lr.get("corridor", "GBPLKR")
+    lr["provider"] = lr.get("provider", "Seylan Hub")
+    lr["id"] = lr.get("id", "REM-LIVE")
+    wallet["last_remittance"] = lr
+
+
 def _apply_live_rows_to_wallet_buckets(wallet: dict, live_rows: list[dict]) -> None:
     """Adjust fixture bucket balances by Supabase-only activity (fixture txns already baked in)."""
     buckets = wallet.get("buckets") or []
@@ -51,7 +90,7 @@ def _apply_live_rows_to_wallet_buckets(wallet: dict, live_rows: list[dict]) -> N
     for row in ordered:
         bid = row.get("bucket_id")
         amt = float(row.get("amount_lkr") or 0)
-        typ = str(row.get("type") or "debit").lower()
+        typ = _coerce_txn_type(row)
         if typ == "credit" and not bid:
             orphan_credit += amt
             continue
@@ -113,7 +152,9 @@ async def family_wallet(account_id: str):
 
     # Merge live Supabase transactions on top of fixture
     try:
-        live_rows = supabase_client.get_recent_transactions(account_id, limit=20)
+        live_rows = supabase_client.get_recent_transactions(
+            account_id, limit=500, ascending=True
+        )
         if live_rows:
             fixture_txns = {t["id"]: t for t in wallet.get("recent_transactions", [])}
             for row in live_rows:
@@ -123,12 +164,16 @@ async def family_wallet(account_id: str):
                     "date": row.get("timestamp") or row.get("created_at"),
                     "merchant": row.get("merchant", ""),
                     "amount_lkr": row.get("amount_lkr", 0),
-                    "type": row.get("type", "debit"),
+                    "type": _coerce_txn_type(row),
                     "bucket_id": row.get("bucket_id"),
                     "bucket_label": row.get("bucket_label"),
                 }
-            merged = sorted(fixture_txns.values(),
-                            key=lambda t: t.get("date") or "", reverse=True)
+            merged = sorted(
+                fixture_txns.values(),
+                key=lambda t: (t.get("date") or "", str(t.get("id") or "")),
+                reverse=True,
+            )
+            _derive_last_remittance_from_transactions(wallet, merged)
             wallet["recent_transactions"] = merged[:10]
             _apply_live_rows_to_wallet_buckets(wallet, live_rows)
     except Exception as exc:
@@ -152,6 +197,8 @@ async def family_wallet(account_id: str):
                         break
     except Exception as exc:
         log.warning("merge allocation_rules into wallet failed: %s", exc)
+
+    _derive_last_remittance_from_transactions(wallet)
 
     return wallet
 

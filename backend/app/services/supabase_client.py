@@ -75,12 +75,21 @@ def get_tax_jar_rule(user_id: str) -> dict | None:
     return result.data[0] if result.data else None
 
 
-def get_recent_transactions(account_id: str, limit: int = 20) -> list[dict]:
-    result = (get_client().table("transactions")
-              .select("*")
-              .eq("account_id", account_id)
-              .order("timestamp", desc=True)
-              .limit(limit).execute())
+def get_recent_transactions(
+    account_id: str,
+    limit: int = 20,
+    *,
+    ascending: bool = False,
+) -> list[dict]:
+    """Return transactions for an account. Default is newest-first; use ascending=True to replay chronologically."""
+    q = (
+        get_client().table("transactions")
+        .select("*")
+        .eq("account_id", account_id)
+        .order("timestamp", desc=not ascending)
+        .order("id", desc=not ascending)
+    )
+    result = q.limit(limit).execute()
     return result.data if result.data else []
 
 

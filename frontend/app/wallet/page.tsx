@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useLayoutEffect } from "react";
+import { useState, useCallback, useRef, useLayoutEffect, useEffect } from "react";
 import { useWalletRealtime } from "@/hooks/useWalletRealtime";
 import { BucketGrid } from "@/components/wallet/BucketGrid";
 import { AllocationEditor } from "@/components/wallet/AllocationEditor";
@@ -25,6 +25,7 @@ const ASSISTANT_PROMPT =
 
 export default function WalletPage() {
   const [modalOpen, setModalOpen] = useState(false);
+  const [allocationFromHash, setAllocationFromHash] = useState(false);
   const [remittanceOverride, setRemittanceOverride] = useState<{
     amount_lkr: number;
     date: string;
@@ -32,6 +33,13 @@ export default function WalletPage() {
     fx_rate: number;
     provider: string;
   } | null>(null);
+
+  useEffect(() => {
+    const sync = () => setAllocationFromHash(window.location.hash === "#allocation-editor");
+    sync();
+    window.addEventListener("hashchange", sync);
+    return () => window.removeEventListener("hashchange", sync);
+  }, []);
 
   const accountHolderRef = useRef("");
   const handleSpend = useCallback((tx: Transaction, newBalance: number) => {
@@ -147,7 +155,7 @@ export default function WalletPage() {
           {
             label: "Ask Assistant",
             icon: Bot,
-            href: `/assistant?prompt=${encodeURIComponent(ASSISTANT_PROMPT)}`,
+            href: `/assistant?prompt=${encodeURIComponent(ASSISTANT_PROMPT)}&context=wallet&accountId=${encodeURIComponent(FAMILY_ACCOUNT_ID)}`,
           },
           { label: "Tune split", icon: PieChart, href: "#allocation-editor" },
         ]}
@@ -157,8 +165,9 @@ export default function WalletPage() {
 
       <section id="allocation-editor" className="scroll-mt-6">
         <AllocationEditor
-          key={buckets.map((b) => `${b.bucket_id}:${b.allocation_pct}`).join("|")}
+          key={`${buckets.map((b) => `${b.bucket_id}:${b.allocation_pct}`).join("|")}|${allocationFromHash ? "open" : "closed"}`}
           buckets={buckets}
+          defaultExpanded={allocationFromHash}
           onSave={async (newAllocations) => {
             try {
               await saveAllocationRules(
