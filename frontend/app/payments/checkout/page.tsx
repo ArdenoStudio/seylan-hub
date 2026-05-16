@@ -12,6 +12,9 @@ declare global {
   interface Window {
     Checkout?: {
       configure: (config: Record<string, unknown>) => void;
+      /** Modal Hosted Checkout — sends configure to the gateway iframe (required on this MPGS build). */
+      showLightbox: () => void;
+      /** Full-page mode only works after the lightbox iframe bridge exists; prefer showLightbox. */
       showPaymentPage: () => void;
     };
   }
@@ -73,7 +76,17 @@ function HostedCheckoutLoader({
             },
           },
         });
-        Checkout.showPaymentPage();
+        // configure() applies inside doWhenDocumentReady; opening the iframe next tick avoids an empty configuration.
+        // showPaymentPage() is a no-op until the xd iframe exists (created by showLightbox on this gateway build).
+        window.setTimeout(() => {
+          if (cancelled) return;
+          try {
+            Checkout.showLightbox();
+          } catch (e) {
+            console.error(e);
+            setLoadError("Could not open payment window. Please try again.");
+          }
+        }, 0);
       } catch (e) {
         console.error(e);
         setLoadError("Could not start checkout. Please try again.");
