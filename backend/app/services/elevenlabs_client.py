@@ -12,12 +12,13 @@ def _tts_cached(text: str, language: str) -> bytes:
     if not settings.elevenlabs_api_key:
         raise RuntimeError("ELEVENLABS_API_KEY is not set")
     client = ElevenLabs(api_key=settings.elevenlabs_api_key)
-    audio = client.generate(
+    # SDK v2+ uses text_to_speech.convert(); v1 used client.generate()
+    audio_iter = client.text_to_speech.convert(
+        voice_id=settings.elevenlabs_voice_id,
         text=text,
-        voice=settings.elevenlabs_voice_id,
-        model="eleven_multilingual_v2",
+        model_id="eleven_multilingual_v2",
     )
-    return b"".join(audio)
+    return b"".join(audio_iter)
 
 
 def text_to_speech(text: str, language: str = "en") -> bytes:
