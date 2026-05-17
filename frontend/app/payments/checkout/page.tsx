@@ -95,8 +95,17 @@ function HostedCheckoutLoader({
         return;
       }
       try {
-        const config: Record<string, unknown> = { session: { id: sessionId } };
-        if (merchantId) config.merchant = merchantId;
+        const config: Record<string, unknown> = {
+          session: { id: sessionId },
+          interaction: {
+            merchant: {
+              name: "Seylan Hub",
+            },
+          },
+        };
+        if (merchantId) {
+          config.merchant = merchantId;
+        }
         Checkout.configure(config);
         window.setTimeout(() => {
           if (cancelled) return;
