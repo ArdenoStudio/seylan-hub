@@ -13,6 +13,12 @@ interface VoiceButtonProps {
   disabled?: boolean;
 }
 
+const MIC_ERROR_LABELS: Record<string, string> = {
+  "not-allowed": "Allow mic in browser",
+  "service-not-allowed": "Allow mic in browser",
+  "audio-capture": "No microphone found",
+};
+
 export function VoiceButton({ language, onTranscript, disabled }: VoiceButtonProps) {
   const { isListening, transcript, error, supported, start, stop } = useVoice();
 
@@ -23,6 +29,7 @@ export function VoiceButton({ language, onTranscript, disabled }: VoiceButtonPro
   if (!supported) return null;
 
   const lang = language === "si" ? "si-LK" : "en-US";
+  const errorLabel = error ? (MIC_ERROR_LABELS[error] ?? "Mic error — click to retry") : null;
 
   function handleClick() {
     if (isListening) {
@@ -45,8 +52,8 @@ export function VoiceButton({ language, onTranscript, disabled }: VoiceButtonPro
           isListening && "ring-2 ring-red-500/50"
         )}
         title={
-          error
-            ? `Microphone error: ${error} — click to try again`
+          errorLabel
+            ? errorLabel
             : isListening
             ? "Listening… click to stop"
             : "Click to speak"
@@ -68,9 +75,9 @@ export function VoiceButton({ language, onTranscript, disabled }: VoiceButtonPro
         </span>
       )}
 
-      {error && !isListening && (
-        <span className="text-xs text-red-400 select-none" title={error}>
-          Mic error
+      {errorLabel && !isListening && (
+        <span className="text-xs text-red-400 select-none cursor-pointer" onClick={handleClick} title="Click to try again">
+          {errorLabel}
         </span>
       )}
     </div>

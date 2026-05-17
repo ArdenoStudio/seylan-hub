@@ -43,6 +43,7 @@ class Settings(BaseSettings):
 
     # AI
     anthropic_api_key: str = ""
+    openai_api_key: str = ""
     groq_api_key: str = ""
     elevenlabs_api_key: str = ""
     elevenlabs_voice_id: str = "EXAVITQu4vr4xnSDxMaL"
@@ -53,9 +54,9 @@ class Settings(BaseSettings):
 
     # App
     cors_origins: str = (
-        "http://localhost:3000,https://seylan-hub.vercel.app,https://seylan-hub1.vercel.app"
+        "http://localhost:3000,https://seylan-hub-frontend.netlify.app"
     )
-    frontend_base_url: str = "https://seylan-hub.vercel.app"
+    frontend_base_url: str = "https://seylan-hub-frontend.netlify.app"
 
     @property
     def cors_list(self) -> list[str]:
