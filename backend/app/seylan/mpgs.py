@@ -63,9 +63,7 @@ async def create_checkout_session(
             "id": order_id,
             "amount": _format_amount(amount_lkr),
             "currency": "LKR",
-            "description": description[:100],
         },
-        "transaction": {"reference": purpose[:40]},
     }
 
     log.info("MPGS create_checkout_session order_id=%s amount=%.2f", order_id, amount_lkr)
