@@ -17,6 +17,7 @@ const MIC_ERROR_LABELS: Record<string, string> = {
   "not-allowed": "Allow mic in browser",
   "service-not-allowed": "Allow mic in browser",
   "audio-capture": "No microphone found",
+  "network": "Speech service unreachable — retry on Chrome/Edge HTTPS",
 };
 
 export function VoiceButton({ language, onTranscript, disabled }: VoiceButtonProps) {

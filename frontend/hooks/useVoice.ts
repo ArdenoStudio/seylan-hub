@@ -15,6 +15,7 @@ const FATAL_MIC_ERRORS = new Set(["not-allowed", "service-not-allowed", "audio-c
 
 /** Errors that should not tear down a press‑and‑hold session; the engine ends and we reconnect. */
 const NON_FATAL_SESSION_ERRORS = new Set(["no-speech", "aborted", "network"]);
+const MAX_NETWORK_RETRIES = 3;
 
 export function useVoice(): UseVoiceReturn {
   const [isListening, setIsListening] = useState(false);
@@ -34,6 +35,7 @@ export function useVoice(): UseVoiceReturn {
   const sessionActiveRef = useRef(false);
   const langRef = useRef("en-US");
   const restartTimerRef = useRef<number | null>(null);
+  const restartAttemptsRef = useRef(0);
 
   const SpeechRecognitionCtor =
     typeof window !== "undefined"
@@ -86,6 +88,7 @@ export function useVoice(): UseVoiceReturn {
     if (resetAccumulator) {
       sessionFinalRef.current = "";
       setTranscript("");
+      restartAttemptsRef.current = 0;
     }
 
     const prev = recognitionRef.current;
@@ -108,7 +111,7 @@ export function useVoice(): UseVoiceReturn {
     const recognition = new SpeechRecognitionCtor();
     recognition.lang = lang;
     recognition.interimResults = true;
-    recognition.continuous = true;
+    recognition.continuous = false;
     recognition.maxAlternatives = 1;
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -124,6 +127,8 @@ export function useVoice(): UseVoiceReturn {
       }
       sessionFinalRef.current = finalPart;
       setTranscript(finalPart + interim);
+      setError(null);
+      restartAttemptsRef.current = 0;
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
@@ -138,6 +143,18 @@ export function useVoice(): UseVoiceReturn {
         return;
       }
 
+      if (event.error === "network") {
+        restartAttemptsRef.current += 1;
+        if (restartAttemptsRef.current > MAX_NETWORK_RETRIES) {
+          sessionActiveRef.current = false;
+          clearRestartTimerOnly();
+          setError("network");
+          setIsListening(false);
+          recognitionRef.current = null;
+          return;
+        }
+      }
+
       if (!NON_FATAL_SESSION_ERRORS.has(event.error)) {
         setError(event.error);
       }
@@ -150,11 +167,12 @@ export function useVoice(): UseVoiceReturn {
         return;
       }
       clearRestartTimerOnly();
+      const retryDelayMs = Math.min(1500, 250 * (restartAttemptsRef.current + 1));
       restartTimerRef.current = window.setTimeout(() => {
         restartTimerRef.current = null;
         if (!sessionActiveRef.current || !SpeechRecognitionCtor) return;
         beginRecognition(langRef.current, false);
-      }, 0);
+      }, retryDelayMs);
     };
 
     recognitionRef.current = recognition;
@@ -164,11 +182,13 @@ export function useVoice(): UseVoiceReturn {
     } catch {
       if (sessionActiveRef.current && SpeechRecognitionCtor) {
         clearRestartTimerOnly();
+        restartAttemptsRef.current += 1;
+        const retryDelayMs = Math.min(1500, 250 * (restartAttemptsRef.current + 1));
         restartTimerRef.current = window.setTimeout(() => {
           restartTimerRef.current = null;
           if (!sessionActiveRef.current) return;
           beginRecognition(langRef.current, false);
-        }, 0);
+        }, retryDelayMs);
       } else {
         setIsListening(false);
       }
@@ -183,6 +203,7 @@ export function useVoice(): UseVoiceReturn {
     clearRestartTimerOnly();
     sessionActiveRef.current = true;
     setError(null);
+    restartAttemptsRef.current = 0;
     beginRecognition(lang, true);
   }
 
