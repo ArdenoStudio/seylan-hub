@@ -57,13 +57,7 @@ async def create_checkout_session(
     mid = settings.mpgs_merchant_id
     session_url = _base_url() + "/merchant/" + mid + "/session"
 
-    create_payload: dict[str, Any] = {
-        "apiOperation": "CREATE_CHECKOUT_SESSION",
-        "order": {
-            "id": order_id,
-            "currency": "LKR",
-        },
-    }
+    create_payload: dict[str, Any] = {"apiOperation": "CREATE_CHECKOUT_SESSION"}
 
     log.info("MPGS create_checkout_session order_id=%s amount=%.2f", order_id, amount_lkr)
 
@@ -85,6 +79,7 @@ async def create_checkout_session(
             json={
                 "apiOperation": "UPDATE_SESSION",
                 "order": {
+                    "id": order_id,
                     "amount": _format_amount(amount_lkr),
                     "currency": "LKR",
                 },
