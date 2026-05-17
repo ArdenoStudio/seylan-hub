@@ -33,7 +33,7 @@ export default async function StatusPage() {
             <span className="font-semibold tracking-tight">SeylanHub Status</span>
           </div>
           <a
-            href="https://seylan-hub.vercel.app"
+            href={process.env.NEXT_PUBLIC_APP_URL ?? "https://seylan-hub.vercel.app"}
             className="text-sm text-neutral-500 hover:text-blue-600 transition-colors"
           >
             seylan-hub.vercel.app →

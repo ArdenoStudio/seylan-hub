@@ -14,7 +14,7 @@ const NAV_ITEMS = [
   { href: "/business",  label: "Business",  icon: Store     },
 ];
 
-const STATUS_URL = "https://seylan-hub-status1.vercel.app/";
+const STATUS_URL = process.env.NEXT_PUBLIC_STATUS_URL ?? "https://seylan-hub-status1.vercel.app/";
 
 export function Sidebar() {
   const pathname = usePathname();
