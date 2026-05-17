@@ -61,7 +61,6 @@ async def create_checkout_session(
         "apiOperation": "CREATE_CHECKOUT_SESSION",
         "order": {
             "id": order_id,
-            "amount": _format_amount(amount_lkr),
             "currency": "LKR",
         },
     }
@@ -80,6 +79,24 @@ async def create_checkout_session(
         data = resp.json()
         session_id: str = data.get("session", {}).get("id", "")
         success_indicator: str = data.get("successIndicator", "")
+
+        update_resp = await client.put(
+            session_url + "/" + session_id,
+            json={
+                "apiOperation": "UPDATE_SESSION",
+                "order": {
+                    "amount": _format_amount(amount_lkr),
+                    "currency": "LKR",
+                },
+            },
+            auth=_auth(),
+        )
+
+        if not update_resp.is_success:
+            log.error("MPGS session update error %s: %s", update_resp.status_code, update_resp.text)
+            raise RuntimeError(
+                "MPGS session update failed [" + str(update_resp.status_code) + "]: " + update_resp.text
+            )
 
     log.info("MPGS session created session_id=%s", session_id)
     return {
