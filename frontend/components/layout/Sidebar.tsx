@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Wallet, CreditCard, Store, Sparkles, Activity, ExternalLink, UserCircle } from "lucide-react";
+import { Wallet, CreditCard, Store, Sparkles, Activity, ExternalLink, UserCircle, BarChart2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: "/assistant", label: "Seylan AI", icon: Sparkles  },
   { href: "/loans",     label: "Loans",     icon: CreditCard },
   { href: "/business",  label: "Business",  icon: Store     },
+  { href: "/metrics",   label: "Metrics",   icon: BarChart2  },
 ];
 
 const STATUS_URL = process.env.NEXT_PUBLIC_STATUS_URL ?? "https://seylan-hub-status1.vercel.app/";

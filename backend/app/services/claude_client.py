@@ -1,6 +1,6 @@
-"""AI client with extended thinking + streaming.
+"""AI client with streaming.
 
-Uses Claude (Anthropic) when ANTHROPIC_API_KEY is set.
+Uses OpenAI (gpt-4o) when OPENAI_API_KEY is set.
 Falls back to DeepSeek-R1 on Groq which natively outputs <think> blocks.
 """
 import logging
@@ -11,8 +11,7 @@ from app.config import settings
 log = logging.getLogger(__name__)
 
 _GROQ_THINKING_MODEL = "deepseek-r1-distill-llama-70b"
-_CLAUDE_MODEL = "claude-sonnet-4-6"
-_THINKING_BUDGET = 5000
+_OPENAI_MODEL = "gpt-4o"
 _MAX_TOKENS = 8000
 
 
@@ -72,33 +71,31 @@ async def stream_chat(
     Yields (event_type, content) tuples.
     event_type is 'thinking' (reasoning text) or 'token' (reply text).
 
-    Uses Claude with extended thinking if ANTHROPIC_API_KEY is set,
+    Uses OpenAI gpt-4o if OPENAI_API_KEY is set,
     otherwise uses DeepSeek-R1 on Groq which natively reasons with <think> tags.
     """
-    if not settings.anthropic_api_key:
+    if not settings.openai_api_key:
         async for item in _stream_groq_thinking(system_prompt, messages):
             yield item
         return
 
-    import anthropic
-    client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+    import openai
+    client = openai.AsyncOpenAI(api_key=settings.openai_api_key)
 
-    clean_messages = [
+    clean_messages: list[dict] = [{"role": "system", "content": system_prompt}]
+    clean_messages += [
         m for m in messages
         if m.get("content") is not None and m.get("role") in ("user", "assistant")
     ]
 
-    async with client.messages.stream(
-        model=_CLAUDE_MODEL,
-        system=system_prompt,
-        messages=clean_messages,
+    stream = await client.chat.completions.create(
+        model=_OPENAI_MODEL,
+        messages=clean_messages,  # type: ignore[arg-type]
         max_tokens=_MAX_TOKENS,
-        thinking={"type": "enabled", "budget_tokens": _THINKING_BUDGET},
-    ) as stream:
-        async for event in stream:
-            if event.type == "content_block_delta":
-                delta = event.delta
-                if delta.type == "thinking_delta":
-                    yield ("thinking", delta.thinking)
-                elif delta.type == "text_delta":
-                    yield ("token", delta.text)
+        stream=True,
+    )
+
+    async for chunk in stream:
+        delta = chunk.choices[0].delta if chunk.choices else None
+        if delta and delta.content:
+            yield ("token", delta.content)
