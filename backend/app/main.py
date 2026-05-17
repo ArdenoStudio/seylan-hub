@@ -8,6 +8,8 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+from app.services import metrics_store
+
 from app.config import settings
 from app.routers import mock, wallet, chat, tts, loans, business, payments, stt
 
@@ -95,6 +97,17 @@ app.add_middleware(
 
 
 @app.middleware("http")
+async def metrics_middleware(request: Request, call_next):
+    t0 = time.perf_counter()
+    agent_key = metrics_store.route_to_agent(request.url.path)
+    response = await call_next(request)
+    if agent_key:
+        latency_ms = (time.perf_counter() - t0) * 1000
+        metrics_store.record(agent_key, latency_ms, response.status_code < 500)
+    return response
+
+
+@app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
     client_ip = request.client.host if request.client else "unknown"
     if not _check_rate_limit(request.url.path, client_ip):
@@ -131,6 +144,11 @@ async def global_error(request: Request, exc: Exception):
 @app.get("/health")
 async def health():
     return {"status": "ok", "version": "0.1.0"}
+
+
+@app.get("/api/metrics")
+async def get_metrics():
+    return metrics_store.get_all_metrics()
 
 
 @app.get("/health/deep")
