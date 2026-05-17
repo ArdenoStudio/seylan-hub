@@ -1,7 +1,13 @@
 from datetime import date
 
 
-def build_assistant_system_prompt(account_context: dict, language: str = "en") -> str:
+def build_assistant_system_prompt(
+    account_context: dict,
+    language: str = "en",
+    loans_detail: dict | None = None,
+    wallet: dict | None = None,
+    business: dict | None = None,
+) -> str:
     name = account_context.get("name") or account_context.get("account_holder", "Customer")
     savings = account_context.get("savings_balance", 0)
     current = account_context.get("current_balance", 0)
@@ -16,13 +22,19 @@ def build_assistant_system_prompt(account_context: dict, language: str = "en") -
         for t in txns[:5]
     )
 
-    loans = account_context.get("loans", [])
+    # Use detailed loans data if available, otherwise fall back to account_context loans
+    raw_loans = (loans_detail.get("loans") if loans_detail else None) or account_context.get("loans", [])
     loan_lines = "\n".join(
-        f"  - {l.get('type','Loan')}: "
-        f"LKR {l.get('outstanding_lkr', l.get('outstanding_amount_lkr', 0)):,.0f} outstanding, "
-        f"LKR {l.get('monthly_installment_lkr', l.get('monthly_payment_lkr', 0)):,.0f}/month, "
-        f"next payment {l.get('next_payment_date','unknown')}"
-        for l in loans
+        f"  - {l.get('type', l.get('loan_id', 'Loan'))}: "
+        f"LKR {l.get('outstanding_lkr', l.get('outstanding_amount_lkr', 0)):,.0f} outstanding "
+        f"of LKR {l.get('disbursed_lkr', l.get('disbursed_amount_lkr', 0)):,.0f} disbursed, "
+        f"{l.get('payments_made', '?')}/{l.get('total_payments', '?')} payments made, "
+        f"LKR {l.get('monthly_payment_lkr', l.get('monthly_installment_lkr', 0)):,.0f}/month at "
+        f"{l.get('interest_rate_pct', '?')}% p.a., "
+        f"next payment {l.get('next_payment_date', 'unknown')}, "
+        f"health: {l.get('health_score', 'unknown')}, "
+        f"payoff: {l.get('projected_payoff_date', 'unknown')}"
+        for l in raw_loans
     ) or "  None"
 
     fds = account_context.get("fixed_deposits", [])
@@ -38,6 +50,45 @@ def build_assistant_system_prompt(account_context: dict, language: str = "en") -
         if language == "en"
         else "Always respond in Sinhala (Sinhala script). If the user writes in English, still respond in Sinhala."
     )
+
+    wallet_section = ""
+    if wallet:
+        buckets = wallet.get("buckets", [])
+        bucket_lines = "\n".join(
+            f"  - {b.get('label', b.get('id'))}: "
+            f"LKR {b.get('balance_lkr', 0):,.0f} available, "
+            f"LKR {b.get('spent_lkr', 0):,.0f} spent, "
+            f"{b.get('allocated_pct', b.get('allocation_pct', 0))}% allocation"
+            for b in buckets
+        )
+        last_rem = wallet.get("last_remittance")
+        rem_line = (
+            f"\n  Last remittance: LKR {last_rem.get('amount_lkr', 0):,.0f} "
+            f"on {last_rem.get('date', 'unknown')} "
+            f"(GBP {last_rem.get('sender_amount_gbp', last_rem.get('amount_gbp', '?'))} "
+            f"@ {last_rem.get('exchange_rate', last_rem.get('fx_rate', '?'))})"
+            if last_rem else ""
+        )
+        wallet_section = f"""
+Family Wallet (linked account — {wallet.get('account_holder', 'Family')}):
+  Total balance: LKR {wallet.get('total_balance_lkr', 0):,.0f}{rem_line}
+  Buckets:
+{bucket_lines}"""
+
+    business_section = ""
+    if business:
+        biz_txns = business.get("transactions", [])
+        biz_txn_lines = "\n".join(
+            f"  - {t.get('timestamp', '')[:10]}: {t.get('description', 'Transaction')} — "
+            f"LKR {t.get('amount_lkr', 0):,.0f} ({t.get('type', '')})"
+            for t in biz_txns[:5]
+        )
+        business_section = f"""
+Business Account ({business.get('business_name', 'Business')} — {business.get('location', '')}):
+  Current balance: LKR {business.get('current_balance', 0):,.0f}
+  Tax jar balance: LKR {business.get('tax_jar_balance', 0):,.0f} (rule: {business.get('tax_jar_rule_pct', 0)}% auto-save)
+  Recent business transactions (last 5):
+{biz_txn_lines if biz_txn_lines else "  No recent transactions"}"""
 
     return f"""You are Seylan AI, a personal banking assistant for Seylan Bank Sri Lanka. You have access to the customer's live account data shown below.
 
@@ -59,7 +110,7 @@ Active loans:
 {loan_lines}
 
 Fixed deposits:
-{fd_lines}
+{fd_lines}{wallet_section}{business_section}
 
 Today's date is {today}. Use this when the customer asks about dates relative to today."""
 

@@ -14,7 +14,7 @@ interface UseVoiceReturn {
 const FATAL_MIC_ERRORS = new Set(["not-allowed", "service-not-allowed", "audio-capture"]);
 
 /** Errors that should not tear down a press‑and‑hold session; the engine ends and we reconnect. */
-const NON_FATAL_SESSION_ERRORS = new Set(["no-speech", "aborted"]);
+const NON_FATAL_SESSION_ERRORS = new Set(["no-speech", "aborted", "network"]);
 
 export function useVoice(): UseVoiceReturn {
   const [isListening, setIsListening] = useState(false);

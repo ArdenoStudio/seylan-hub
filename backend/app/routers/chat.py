@@ -14,22 +14,48 @@ from app.services.chat_tools import TOOL_DEFINITIONS, execute_tool, execute_tool
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["chat"])
 
-# In-process account context cache (avoids re-reading fixtures per token)
+# In-process fixture cache
 _ctx_cache: dict[str, dict] = {}
+_fixture_cache: dict[str, dict] = {}
+
+
+def _load_fixture(name: str) -> dict:
+    from pathlib import Path
+    if name not in _fixture_cache:
+        fx = Path(__file__).parent.parent.parent / "fixtures" / name
+        _fixture_cache[name] = json.loads(fx.read_text(encoding="utf-8"))
+    return _fixture_cache[name]
 
 
 def _get_account_context(user_id: str) -> dict:
     if user_id in _ctx_cache:
         return _ctx_cache[user_id]
-    import json
-    from pathlib import Path
-    fx = Path(__file__).parent.parent.parent / "fixtures" / "account_context.json"
-    data = json.loads(fx.read_text(encoding="utf-8"))
-    ctx = data.get(user_id, {"user_id": user_id, "name": "Customer",
-                              "savings_balance": 0, "current_balance": 0,
-                              "recent_transactions": [], "loans": [], "fixed_deposits": []})
+    data = _load_fixture("account_context.json")
+    # Fallback to SEY-USR-001 demo data if user not in fixtures
+    ctx = data.get(user_id) or data.get("SEY-USR-001", {
+        "user_id": user_id, "name": "Customer",
+        "savings_balance": 0, "current_balance": 0,
+        "recent_transactions": [], "loans": [], "fixed_deposits": [],
+    })
     _ctx_cache[user_id] = ctx
     return ctx
+
+
+def _get_supplemental_context(user_id: str) -> tuple[dict | None, dict | None]:
+    """Load loans detail and family wallet for richer AI context."""
+    loans_detail = None
+    wallet = None
+    try:
+        loans_data = _load_fixture("loans.json")
+        loans_detail = loans_data.get(user_id) or loans_data.get("SEY-USR-001")
+    except Exception:
+        pass
+    try:
+        wallet_data = _load_fixture("family_wallet.json")
+        wallet = wallet_data.get("SEY-ACC-002")
+    except Exception:
+        pass
+    return loans_detail, wallet
 
 
 @router.post("/chat")
@@ -46,7 +72,8 @@ async def chat(req: ChatRequest):
         except Exception as exc:
             log.warning("Seylan balance fetch for context failed: %s", exc)
 
-    system_prompt = build_assistant_system_prompt(account_ctx, req.language)
+    loans_detail, wallet = _get_supplemental_context(req.user_id)
+    system_prompt = build_assistant_system_prompt(account_ctx, req.language, loans_detail=loans_detail, wallet=wallet)
     messages = [{"role": m.role, "content": m.content} for m in req.history]
     messages.append({"role": "user", "content": req.message})
 
@@ -115,7 +142,8 @@ async def chat(req: ChatRequest):
 async def chat_with_actions(req: ChatRequest):
     """Non-streaming chat that supports tool calling. Returns text + any actions taken."""
     account_ctx = _get_account_context(req.user_id)
-    system_prompt = build_assistant_system_prompt(account_ctx, req.language)
+    loans_detail, wallet = _get_supplemental_context(req.user_id)
+    system_prompt = build_assistant_system_prompt(account_ctx, req.language, loans_detail=loans_detail, wallet=wallet)
     messages = [{"role": m.role, "content": m.content} for m in req.history]
     messages.append({"role": "user", "content": req.message})
 

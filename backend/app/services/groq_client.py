@@ -51,6 +51,15 @@ async def _try_models_stream(msgs: list[dict], max_tokens: int, temperature: flo
 
 async def stream_chat(system_prompt: str, messages: list[dict],
                       max_tokens: int = 512, temperature: float = 0.3) -> AsyncIterator[str]:
+    from app.services import openai_client
+    if openai_client.is_available():
+        try:
+            async for token in openai_client.stream_chat(system_prompt, messages, max_tokens, temperature):
+                yield token
+            return
+        except Exception as exc:
+            log.warning("openai: stream_chat failed (%s), falling back to Groq", exc)
+
     msgs = [{"role": "system", "content": system_prompt}] + messages
     async for token in _try_models_stream(msgs, max_tokens, temperature):
         yield token
@@ -58,6 +67,13 @@ async def stream_chat(system_prompt: str, messages: list[dict],
 
 async def complete(system_prompt: str, messages: list[dict],
                    max_tokens: int = 512, temperature: float = 0.3) -> str:
+    from app.services import openai_client
+    if openai_client.is_available():
+        try:
+            return await openai_client.complete(system_prompt, messages, max_tokens, temperature)
+        except Exception as exc:
+            log.warning("openai: complete failed (%s), falling back to Groq", exc)
+
     msgs = [{"role": "system", "content": system_prompt}] + messages
     for model in [_PRIMARY_MODEL] + _FALLBACK_MODELS:
         try:
@@ -98,8 +114,16 @@ async def complete_with_tools(system_prompt: str, messages: list[dict],
                                tools: list[dict], max_tokens: int = 512,
                                temperature: float = 0.3):
     """Non-streaming completion with tool calling support. Returns the full response message."""
+    from app.services import openai_client
+    if openai_client.is_available():
+        try:
+            return await openai_client.complete_with_tools(
+                system_prompt, messages, tools, max_tokens, temperature
+            )
+        except Exception as exc:
+            log.warning("openai: complete_with_tools failed (%s), falling back to Groq", exc)
+
     msgs = [{"role": "system", "content": system_prompt}] + messages
-    # Tools require the larger model; fall back to primary-only with graceful error
     for model in [_PRIMARY_MODEL] + _FALLBACK_MODELS:
         try:
             resp = await _get_client().chat.completions.create(
