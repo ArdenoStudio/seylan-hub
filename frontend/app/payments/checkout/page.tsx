@@ -56,9 +56,11 @@ function MissingCheckoutParams() {
 function HostedCheckoutLoader({
   sessionId,
   mpgsHost,
+  merchantId,
 }: {
   sessionId: string;
   mpgsHost: string;
+  merchantId: string;
 }) {
   const [loadError, setLoadError] = useState("");
 
@@ -69,7 +71,17 @@ function HostedCheckoutLoader({
     clearMpgsHostedCheckoutBrowserState();
     window.mpgsCheckoutErrorCallback = (error: unknown) => {
       console.error(error);
-      if (!cancelled) setLoadError("Payment gateway rejected the checkout session. Please start again.");
+      if (!cancelled) {
+        const detail =
+          typeof error === "object" && error !== null
+            ? JSON.stringify(error)
+            : String(error ?? "");
+        setLoadError(
+          detail
+            ? `Payment gateway rejected checkout session: ${detail}`
+            : "Payment gateway rejected the checkout session. Please start again."
+        );
+      }
     };
     window.mpgsCheckoutCancelCallback = () => {
       if (!cancelled) setLoadError("Payment was cancelled.");
@@ -83,9 +95,9 @@ function HostedCheckoutLoader({
         return;
       }
       try {
-        Checkout.configure({
-          session: { id: sessionId },
-        });
+        const config: Record<string, unknown> = { session: { id: sessionId } };
+        if (merchantId) config.merchant = merchantId;
+        Checkout.configure(config);
         window.setTimeout(() => {
           if (cancelled) return;
           try {
@@ -119,7 +131,7 @@ function HostedCheckoutLoader({
       delete window.mpgsCheckoutErrorCallback;
       delete window.mpgsCheckoutCancelCallback;
     };
-  }, [sessionId, mpgsHost]);
+  }, [sessionId, mpgsHost, merchantId]);
 
   if (loadError) {
     return (
@@ -151,6 +163,7 @@ function HostedCheckoutLoader({
 function CheckoutContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session") ?? "";
+  const merchantId = searchParams.get("merchant") ?? "";
 
   const mpgsHost =
     (process.env.NEXT_PUBLIC_MPGS_HOST ?? "").trim() || DEFAULT_MPGS_HOST;
@@ -163,6 +176,7 @@ function CheckoutContent() {
     <HostedCheckoutLoader
       sessionId={sessionId}
       mpgsHost={mpgsHost}
+      merchantId={merchantId}
     />
   );
 }
