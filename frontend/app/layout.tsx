@@ -30,27 +30,28 @@ const notoSansSinhala = Noto_Sans_Sinhala({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL ?? "https://seylan-hub.vercel.app"
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://seylan-hub-frontend.netlify.app"
   ),
-  title: "Seylan Hub",
+  title: "SeylanHub — AI Banking for Sri Lanka",
   description:
-    "AI banking for Sri Lanka — diaspora wallets, voice assistant, loan health, and bookkeeping for SMEs",
+    "AI-powered banking clarity for Sri Lankan families, borrowers, and SME owners. Diaspora wallets, bilingual AI assistant, loan health scores, and business bookkeeping — built on Seylan Bank.",
   manifest: "/manifest.json",
   icons: {
     icon: "/seylan-bank-icon.png",
     apple: "/seylan-bank-icon.png",
   },
   openGraph: {
-    title: "Seylan Hub",
+    title: "SeylanHub — AI Banking for Sri Lanka",
     description:
-      "AI banking for Sri Lanka — diaspora wallets, voice assistant, loan health, and bookkeeping for SMEs",
+      "Diaspora wallets · Bilingual AI · Loan health · SME bookkeeping. Built for Cursor Buildathon Colombo 2026.",
+    siteName: "SeylanHub",
     images: ["/api/og"],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Seylan Hub",
+    title: "SeylanHub — AI Banking for Sri Lanka",
     description:
-      "AI banking for Sri Lanka — diaspora wallets, voice assistant, loan health, and bookkeeping for SMEs",
+      "Diaspora wallets · Bilingual AI · Loan health · SME bookkeeping.",
     images: ["/api/og"],
   },
 };
