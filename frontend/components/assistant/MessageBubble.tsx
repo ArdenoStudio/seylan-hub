@@ -88,7 +88,7 @@ export function MessageBubble({ message, isStreaming }: MessageBubbleProps) {
             <span>Pay {formatLKR(pa.amount_lkr)} →</span>
           </a>
         )}
-        {!isUser && !isStreaming && message.content && (
+        {!isUser && !isStreaming && message.content && message.language === "en" && (
           <AudioPlayer text={message.content} language={message.language} />
         )}
       </div>
