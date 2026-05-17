@@ -3,3 +3,4 @@ test-output/
 playwright-report/
 blob-report/
 playwright/.cache/
+artifacts/
