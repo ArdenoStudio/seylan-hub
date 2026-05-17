@@ -1,0 +1,15 @@
+{
+  "name": "seylan-hub-demo-recording",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Playwright automation to record an end-to-end Seylan Hub product demo (1920×1080 video).",
+  "scripts": {
+    "install:browsers": "playwright install chromium",
+    "record": "playwright test",
+    "record:headed": "playwright test --headed"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "typescript": "^5.8.3"
+  }
+}
