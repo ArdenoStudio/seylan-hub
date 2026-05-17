@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { postStt } from "@/lib/api";
 
 interface UseVoiceReturn {
   isListening: boolean;
@@ -24,10 +25,11 @@ export function useVoice(): UseVoiceReturn {
   const [supported] = useState(
     () =>
       typeof window !== "undefined" &&
-      !!(
+      (
         (window as typeof window & { SpeechRecognition?: unknown }).SpeechRecognition ??
         (window as typeof window & { webkitSpeechRecognition?: unknown }).webkitSpeechRecognition
-      )
+      ) !== undefined ||
+      (typeof window !== "undefined" && "MediaRecorder" in window && !!navigator.mediaDevices?.getUserMedia)
   );
 
   const recognitionRef = useRef<SpeechRecognition | null>(null);
@@ -36,6 +38,10 @@ export function useVoice(): UseVoiceReturn {
   const langRef = useRef("en-US");
   const restartTimerRef = useRef<number | null>(null);
   const restartAttemptsRef = useRef(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const sttFallbackActiveRef = useRef(false);
 
   const SpeechRecognitionCtor =
     typeof window !== "undefined"
@@ -64,6 +70,23 @@ export function useVoice(): UseVoiceReturn {
       }
       recognitionRef.current = null;
     }
+    const mr = mediaRecorderRef.current;
+    if (mr && mr.state !== "inactive") {
+      try {
+        mr.stop();
+      } catch {
+        /* ignore */
+      }
+    }
+    mediaRecorderRef.current = null;
+    if (mediaStreamRef.current) {
+      for (const track of mediaStreamRef.current.getTracks()) {
+        track.stop();
+      }
+      mediaStreamRef.current = null;
+    }
+    audioChunksRef.current = [];
+    sttFallbackActiveRef.current = false;
     setIsListening(false);
   }, []);
 
@@ -151,6 +174,9 @@ export function useVoice(): UseVoiceReturn {
           setError("network");
           setIsListening(false);
           recognitionRef.current = null;
+          if (!sttFallbackActiveRef.current) {
+            void beginSttFallback();
+          }
           return;
         }
       }
@@ -195,9 +221,59 @@ export function useVoice(): UseVoiceReturn {
     }
   }
 
+  async function beginSttFallback(): Promise<void> {
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      setError("network");
+      return;
+    }
+    sttFallbackActiveRef.current = true;
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+      audioChunksRef.current = [];
+      setIsListening(true);
+      recorder.ondataavailable = (e: BlobEvent) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      recorder.onstop = async () => {
+        try {
+          const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+          if (blob.size > 0) {
+            const res = await postStt(blob);
+            if (res.text) {
+              setTranscript(res.text);
+              setError(null);
+            } else {
+              setError("network");
+            }
+          }
+        } catch {
+          setError("network");
+        } finally {
+          if (mediaStreamRef.current) {
+            for (const track of mediaStreamRef.current.getTracks()) track.stop();
+            mediaStreamRef.current = null;
+          }
+          mediaRecorderRef.current = null;
+          audioChunksRef.current = [];
+          sttFallbackActiveRef.current = false;
+          setIsListening(false);
+        }
+      };
+      recorder.start();
+    } catch {
+      sttFallbackActiveRef.current = false;
+      setError("network");
+      setIsListening(false);
+    }
+  }
+
   function start(lang = "en-US"): void {
+    if (sttFallbackActiveRef.current) return;
     if (!SpeechRecognitionCtor) {
-      setError("Speech recognition not supported in this browser");
+      void beginSttFallback();
       return;
     }
     clearRestartTimerOnly();

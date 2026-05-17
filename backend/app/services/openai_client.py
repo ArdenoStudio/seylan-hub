@@ -1,5 +1,6 @@
 import logging
 from typing import AsyncIterator
+from io import BytesIO
 from openai import AsyncOpenAI, RateLimitError, APIError
 from app.config import settings
 
@@ -7,6 +8,7 @@ log = logging.getLogger(__name__)
 _client: AsyncOpenAI | None = None
 
 _PRIMARY_MODEL = "gpt-4o-mini"
+_STT_MODEL = "gpt-4o-mini-transcribe"
 
 
 def _get_client() -> AsyncOpenAI:
@@ -80,3 +82,14 @@ async def complete_with_tools(
     if not resp.choices:
         raise RuntimeError("OpenAI returned no choices")
     return resp.choices[0].message
+
+
+async def transcribe_audio_bytes(audio_bytes: bytes, filename: str = "speech.webm") -> str:
+    bio = BytesIO(audio_bytes)
+    bio.name = filename
+    resp = await _get_client().audio.transcriptions.create(
+        model=_STT_MODEL,
+        file=bio,
+    )
+    text = getattr(resp, "text", "") or ""
+    return text.strip()

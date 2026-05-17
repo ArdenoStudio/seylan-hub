@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import settings
-from app.routers import mock, wallet, chat, tts, loans, business, payments
+from app.routers import mock, wallet, chat, tts, loans, business, payments, stt
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")
 log = logging.getLogger(__name__)
@@ -20,6 +20,7 @@ _rate_buckets: dict[str, list[float]] = defaultdict(list)
 _RATE_LIMITS: dict[str, tuple[int, int]] = {
     "/api/chat": (20, 60),
     "/api/tts": (10, 60),
+    "/api/stt": (10, 60),
     "/api/categorize-transactions": (5, 60),
     "/api/loans/advisor": (10, 60),
 }
@@ -114,6 +115,7 @@ app.include_router(mock.router)
 app.include_router(wallet.router)
 app.include_router(chat.router)
 app.include_router(tts.router)
+app.include_router(stt.router)
 app.include_router(loans.router)
 app.include_router(business.router)
 app.include_router(payments.router)

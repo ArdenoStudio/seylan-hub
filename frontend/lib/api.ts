@@ -263,6 +263,22 @@ export function postTts(payload: { text: string; language: string }) {
   });
 }
 
+export async function postStt(audioBlob: Blob) {
+  const form = new FormData();
+  form.append("audio", audioBlob, "speech.webm");
+  const res = await fetch(`${API_BASE}/api/stt`, {
+    method: "POST",
+    body: form,
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    const detail = (body as { detail?: string }).detail ?? "Speech transcription failed.";
+    throw new Error(detail);
+  }
+  return res.json() as Promise<{ text: string }>;
+}
+
 interface CategorizedItem {
   id: string;
   category_en: string;

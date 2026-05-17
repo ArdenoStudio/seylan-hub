@@ -17,6 +17,10 @@ router = APIRouter(prefix="/api", tags=["chat"])
 # In-process fixture cache
 _ctx_cache: dict[str, dict] = {}
 _fixture_cache: dict[str, dict] = {}
+_REAL_ACCOUNTS = {
+    "SEY-USR-001": "064000012548001",
+    "SEY-USR-003": "064000012548001",
+}
 
 
 def _load_fixture(name: str) -> dict:
@@ -64,11 +68,17 @@ async def chat(req: ChatRequest):
     if settings.use_seylan_real:
         try:
             from app.seylan import account as seylan_acct
-            acct_nums = account_ctx.get("accounts", [])
-            if acct_nums:
-                bal = await seylan_acct.get_balance(acct_nums[0])
-                account_ctx = {**account_ctx,
-                               "savings_balance": bal.get("balance_lkr", account_ctx.get("savings_balance"))}
+            account_number = _REAL_ACCOUNTS.get(req.user_id)
+            if account_number:
+                bal = await seylan_acct.get_balance(account_number)
+                txns = await seylan_acct.get_recent_transactions(account_number, n=5)
+                account_ctx = {
+                    **account_ctx,
+                    "balance_lkr": bal.get("balance_lkr", account_ctx.get("balance_lkr")),
+                    "current_balance": bal.get("balance_lkr", account_ctx.get("current_balance")),
+                    "savings_balance": bal.get("balance_lkr", account_ctx.get("savings_balance")),
+                    "recent_transactions": txns or account_ctx.get("recent_transactions", []),
+                }
         except Exception as exc:
             log.warning("Seylan balance fetch for context failed: %s", exc)
 

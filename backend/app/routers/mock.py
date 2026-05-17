@@ -31,6 +31,26 @@ def _load(name: str) -> dict:
     return _fixture_cache[name]
 
 
+def _normalize_db_txn(row: dict, account_id: str) -> dict:
+    """Normalize Supabase transaction rows to fixture-like transaction objects."""
+    amount = float(row.get("amount_lkr") or 0)
+    txn_id = row.get("id", row.get("transaction_id", f"txn_{uuid.uuid4().hex[:8]}"))
+    date = row.get("timestamp") or row.get("created_at") or ""
+    return {
+        "transaction_id": txn_id,
+        "id": txn_id,
+        "account_id": account_id,
+        "date": date,
+        "timestamp": date,
+        "description": row.get("merchant", ""),
+        "merchant": row.get("merchant", ""),
+        "amount_lkr": amount,
+        "type": row.get("type", "debit" if amount < 0 else "credit"),
+        "bucket_id": row.get("bucket_id"),
+        "bucket_label": row.get("bucket_label"),
+    }
+
+
 def _apply_live_rows_to_wallet_buckets(wallet: dict, live_rows: list[dict]) -> None:
     """Adjust fixture bucket balances by Supabase-only activity (fixture txns already baked in)."""
     buckets = wallet.get("buckets") or []

@@ -60,7 +60,6 @@ async def create_checkout_session(
     create_payload: dict[str, Any] = {
         "apiOperation": "CREATE_CHECKOUT_SESSION",
         "interaction": {
-            "operation": "PURCHASE",
             "returnUrl": return_url,
             "merchant": {"name": "Seylan Hub"},
         },
