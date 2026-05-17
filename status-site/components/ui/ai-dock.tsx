@@ -17,9 +17,9 @@ function ColorOrb({ size = 24 }: { size?: number }) {
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
-const PANEL_W = 360
-const PANEL_H_EMPTY = 214   // panel when no messages yet
-const PANEL_H_CHAT  = 330   // panel once conversation started
+const PANEL_W = 380
+const PANEL_H_EMPTY = 290   // panel when no messages yet
+const PANEL_H_CHAT  = 380   // panel once conversation started
 const DOCK_H = 44
 
 const SUGGESTIONS = [
@@ -194,7 +194,7 @@ export function AiDock() {
                 </div>
               ) : (
                 /* Suggestion chips — shown before first message */
-                <div className="flex flex-1 flex-col items-center justify-end gap-2 p-3">
+                <div className="flex flex-1 flex-col items-center justify-end gap-2 overflow-y-auto p-3">
                   <p className="select-none text-[11px] text-neutral-400">Ask me about any service</p>
                   <div className="flex flex-wrap justify-center gap-1.5">
                     {SUGGESTIONS.map(s => (
@@ -222,7 +222,7 @@ export function AiDock() {
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Ask about system status…"
-                  rows={hasMessages ? 2 : 3}
+                  rows={hasMessages ? 2 : 1}
                   disabled={loading}
                   spellCheck={false}
                   className="flex-1 resize-none rounded-lg bg-transparent p-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 disabled:opacity-50 dark:text-neutral-100"
