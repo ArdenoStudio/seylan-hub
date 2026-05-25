@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     # Hosted Checkout's browser script and REST session version must match.
     mpgs_api_version: str = "79"
     mpgs_enable: bool = False
+    # MPGS Admin → Webhook Notifications → Notification Secret (sent as X-Notification-Secret)
+    mpgs_webhook_secret: str = ""
 
     # AI
     openai_api_key: str = ""
