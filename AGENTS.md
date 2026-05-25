@@ -17,11 +17,16 @@
 
 ### Lint / test / build
 
-- **Frontend lint:** `cd frontend && npm run lint` — ESLint 9 with next config. 3 pre-existing errors in `app/status/page.tsx` and `lib/api.ts`.
+- **Frontend lint:** `cd frontend && npm run lint` — ESLint 9 with next config. 3 pre-existing errors in `app/business/page.tsx`, `app/payments/return/page.tsx`, and `components/wallet/SendMoneyModal.tsx`.
 - **Frontend smoke test:** `cd frontend && npm run test:smoke` — checks demo-critical files exist.
 - **Frontend build:** `cd frontend && npm run build`
+- **Backend pytest:** `cd backend && python3 -m pytest tests/ -v` — 22 unit/integration tests (no running server needed).
 - **Backend smoke test:** `cd backend && bash scripts/smoke.sh http://localhost:8000` — requires running backend. 13 endpoint checks.
-- No unit test suites exist for either frontend or backend (only smoke tests).
+
+### Gotchas (Cloud VM)
+
+- Use `python3` (not `python`) — the system binary is `python3`.
+- `pytest` and `pytest-asyncio` are not in `requirements.txt`; install them separately for testing: `pip install pytest pytest-asyncio`.
 
 ### Gotchas
 
