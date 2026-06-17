@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 const BACKEND_URL =
   process.env.BACKEND_URL ??
   process.env.NEXT_PUBLIC_API_BASE ??
-  "https://seylan-hub-api.fly.dev";
+  "https://seylan-hub-backend.vercel.app";
 
 export async function GET() {
   try {

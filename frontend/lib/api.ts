@@ -1,8 +1,8 @@
-/** Backend URL: env override, else Fly API in production builds, else local dev. */
+/** Backend URL: env override, else Vercel API in production builds, else local dev. */
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE ??
   (process.env.NODE_ENV === "production"
-    ? "https://seylan-hub-api.fly.dev"
+    ? "https://seylan-hub-backend.vercel.app"
     : "http://localhost:8000");
 
 export class ApiError extends Error {
