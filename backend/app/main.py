@@ -80,6 +80,12 @@ async def _prewarm():
 async def lifespan(app: FastAPI):
     log.info("SEYLAN HUB API STARTING — USE_SEYLAN_REAL=%s", settings.use_seylan_real)
     import asyncio
+    if settings.database_url:
+        try:
+            from app.services import supabase_client
+            await asyncio.to_thread(supabase_client.run_migrations)
+        except Exception as exc:
+            log.error("DB migration failed: %s", exc)
     asyncio.create_task(_prewarm())
     yield
     log.info("shutdown")
@@ -155,15 +161,14 @@ async def get_metrics():
 async def health_deep():
     deps: dict[str, str] = {}
 
-    if settings.supabase_url and settings.supabase_service_key:
+    if settings.database_url:
         try:
             from app.services import supabase_client
-            supabase_client.get_client()
-            deps["supabase"] = "configured"
+            deps["database"] = "ok" if supabase_client.ping() else "error"
         except Exception:
-            deps["supabase"] = "error"
+            deps["database"] = "error"
     else:
-        deps["supabase"] = "not_configured"
+        deps["database"] = "not_configured"
 
     deps["openai"] = "configured" if settings.openai_api_key else "not_configured"
     deps["groq"] = "configured" if settings.groq_api_key else "not_configured"
