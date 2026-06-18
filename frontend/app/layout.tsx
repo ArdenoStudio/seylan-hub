@@ -3,6 +3,9 @@ import { DM_Sans, Geist_Mono, Noto_Sans_Sinhala, Sora } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { AppShell } from "@/components/layout/AppShell";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthGuard } from "@/components/layout/AuthGuard";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import "./globals.css";
 
 const headingFont = Sora({
@@ -64,11 +67,18 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${headingFont.variable} ${bodyFont.variable} ${geistMono.variable} ${notoSansSinhala.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col">
+      <body className="flex min-h-full flex-col bg-ceyfi-canvas text-ceyfi-ink dark:bg-ceyfi-deep dark:text-white">
         <ErrorBoundary>
-          <AppShell>{children}</AppShell>
+          <ThemeProvider>
+            <AuthProvider>
+              <AuthGuard>
+                <AppShell>{children}</AppShell>
+              </AuthGuard>
+            </AuthProvider>
+          </ThemeProvider>
         </ErrorBoundary>
         <Toaster />
       </body>
