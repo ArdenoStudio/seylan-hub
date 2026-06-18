@@ -72,10 +72,30 @@ export interface ChatMessage {
 
 export interface AccountContext {
   user_id: string;
+  name?: string;
   account_holder: string;
   accounts: string[];
   balance_lkr: number;
   language_preference: Language;
+  savings_balance?: number;
+  current_balance?: number;
+  recent_transactions?: {
+    id: string;
+    date: string;
+    description: string;
+    amount_lkr: number;
+    type: "credit" | "debit";
+    bucket_id?: string | null;
+  }[];
+  loans?: {
+    id: string;
+    type: string;
+    disbursed_amount_lkr: number;
+    outstanding_lkr: number;
+    monthly_installment_lkr: number;
+    next_payment_date: string;
+    next_payment_amount_lkr: number;
+  }[];
 }
 
 export interface FixedDeposit {

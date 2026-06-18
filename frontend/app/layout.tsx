@@ -6,9 +6,9 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import "./globals.css";
 
 const headingFont = Sora({
-  variable: "--font-cal-sans",
+  variable: "--font-sora",
   subsets: ["latin"],
-  weight: ["400", "600", "700"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const bodyFont = DM_Sans({
@@ -30,28 +30,28 @@ const notoSansSinhala = Noto_Sans_Sinhala({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "https://seylan-hub-frontend.netlify.app"
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://ceyfi.app"
   ),
-  title: "SeylanHub — AI Banking for Sri Lanka",
+  title: "CEYFI — Clarity for every rupee",
   description:
-    "AI-powered banking clarity for Sri Lankan families, borrowers, and SME owners. Diaspora wallets, bilingual AI assistant, loan health scores, and business bookkeeping — built on Seylan Bank.",
+    "AI-powered financial clarity for Sri Lankan families, borrowers, and business owners.",
   manifest: "/manifest.json",
   icons: {
     icon: "/seylan-bank-icon.png",
     apple: "/seylan-bank-icon.png",
   },
   openGraph: {
-    title: "SeylanHub — AI Banking for Sri Lanka",
+    title: "CEYFI — Clarity for every rupee",
     description:
-      "Diaspora wallets · Bilingual AI · Loan health · SME bookkeeping. Built for Cursor Buildathon Colombo 2026.",
-    siteName: "SeylanHub",
+      "One calm view of your money, loans, remittances, and business cash flow.",
+    siteName: "CEYFI",
     images: ["/api/og"],
   },
   twitter: {
     card: "summary_large_image",
-    title: "SeylanHub — AI Banking for Sri Lanka",
+    title: "CEYFI — Clarity for every rupee",
     description:
-      "Diaspora wallets · Bilingual AI · Loan health · SME bookkeeping.",
+      "One calm view of your money, loans, remittances, and business cash flow.",
     images: ["/api/og"],
   },
 };
@@ -66,7 +66,7 @@ export default function RootLayout({
       lang="en"
       className={`${headingFont.variable} ${bodyFont.variable} ${geistMono.variable} ${notoSansSinhala.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="flex min-h-full flex-col">
         <ErrorBoundary>
           <AppShell>{children}</AppShell>
         </ErrorBoundary>

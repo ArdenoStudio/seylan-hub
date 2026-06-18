@@ -3,129 +3,118 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Wallet, CreditCard, Store, Sparkles, Activity, ExternalLink, UserCircle, BarChart2 } from "lucide-react";
+import {
+  Activity,
+  ArrowUpDown,
+  BriefcaseBusiness,
+  CreditCard,
+  LayoutDashboard,
+  Sparkles,
+  Wallet,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
-  { href: "/profile",   label: "Profile",   icon: UserCircle },
-  { href: "/wallet",    label: "Wallet",    icon: Wallet    },
-  { href: "/assistant", label: "Seylan AI", icon: Sparkles  },
-  { href: "/loans",     label: "Loans",     icon: CreditCard },
-  { href: "/business",  label: "Business",  icon: Store     },
-  { href: "/metrics",   label: "Metrics",   icon: BarChart2  },
+  { href: "/", label: "Overview", icon: LayoutDashboard },
+  { href: "/wallet", label: "Wallet", icon: Wallet },
+  { href: "/transactions", label: "Transactions", icon: ArrowUpDown },
+  { href: "/loans", label: "Loans", icon: CreditCard },
+  { href: "/business", label: "Business", icon: BriefcaseBusiness },
+  { href: "/assistant", label: "CEYFI AI", icon: Sparkles },
+  { href: "/metrics", label: "Metrics", icon: Activity },
 ];
-
-const STATUS_URL = process.env.NEXT_PUBLIC_STATUS_URL ?? "https://seylan-hub-status1.vercel.app/";
 
 export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <>
-      {/* Desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col bg-[linear-gradient(180deg,#721c24_0%,#4f1219_100%)] text-white shadow-2xl shadow-seylan-plum/20 md:flex">
-        <div className="border-b border-white/10 p-4">
-          <div className="flex items-center gap-3 rounded-2xl bg-white px-3 py-2 shadow-sm">
+    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[17.5rem] flex-col border-r border-white/8 bg-ceyfi-deep text-white md:flex">
+      <div className="border-b border-white/8 px-6 py-6">
+        <Link href="/" className="flex items-center gap-3">
+          <span className="grid h-10 w-10 place-items-center rounded-[14px] bg-ceyfi-green text-lg font-bold shadow-[0_8px_24px_rgba(5,150,105,0.28)]">
+            C
+          </span>
+          <span>
+            <span className="block font-heading text-base font-bold tracking-[0.16em]">
+              CEYFI
+            </span>
+            <span className="block text-[11px] text-white/42">
+              Clarity for every rupee
+            </span>
+          </span>
+        </Link>
+      </div>
+
+      <div className="border-b border-white/8 px-4 py-4">
+        <Link
+          href="/profile"
+          className="flex items-center gap-3 rounded-2xl border border-white/8 bg-white/[0.055] p-3 transition-colors hover:bg-white/[0.08]"
+        >
+          <div className="h-10 w-10 shrink-0 overflow-hidden rounded-[14px] ring-1 ring-white/12">
             <Image
-              src="/seylan-bank-logo.png"
-              alt="Seylan Bank"
-              width={172}
-              height={80}
-              className="h-9 w-auto"
-              priority
+              src="/nimal-avatar.jpg"
+              alt="Nimal Fernando"
+              width={40}
+              height={40}
+              className="h-full w-full object-cover"
             />
-            <span className="rounded-full bg-seylan-red/10 px-2 py-1 text-sm font-bold tracking-wide text-seylan-red">
-              Hub
-            </span>
           </div>
-        </div>
-
-        <div className="border-b border-white/10 px-3 py-4">
-          <Link href="/profile" className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/10 p-3 transition-colors hover:bg-white/15">
-            <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full ring-1 ring-white/20">
-              <Image
-                src="/nimal-avatar.jpg"
-                alt="Nimal Fernando"
-                width={36}
-                height={36}
-                className="h-full w-full object-cover"
-              />
+          <div className="min-w-0">
+            <div className="truncate text-sm font-semibold">Nimal Fernando</div>
+            <div className="truncate font-mono text-[10px] text-white/38">
+              SEY-USR-001
             </div>
-            <div className="min-w-0">
-              <div className="text-sm font-semibold truncate">Nimal Fernando</div>
-              <div className="text-xs text-white/60 truncate">0640-0001254-001</div>
-            </div>
-          </Link>
-        </div>
+          </div>
+        </Link>
+      </div>
 
-        <nav className="flex-1 space-y-1 px-3 py-4">
-          {NAV_ITEMS.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={isActive ? "page" : undefined}
-                className={cn(
-                  "group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm transition-all",
-                  isActive
-                    ? "bg-white text-seylan-plum shadow-lg shadow-black/10"
-                    : "text-white/70 hover:bg-white/10 hover:text-white"
-                )}
-              >
-                <span
-                  className={cn(
-                    "flex h-8 w-8 items-center justify-center rounded-xl transition-colors",
-                    isActive ? "bg-seylan-red text-white" : "bg-white/10"
-                  )}
-                >
-                  <item.icon className="h-4 w-4" />
-                </span>
-                <span className="font-medium">{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Status link pinned to bottom */}
-        <div className="border-t border-white/10 px-3 py-4">
-          <a
-            href={STATUS_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm text-white/50 transition-all hover:bg-white/10 hover:text-white"
-          >
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 transition-colors group-hover:bg-white/15">
-              <Activity className="h-4 w-4" />
-            </span>
-            <span className="font-medium">System Status</span>
-            <ExternalLink className="ml-auto h-3 w-3 opacity-50" />
-          </a>
-        </div>
-      </aside>
-
-      {/* Mobile bottom tab bar */}
-      <nav className="fixed inset-x-3 bottom-3 z-30 flex rounded-3xl border border-seylan-border bg-white/95 p-1 shadow-2xl shadow-seylan-plum/15 backdrop-blur md:hidden">
+      <nav className="relative flex-1 space-y-1 px-4 py-5">
+        <div className="absolute bottom-8 left-[2.05rem] top-8 w-px bg-gradient-to-b from-ceyfi-mint/35 via-white/8 to-transparent" />
         {NAV_ITEMS.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive =
+            pathname === item.href ||
+            (item.href !== "/" && pathname.startsWith(item.href));
+
           return (
             <Link
               key={item.href}
               href={item.href}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex-1 flex flex-col items-center py-2 text-xs",
+                "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all",
                 isActive
-                  ? "rounded-2xl bg-seylan-red text-white"
-                  : "text-gray-500"
+                  ? "bg-white/[0.09] text-white"
+                  : "text-white/52 hover:bg-white/[0.055] hover:text-white"
               )}
             >
-              <item.icon className="h-5 w-5 mb-0.5" />
-              {item.label}
+              <span
+                className={cn(
+                  "relative z-10 grid h-8 w-8 place-items-center rounded-[11px] border transition-colors",
+                  isActive
+                    ? "border-ceyfi-mint/30 bg-ceyfi-green text-white"
+                    : "border-white/8 bg-ceyfi-deep text-white/55 group-hover:text-white"
+                )}
+              >
+                <item.icon className="h-4 w-4" strokeWidth={1.8} />
+              </span>
+              <span className="font-medium">{item.label}</span>
+              {isActive ? (
+                <span className="ml-auto h-1.5 w-1.5 rounded-full bg-ceyfi-mint shadow-[0_0_10px_rgba(52,211,153,0.7)]" />
+              ) : null}
             </Link>
           );
         })}
       </nav>
-    </>
+
+      <div className="border-t border-white/8 px-6 py-5">
+        <div className="flex items-center gap-2 text-[11px] text-white/32">
+          <span className="h-1.5 w-1.5 rounded-full bg-ceyfi-mint" />
+          Demo data connected
+        </div>
+        <div className="mt-1 text-[10px] text-white/20">
+          CEYFI v2 · Buildathon 2026
+        </div>
+      </div>
+    </aside>
   );
 }

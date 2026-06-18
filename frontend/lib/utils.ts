@@ -13,3 +13,31 @@ const lkrFormatter = new Intl.NumberFormat("en-LK", {
 export function formatLKR(amount: number): string {
   return `LKR ${lkrFormatter.format(amount)}`;
 }
+
+export const formatters = {
+  currency: ({
+    number,
+    maxFractionDigits = 2,
+  }: {
+    number: number;
+    maxFractionDigits?: number;
+  }) =>
+    new Intl.NumberFormat("en-LK", {
+      style: "currency",
+      currency: "LKR",
+      currencyDisplay: "code",
+      maximumFractionDigits: maxFractionDigits,
+    }).format(number),
+  compact: (number: number) =>
+    new Intl.NumberFormat("en", {
+      notation: "compact",
+      maximumFractionDigits: 1,
+    }).format(number),
+  percent: (number: number) => `${(number * 100).toFixed(1)}%`,
+};
+
+export function cx(
+  ...args: Array<string | undefined | null | false>
+): string {
+  return args.filter(Boolean).join(" ");
+}

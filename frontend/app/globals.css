@@ -31,7 +31,7 @@
   --font-sans: var(--font-dm-sans), var(--font-noto-sinhala), ui-sans-serif,
     system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-cal-sans), var(--font-noto-sinhala),
+  --font-heading: var(--font-sora), var(--font-noto-sinhala),
     ui-sans-serif, system-ui, sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -76,41 +76,52 @@
   --color-seylan-mist: #FFF8F1;
   --color-seylan-border: #EAD7C2;
   --color-seylan-gold: #D9A441;
+
+  --color-ceyfi-green: #059669;
+  --color-ceyfi-deep: #052E16;
+  --color-ceyfi-mint: #34D399;
+  --color-ceyfi-canvas: #F4F8F3;
+  --color-ceyfi-paper: #FBFDF9;
+  --color-ceyfi-sprout: #E8F7EE;
+  --color-ceyfi-line: #D8E8DC;
+  --color-ceyfi-ink: #10261A;
+  --color-ceyfi-muted: #617267;
+  --color-ceyfi-faint: #8C9A91;
 }
 
 :root {
-  --background: #FFF8F1;
-  --foreground: #241316;
-  --card: #FFFFFF;
-  --card-foreground: #241316;
-  --popover: #FFFFFF;
-  --popover-foreground: #241316;
-  --primary: #E31821;
+  --background: #F4F8F3;
+  --foreground: #10261A;
+  --card: #FBFDF9;
+  --card-foreground: #10261A;
+  --popover: #FBFDF9;
+  --popover-foreground: #10261A;
+  --primary: #059669;
   --primary-foreground: #FFFFFF;
-  --secondary: #FFF8F1;
-  --secondary-foreground: #721C24;
-  --muted: #FFF8F1;
-  --muted-foreground: #79565B;
-  --accent: #FCE8D0;
-  --accent-foreground: #721C24;
+  --secondary: #E8F7EE;
+  --secondary-foreground: #075C3E;
+  --muted: #EDF3ED;
+  --muted-foreground: #617267;
+  --accent: #D8F7E5;
+  --accent-foreground: #075C3E;
   --destructive: #DC2626;
-  --border: #EAD7C2;
-  --input: #EAD7C2;
-  --ring: #E31821;
-  --chart-1: #E31821;
-  --chart-2: #721C24;
-  --chart-3: #E0AF49;
-  --chart-4: #10B981;
-  --chart-5: #6366F1;
-  --radius: 0.75rem;
-  --sidebar: #721C24;
+  --border: #D8E8DC;
+  --input: #D2E2D6;
+  --ring: #059669;
+  --chart-1: #059669;
+  --chart-2: #34D399;
+  --chart-3: #2563EB;
+  --chart-4: #D97706;
+  --chart-5: #E11D48;
+  --radius: 0.8rem;
+  --sidebar: #052E16;
   --sidebar-foreground: #FFFFFF;
-  --sidebar-primary: #E31821;
+  --sidebar-primary: #059669;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #8A2730;
+  --sidebar-accent: #0A4424;
   --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #8A2730;
-  --sidebar-ring: #E0AF49;
+  --sidebar-border: #174D2C;
+  --sidebar-ring: #34D399;
 }
 
 .dark {
@@ -152,10 +163,10 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-seylan-mist text-foreground;
+    @apply bg-ceyfi-canvas text-foreground;
     background:
-      radial-gradient(circle at top left, rgb(227 24 33 / 8%), transparent 30rem),
-      linear-gradient(180deg, #fff8f1 0%, #fffdf8 58%, #fff6ec 100%);
+      radial-gradient(circle at 16% 0%, rgb(52 211 153 / 8%), transparent 28rem),
+      linear-gradient(180deg, #f7faf5 0%, #f4f8f3 46%, #eff6f0 100%);
     font-feature-settings: "kern" 1, "liga" 1, "tnum" 1;
   }
   html {
@@ -164,7 +175,7 @@
 }
 
 .sinhala {
-  font-family: var(--font-noto-sinhala), var(--font-cal-sans), sans-serif;
+  font-family: var(--font-noto-sinhala), var(--font-sora), sans-serif;
 }
 
 /* Glassmorphism card utility */
@@ -328,6 +339,6 @@
 
 /* Selection highlight */
 ::selection {
-  background-color: rgba(227, 24, 33, 0.15);
-  color: #241316;
+  background-color: rgba(52, 211, 153, 0.24);
+  color: #052E16;
 }

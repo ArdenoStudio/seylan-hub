@@ -5,6 +5,7 @@ const root = process.cwd();
 
 const requiredFiles = [
   "app/page.tsx",
+  "app/transactions/page.tsx",
   "app/wallet/page.tsx",
   "app/assistant/page.tsx",
   "app/loans/page.tsx",
@@ -19,7 +20,8 @@ const requiredFiles = [
 ];
 
 const requiredSnippets = [
-  ["app/page.tsx", "Open SeylanHub"],
+  ["app/page.tsx", "Good morning"],
+  ["components/layout/Sidebar.tsx", "Clarity for every rupee"],
   ["hooks/useWalletRealtime.ts", "subscribeToTransactions"],
   ["app/wallet/page.tsx", "Track money sent home"],
   ["components/layout/AppShell.tsx", "showSeylanHandoff"],

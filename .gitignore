@@ -5,3 +5,15 @@ __pycache__/
 *.log
 .env
 .vercel
+
+# Root-level node artifacts
+node_modules/
+package-lock.json
+
+# Binary / document files
+*.pdf
+*.docx
+*.doc
+
+# One-off scripts
+build-doc.js
